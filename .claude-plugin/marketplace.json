@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "ClaudeTools Marketplace",
+  "metadata": { "description": "Extensions, stacks, and tools for Claude Code" },
+  "owner": { "name": "ClaudeTools", "url": "https://claudetools.com" },
+  "plugins": [
+    {
+      "name": "claudetools",
+      "description": "ClaudeTools platform — stack management, marketplace, MCP integrations",
+      "version": "1.0.0",
+      "source": "./claudetools",
+      "category": "platform",
+      "tags": ["core", "marketplace", "stacks"]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "claudetools": {
+    "command": "npx",
+    "args": ["-y", "@claudetools/sync-engine", "stdio"]
+  }
+}

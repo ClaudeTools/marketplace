@@ -1,0 +1,8 @@
+{
+  "hooks": {
+    "SessionStart": [{
+      "type": "command",
+      "command": "claudetools-sync hook SessionStart 2>/dev/null || true"
+    }]
+  }
+}

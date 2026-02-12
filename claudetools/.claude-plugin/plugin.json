@@ -1,0 +1,8 @@
+{
+  "name": "claudetools",
+  "version": "1.0.0",
+  "description": "ClaudeTools — stack management, marketplace, and MCP integrations",
+  "author": { "name": "ClaudeTools", "url": "https://claudetools.com" },
+  "skills": ["skills/claudetools/"],
+  "agents": ["agents/claudetools.md"]
+}

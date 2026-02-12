@@ -1,0 +1,116 @@
+name: Generate Plugin Directories
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch approved extensions
+        env:
+          MARKETPLACE_SERVICE_TOKEN: ${{ secrets.MARKETPLACE_SERVICE_TOKEN }}
+        run: |
+          curl -sf \
+            -H "X-Service-Token: $MARKETPLACE_SERVICE_TOKEN" \
+            "https://claudetools.com/api/marketplace/export" \
+            -o extensions.json
+
+      - name: Generate plugin directories
+        run: |
+          node -e "
+          const fs = require('fs');
+          const path = require('path');
+          const data = JSON.parse(fs.readFileSync('extensions.json', 'utf8'));
+          const exts = data.data?.extensions || {};
+
+          // Clean existing generated plugins
+          const pluginsDir = 'plugins';
+          if (fs.existsSync(pluginsDir)) {
+            fs.rmSync(pluginsDir, { recursive: true });
+          }
+          fs.mkdirSync(pluginsDir, { recursive: true });
+
+          // Generate plugin dirs for each skill
+          for (const skill of (exts.skills || [])) {
+            const slug = skill.slug;
+            if (!slug || !/^[a-z0-9][a-z0-9_-]*$/.test(slug)) continue;
+
+            const dir = path.join(pluginsDir, 'ct--' + slug);
+            const metaDir = path.join(dir, '.claude-plugin');
+            const skillsDir = path.join(dir, 'skills', slug);
+
+            fs.mkdirSync(metaDir, { recursive: true });
+            fs.mkdirSync(skillsDir, { recursive: true });
+
+            // plugin.json
+            fs.writeFileSync(path.join(metaDir, 'plugin.json'), JSON.stringify({
+              name: 'ct--' + slug,
+              version: '1.0.0',
+              description: skill.tagline || skill.name,
+              author: { name: skill.author || 'Community' },
+              managed_by: 'claudetools-marketplace-ci',
+              skills: ['skills/' + slug + '/']
+            }, null, 2));
+
+            // SKILL.md
+            const content = skill.body_content || '# ' + skill.name;
+            fs.writeFileSync(path.join(skillsDir, 'SKILL.md'), content);
+          }
+
+          console.log('Generated plugin directories');
+          "
+
+      - name: Update marketplace.json plugin list
+        run: |
+          node -e "
+          const fs = require('fs');
+          const path = require('path');
+          const manifest = JSON.parse(fs.readFileSync('.claude-plugin/marketplace.json', 'utf8'));
+
+          // Keep the bootstrap claudetools plugin
+          const bootstrap = manifest.plugins.filter(p => p.name === 'claudetools');
+
+          // Add generated plugins
+          const pluginsDir = 'plugins';
+          const generated = [];
+          if (fs.existsSync(pluginsDir)) {
+            for (const entry of fs.readdirSync(pluginsDir)) {
+              const pluginJsonPath = path.join(pluginsDir, entry, '.claude-plugin', 'plugin.json');
+              if (fs.existsSync(pluginJsonPath)) {
+                const meta = JSON.parse(fs.readFileSync(pluginJsonPath, 'utf8'));
+                generated.push({
+                  name: meta.name,
+                  description: meta.description,
+                  version: meta.version,
+                  source: './' + path.join(pluginsDir, entry),
+                  category: 'community',
+                  tags: ['generated']
+                });
+              }
+            }
+          }
+
+          manifest.plugins = [...bootstrap, ...generated];
+          fs.writeFileSync('.claude-plugin/marketplace.json', JSON.stringify(manifest, null, 2) + '\n');
+          console.log('Updated marketplace.json with ' + generated.length + ' generated plugins');
+          "
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add plugins/ .claude-plugin/marketplace.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(marketplace): update generated plugin directories"
+            git push
+          fi
