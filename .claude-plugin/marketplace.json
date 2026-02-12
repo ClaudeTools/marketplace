@@ -1,6 +1,6 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "ClaudeTools Marketplace",
+  "name": "claudetools-marketplace",
   "metadata": { "description": "Extensions, stacks, and tools for Claude Code" },
   "owner": { "name": "ClaudeTools", "url": "https://claudetools.com" },
   "plugins": [
