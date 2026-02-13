@@ -1,0 +1,12 @@
+{
+  "name": "ct--react-best-practices",
+  "version": "1.0.0",
+  "description": "React performance optimization from Vercel",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/react-best-practices/"
+  ]
+}

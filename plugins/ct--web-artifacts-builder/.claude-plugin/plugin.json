@@ -1,0 +1,12 @@
+{
+  "name": "ct--web-artifacts-builder",
+  "version": "1.0.0",
+  "description": "Build complex HTML artifacts with React",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/web-artifacts-builder/"
+  ]
+}

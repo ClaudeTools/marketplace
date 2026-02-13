@@ -1,0 +1,12 @@
+{
+  "name": "ct--webapp-testing",
+  "version": "1.0.0",
+  "description": "Automated web testing with Playwright",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/webapp-testing/"
+  ]
+}

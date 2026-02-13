@@ -1,0 +1,12 @@
+{
+  "name": "ct--pdf",
+  "version": "1.0.0",
+  "description": "PDF manipulation and extraction",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/pdf/"
+  ]
+}

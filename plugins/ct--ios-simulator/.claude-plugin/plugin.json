@@ -1,0 +1,12 @@
+{
+  "name": "ct--ios-simulator",
+  "version": "1.0.0",
+  "description": "Build and test iOS apps automatically",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/ios-simulator/"
+  ]
+}

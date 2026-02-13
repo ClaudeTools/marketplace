@@ -1,0 +1,12 @@
+{
+  "name": "ct--pptx",
+  "version": "1.0.0",
+  "description": "PowerPoint presentation creation",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/pptx/"
+  ]
+}

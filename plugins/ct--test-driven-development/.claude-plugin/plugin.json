@@ -1,0 +1,12 @@
+{
+  "name": "ct--test-driven-development",
+  "version": "1.0.0",
+  "description": "RED-GREEN-REFACTOR methodology",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/test-driven-development/"
+  ]
+}

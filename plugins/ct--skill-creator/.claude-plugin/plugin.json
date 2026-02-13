@@ -1,0 +1,12 @@
+{
+  "name": "ct--skill-creator",
+  "version": "1.0.0",
+  "description": "Create new Claude Code skills",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/skill-creator/"
+  ]
+}

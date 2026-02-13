@@ -1,0 +1,12 @@
+{
+  "name": "ct--xlsx",
+  "version": "1.0.0",
+  "description": "Excel spreadsheet creation and analysis",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/xlsx/"
+  ]
+}

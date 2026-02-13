@@ -1,0 +1,12 @@
+{
+  "name": "ct--brainstorming",
+  "version": "1.0.0",
+  "description": "Socratic design refinement process",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/brainstorming/"
+  ]
+}

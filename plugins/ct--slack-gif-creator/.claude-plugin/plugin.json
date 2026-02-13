@@ -1,0 +1,12 @@
+{
+  "name": "ct--slack-gif-creator",
+  "version": "1.0.0",
+  "description": "Generate animated GIFs for Slack",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/slack-gif-creator/"
+  ]
+}

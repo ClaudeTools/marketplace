@@ -1,8 +1,13 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "claudetools-marketplace",
-  "metadata": { "description": "Extensions, stacks, and tools for Claude Code" },
-  "owner": { "name": "ClaudeTools", "url": "https://claudetools.com" },
+  "metadata": {
+    "description": "Extensions, stacks, and tools for Claude Code"
+  },
+  "owner": {
+    "name": "ClaudeTools",
+    "url": "https://claudetools.com"
+  },
   "plugins": [
     {
       "name": "claudetools",
@@ -10,7 +15,341 @@
       "version": "1.0.0",
       "source": "./claudetools",
       "category": "platform",
-      "tags": ["core", "marketplace", "stacks"]
+      "tags": [
+        "core",
+        "marketplace",
+        "stacks"
+      ]
+    },
+    {
+      "name": "ct--algorithmic-art",
+      "description": "Generative art with p5.js",
+      "version": "1.0.0",
+      "source": "./plugins/ct--algorithmic-art",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--brainstorming",
+      "description": "Socratic design refinement process",
+      "version": "1.0.0",
+      "source": "./plugins/ct--brainstorming",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--brand-guidelines",
+      "description": "Apply brand colors and typography",
+      "version": "1.0.0",
+      "source": "./plugins/ct--brand-guidelines",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--canvas-design",
+      "description": "Visual art in PNG and PDF formats",
+      "version": "1.0.0",
+      "source": "./plugins/ct--canvas-design",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--composition-patterns",
+      "description": "React composition patterns that scale",
+      "version": "1.0.0",
+      "source": "./plugins/ct--composition-patterns",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--d3js-visualizations",
+      "description": "Data visualizations with D3.js",
+      "version": "1.0.0",
+      "source": "./plugins/ct--d3js-visualizations",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--doc-coauthoring",
+      "description": "Structured collaborative document writing",
+      "version": "1.0.0",
+      "source": "./plugins/ct--doc-coauthoring",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--docx",
+      "description": "Word document creation and editing",
+      "version": "1.0.0",
+      "source": "./plugins/ct--docx",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--frontend-design",
+      "description": "Production-grade UI with bold design decisions",
+      "version": "1.0.0",
+      "source": "./plugins/ct--frontend-design",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--git-worktrees",
+      "description": "Parallel development with git worktrees",
+      "version": "1.0.0",
+      "source": "./plugins/ct--git-worktrees",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--internal-comms",
+      "description": "Write status reports and newsletters",
+      "version": "1.0.0",
+      "source": "./plugins/ct--internal-comms",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--ios-simulator",
+      "description": "Build and test iOS apps automatically",
+      "version": "1.0.0",
+      "source": "./plugins/ct--ios-simulator",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--mcp-builder",
+      "description": "Build MCP servers for tool integration",
+      "version": "1.0.0",
+      "source": "./plugins/ct--mcp-builder",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--pdf",
+      "description": "PDF manipulation and extraction",
+      "version": "1.0.0",
+      "source": "./plugins/ct--pdf",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--playwright-automation",
+      "description": "General-purpose browser automation",
+      "version": "1.0.0",
+      "source": "./plugins/ct--playwright-automation",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--pptx",
+      "description": "PowerPoint presentation creation",
+      "version": "1.0.0",
+      "source": "./plugins/ct--pptx",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--react-best-practices",
+      "description": "React performance optimization from Vercel",
+      "version": "1.0.0",
+      "source": "./plugins/ct--react-best-practices",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--react-native-guidelines",
+      "description": "React Native best practices for agents",
+      "version": "1.0.0",
+      "source": "./plugins/ct--react-native-guidelines",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--requesting-code-review",
+      "description": "Pre-review checklist for clean PRs",
+      "version": "1.0.0",
+      "source": "./plugins/ct--requesting-code-review",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--scientific-computing",
+      "description": "Scientific libraries and databases",
+      "version": "1.0.0",
+      "source": "./plugins/ct--scientific-computing",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--security-audit",
+      "description": "Static analysis and vulnerability detection",
+      "version": "1.0.0",
+      "source": "./plugins/ct--security-audit",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--skill-creator",
+      "description": "Create new Claude Code skills",
+      "version": "1.0.0",
+      "source": "./plugins/ct--skill-creator",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--slack-gif-creator",
+      "description": "Generate animated GIFs for Slack",
+      "version": "1.0.0",
+      "source": "./plugins/ct--slack-gif-creator",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--subagent-driven-development",
+      "description": "Two-stage review with subagents",
+      "version": "1.0.0",
+      "source": "./plugins/ct--subagent-driven-development",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--systematic-debugging",
+      "description": "4-phase root cause analysis",
+      "version": "1.0.0",
+      "source": "./plugins/ct--systematic-debugging",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--test-driven-development",
+      "description": "RED-GREEN-REFACTOR methodology",
+      "version": "1.0.0",
+      "source": "./plugins/ct--test-driven-development",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--theme-factory",
+      "description": "Professional theme styling toolkit",
+      "version": "1.0.0",
+      "source": "./plugins/ct--theme-factory",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--verification-before-completion",
+      "description": "Ensure fixes are genuinely resolved",
+      "version": "1.0.0",
+      "source": "./plugins/ct--verification-before-completion",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--web-artifacts-builder",
+      "description": "Build complex HTML artifacts with React",
+      "version": "1.0.0",
+      "source": "./plugins/ct--web-artifacts-builder",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--web-design-guidelines",
+      "description": "100+ rules for UI compliance audits",
+      "version": "1.0.0",
+      "source": "./plugins/ct--web-design-guidelines",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--webapp-testing",
+      "description": "Automated web testing with Playwright",
+      "version": "1.0.0",
+      "source": "./plugins/ct--webapp-testing",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--writing-plans",
+      "description": "Detailed implementation planning",
+      "version": "1.0.0",
+      "source": "./plugins/ct--writing-plans",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--xlsx",
+      "description": "Excel spreadsheet creation and analysis",
+      "version": "1.0.0",
+      "source": "./plugins/ct--xlsx",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
     }
   ]
 }

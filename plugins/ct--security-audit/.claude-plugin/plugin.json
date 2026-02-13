@@ -1,0 +1,12 @@
+{
+  "name": "ct--security-audit",
+  "version": "1.0.0",
+  "description": "Static analysis and vulnerability detection",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/security-audit/"
+  ]
+}

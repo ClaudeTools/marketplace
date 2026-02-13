@@ -1,0 +1,12 @@
+{
+  "name": "ct--scientific-computing",
+  "version": "1.0.0",
+  "description": "Scientific libraries and databases",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/scientific-computing/"
+  ]
+}

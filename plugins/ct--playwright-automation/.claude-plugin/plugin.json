@@ -1,0 +1,12 @@
+{
+  "name": "ct--playwright-automation",
+  "version": "1.0.0",
+  "description": "General-purpose browser automation",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/playwright-automation/"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "ct--brand-guidelines",
+  "version": "1.0.0",
+  "description": "Apply brand colors and typography",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/brand-guidelines/"
+  ]
+}

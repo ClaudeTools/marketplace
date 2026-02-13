@@ -1,0 +1,12 @@
+{
+  "name": "ct--mcp-builder",
+  "version": "1.0.0",
+  "description": "Build MCP servers for tool integration",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/mcp-builder/"
+  ]
+}

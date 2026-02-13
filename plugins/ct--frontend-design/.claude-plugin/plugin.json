@@ -1,0 +1,12 @@
+{
+  "name": "ct--frontend-design",
+  "version": "1.0.0",
+  "description": "Production-grade UI with bold design decisions",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/frontend-design/"
+  ]
+}

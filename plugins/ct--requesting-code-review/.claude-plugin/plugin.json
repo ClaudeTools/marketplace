@@ -1,0 +1,12 @@
+{
+  "name": "ct--requesting-code-review",
+  "version": "1.0.0",
+  "description": "Pre-review checklist for clean PRs",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/requesting-code-review/"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "ct--canvas-design",
+  "version": "1.0.0",
+  "description": "Visual art in PNG and PDF formats",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/canvas-design/"
+  ]
+}

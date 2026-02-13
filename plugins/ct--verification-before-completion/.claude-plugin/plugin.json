@@ -1,0 +1,12 @@
+{
+  "name": "ct--verification-before-completion",
+  "version": "1.0.0",
+  "description": "Ensure fixes are genuinely resolved",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/verification-before-completion/"
+  ]
+}

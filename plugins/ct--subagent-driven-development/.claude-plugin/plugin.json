@@ -1,0 +1,12 @@
+{
+  "name": "ct--subagent-driven-development",
+  "version": "1.0.0",
+  "description": "Two-stage review with subagents",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/subagent-driven-development/"
+  ]
+}

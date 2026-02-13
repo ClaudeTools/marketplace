@@ -1,0 +1,12 @@
+{
+  "name": "ct--algorithmic-art",
+  "version": "1.0.0",
+  "description": "Generative art with p5.js",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/algorithmic-art/"
+  ]
+}

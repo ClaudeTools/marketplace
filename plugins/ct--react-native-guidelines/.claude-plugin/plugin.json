@@ -1,0 +1,12 @@
+{
+  "name": "ct--react-native-guidelines",
+  "version": "1.0.0",
+  "description": "React Native best practices for agents",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/react-native-guidelines/"
+  ]
+}

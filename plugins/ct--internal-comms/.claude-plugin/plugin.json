@@ -1,0 +1,12 @@
+{
+  "name": "ct--internal-comms",
+  "version": "1.0.0",
+  "description": "Write status reports and newsletters",
+  "author": {
+    "name": "Community"
+  },
+  "managed_by": "claudetools-marketplace-ci",
+  "skills": [
+    "skills/internal-comms/"
+  ]
+}
