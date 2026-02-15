@@ -1,0 +1,11 @@
+{
+  "name": "ct--security-auditor",
+  "version": "1.0.0",
+  "description": "OWASP-focused vulnerability scanner",
+  "author": {
+    "name": "Community"
+  },
+  "agents": "./agents/",
+  "license": "MIT",
+  "homepage": "https://github.com/VoltAgent/awesome-claude-code-subagents"
+}

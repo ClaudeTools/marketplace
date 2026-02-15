@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/requesting-code-review/"
+  "skills": "./skills/requesting-code-review/",
+  "license": "MIT",
+  "homepage": "https://github.com/obra/superpowers"
 }

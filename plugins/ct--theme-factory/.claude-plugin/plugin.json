@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/theme-factory/"
+  "skills": "./skills/theme-factory/",
+  "license": "MIT",
+  "homepage": "https://github.com/anthropics/skills/tree/main/skills/theme-factory"
 }

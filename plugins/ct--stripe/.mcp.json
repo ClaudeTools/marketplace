@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "stripe": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "https://www.npmjs.com/package/@stripe/mcp"
+      ]
+    }
+  }
+}

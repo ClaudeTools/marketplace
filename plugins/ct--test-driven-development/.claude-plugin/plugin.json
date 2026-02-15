@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/test-driven-development/"
+  "skills": "./skills/test-driven-development/",
+  "license": "MIT",
+  "homepage": "https://github.com/obra/superpowers"
 }

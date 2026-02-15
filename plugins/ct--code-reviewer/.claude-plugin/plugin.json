@@ -1,0 +1,11 @@
+{
+  "name": "ct--code-reviewer",
+  "version": "1.0.0",
+  "description": "Thorough code review with actionable feedback",
+  "author": {
+    "name": "Community"
+  },
+  "agents": "./agents/",
+  "license": "MIT",
+  "homepage": "https://github.com/affaan-m/everything-claude-code"
+}

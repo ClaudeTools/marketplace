@@ -1,0 +1,11 @@
+{
+  "name": "ct--playwright",
+  "version": "1.0.0",
+  "description": "Browser automation and testing",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/microsoft/playwright-mcp"
+}

@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/slack-gif-creator/"
+  "skills": "./skills/slack-gif-creator/",
+  "license": "MIT",
+  "homepage": "https://github.com/anthropics/skills/tree/main/skills/slack-gif-creator"
 }

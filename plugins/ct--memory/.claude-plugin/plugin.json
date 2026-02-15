@@ -1,0 +1,11 @@
+{
+  "name": "ct--memory",
+  "version": "1.0.0",
+  "description": "Persistent knowledge graph memory",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/modelcontextprotocol/servers"
+}

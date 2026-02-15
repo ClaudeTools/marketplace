@@ -1,0 +1,11 @@
+{
+  "name": "ct--exa-search",
+  "version": "1.0.0",
+  "description": "AI-powered web search API",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/exa-labs/exa-mcp-server"
+}

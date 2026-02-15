@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "time": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "https://www.npmjs.com/package/@modelcontextprotocol/server-time"
+      ]
+    }
+  }
+}

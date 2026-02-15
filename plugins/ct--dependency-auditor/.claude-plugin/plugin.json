@@ -1,0 +1,10 @@
+{
+  "name": "ct--dependency-auditor",
+  "version": "1.0.0",
+  "description": "Outdated and vulnerable dependency scanner",
+  "author": {
+    "name": "Community"
+  },
+  "agents": "./agents/",
+  "license": "MIT"
+}

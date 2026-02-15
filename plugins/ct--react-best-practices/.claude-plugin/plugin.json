@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/react-best-practices/"
+  "skills": "./skills/react-best-practices/",
+  "license": "MIT",
+  "homepage": "https://github.com/vercel-labs/agent-skills/tree/main/skills/react-best-practices"
 }

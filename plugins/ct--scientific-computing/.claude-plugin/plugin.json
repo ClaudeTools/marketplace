@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/scientific-computing/"
+  "skills": "./skills/scientific-computing/",
+  "license": "MIT",
+  "homepage": "https://github.com/K-Dense-AI/claude-scientific-skills"
 }

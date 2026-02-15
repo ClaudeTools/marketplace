@@ -1,0 +1,11 @@
+{
+  "name": "ct--sentry",
+  "version": "1.0.0",
+  "description": "Error tracking and performance monitoring",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/getsentry/sentry-mcp-stdio"
+}

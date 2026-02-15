@@ -1,0 +1,11 @@
+{
+  "name": "ct--google-drive",
+  "version": "1.0.0",
+  "description": "Google Drive file access",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/modelcontextprotocol/servers"
+}

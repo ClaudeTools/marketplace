@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/react-native-guidelines/"
+  "skills": "./skills/react-native-guidelines/",
+  "license": "MIT",
+  "homepage": "https://github.com/vercel-labs/agent-skills/tree/main/skills/react-native-guidelines"
 }

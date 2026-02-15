@@ -1,0 +1,11 @@
+{
+  "name": "ct--supabase",
+  "version": "1.0.0",
+  "description": "Supabase project management",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/supabase-community/supabase-mcp"
+}

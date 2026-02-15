@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/doc-coauthoring/"
+  "skills": "./skills/doc-coauthoring/",
+  "license": "MIT",
+  "homepage": "https://github.com/anthropics/skills/tree/main/skills/doc-coauthoring"
 }

@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/ios-simulator/"
+  "skills": "./skills/ios-simulator/",
+  "license": "MIT",
+  "homepage": "https://github.com/conorluddy/ios-simulator-skill"
 }

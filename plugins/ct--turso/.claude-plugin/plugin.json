@@ -1,0 +1,11 @@
+{
+  "name": "ct--turso",
+  "version": "1.0.0",
+  "description": "Edge SQLite database management",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/nbbaier/mcp-turso"
+}

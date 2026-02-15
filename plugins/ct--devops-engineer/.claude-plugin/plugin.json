@@ -1,0 +1,10 @@
+{
+  "name": "ct--devops-engineer",
+  "version": "1.0.0",
+  "description": "CI/CD pipelines and infrastructure",
+  "author": {
+    "name": "Community"
+  },
+  "agents": "./agents/",
+  "license": "MIT"
+}

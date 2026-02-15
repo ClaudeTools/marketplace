@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/docx/"
+  "skills": "./skills/docx/",
+  "license": "MIT",
+  "homepage": "https://github.com/anthropics/skills/tree/main/skills/docx"
 }

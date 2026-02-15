@@ -1,0 +1,11 @@
+{
+  "name": "ct--sequential-thinking",
+  "version": "1.0.0",
+  "description": "Step-by-step reasoning for complex problems",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/modelcontextprotocol/servers"
+}

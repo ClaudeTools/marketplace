@@ -1,0 +1,11 @@
+{
+  "name": "ct--tdd-guide",
+  "version": "1.0.0",
+  "description": "Test-driven development workflow",
+  "author": {
+    "name": "Community"
+  },
+  "agents": "./agents/",
+  "license": "MIT",
+  "homepage": "https://github.com/affaan-m/everything-claude-code"
+}

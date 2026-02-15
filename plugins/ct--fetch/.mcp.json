@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "fetch": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "https://www.npmjs.com/package/@modelcontextprotocol/server-fetch"
+      ]
+    }
+  }
+}

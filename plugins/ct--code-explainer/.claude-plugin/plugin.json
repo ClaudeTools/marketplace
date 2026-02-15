@@ -1,0 +1,10 @@
+{
+  "name": "ct--code-explainer",
+  "version": "1.0.0",
+  "description": "Makes complex code understandable",
+  "author": {
+    "name": "Community"
+  },
+  "agents": "./agents/",
+  "license": "MIT"
+}

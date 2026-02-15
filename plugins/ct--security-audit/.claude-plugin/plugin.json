@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/security-audit/"
+  "skills": "./skills/security-audit/",
+  "license": "MIT",
+  "homepage": "https://github.com/trailofbits/skills"
 }

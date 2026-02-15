@@ -1,0 +1,11 @@
+{
+  "name": "ct--postgres",
+  "version": "1.0.0",
+  "description": "Natural language database queries",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/modelcontextprotocol/servers"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "ct--filesystem",
+  "version": "1.0.0",
+  "description": "Secure local file operations",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/modelcontextprotocol/servers"
+}

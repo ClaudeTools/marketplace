@@ -1,0 +1,11 @@
+{
+  "name": "ct--time",
+  "version": "1.0.0",
+  "description": "Time and timezone utilities",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/modelcontextprotocol/servers"
+}

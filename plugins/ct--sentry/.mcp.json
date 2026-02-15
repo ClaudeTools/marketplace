@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "sentry": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "https://www.npmjs.com/package/@sentry/mcp-server"
+      ]
+    }
+  }
+}

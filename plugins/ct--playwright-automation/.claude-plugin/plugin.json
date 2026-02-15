@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/playwright-automation/"
+  "skills": "./skills/playwright-automation/",
+  "license": "MIT",
+  "homepage": "https://github.com/lackeyjb/playwright-skill"
 }

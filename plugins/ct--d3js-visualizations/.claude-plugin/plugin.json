@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/d3js-visualizations/"
+  "skills": "./skills/d3js-visualizations/",
+  "license": "MIT",
+  "homepage": "https://github.com/chrisvoncsefalvay/claude-d3js-skill"
 }

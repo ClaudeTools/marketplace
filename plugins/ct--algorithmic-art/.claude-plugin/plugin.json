@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/algorithmic-art/"
+  "skills": "./skills/algorithmic-art/",
+  "license": "MIT",
+  "homepage": "https://github.com/anthropics/skills/tree/main/skills/algorithmic-art"
 }

@@ -1,0 +1,10 @@
+{
+  "name": "ct--migration-assistant",
+  "version": "1.0.0",
+  "description": "Framework and version upgrade helper",
+  "author": {
+    "name": "Community"
+  },
+  "agents": "./agents/",
+  "license": "MIT"
+}

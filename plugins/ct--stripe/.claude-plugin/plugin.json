@@ -1,0 +1,11 @@
+{
+  "name": "ct--stripe",
+  "version": "1.0.0",
+  "description": "Payment processing integration",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/stripe/ai"
+}

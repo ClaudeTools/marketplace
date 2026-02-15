@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/mcp-builder/"
+  "skills": "./skills/mcp-builder/",
+  "license": "MIT",
+  "homepage": "https://github.com/anthropics/skills/tree/main/skills/mcp-builder"
 }

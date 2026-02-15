@@ -1,0 +1,11 @@
+{
+  "name": "ct--puppeteer",
+  "version": "1.0.0",
+  "description": "Headless browser automation",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/modelcontextprotocol/servers"
+}

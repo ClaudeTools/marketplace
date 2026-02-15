@@ -1,0 +1,10 @@
+{
+  "name": "ct--documentation-writer",
+  "version": "1.0.0",
+  "description": "Generates clear, comprehensive docs",
+  "author": {
+    "name": "Community"
+  },
+  "agents": "./agents/",
+  "license": "MIT"
+}

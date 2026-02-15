@@ -1,0 +1,11 @@
+{
+  "name": "ct--neon",
+  "version": "1.0.0",
+  "description": "Serverless Postgres management",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/neondatabase/mcp-server-neon"
+}

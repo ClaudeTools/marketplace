@@ -1,0 +1,10 @@
+{
+  "name": "ct--database-specialist",
+  "version": "1.0.0",
+  "description": "Schema design and query optimisation",
+  "author": {
+    "name": "Community"
+  },
+  "agents": "./agents/",
+  "license": "MIT"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "ct--cloudflare",
+  "version": "1.0.0",
+  "description": "Cloudflare platform management",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/cloudflare/mcp-server-cloudflare"
+}

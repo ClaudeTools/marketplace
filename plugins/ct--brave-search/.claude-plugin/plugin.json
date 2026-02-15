@@ -1,0 +1,11 @@
+{
+  "name": "ct--brave-search",
+  "version": "1.0.0",
+  "description": "Privacy-first web and local search",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/modelcontextprotocol/servers"
+}

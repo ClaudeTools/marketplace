@@ -1,0 +1,11 @@
+{
+  "name": "ct--notion",
+  "version": "1.0.0",
+  "description": "Knowledge base and documentation",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/makenotion/notion-mcp-server"
+}

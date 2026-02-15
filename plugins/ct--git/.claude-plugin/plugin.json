@@ -1,0 +1,11 @@
+{
+  "name": "ct--git",
+  "version": "1.0.0",
+  "description": "Git repository tools",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/modelcontextprotocol/servers"
+}

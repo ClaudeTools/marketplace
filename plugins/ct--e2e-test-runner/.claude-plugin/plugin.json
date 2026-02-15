@@ -1,0 +1,11 @@
+{
+  "name": "ct--e2e-test-runner",
+  "version": "1.0.0",
+  "description": "Playwright end-to-end test automation",
+  "author": {
+    "name": "Community"
+  },
+  "agents": "./agents/",
+  "license": "MIT",
+  "homepage": "https://github.com/affaan-m/everything-claude-code"
+}

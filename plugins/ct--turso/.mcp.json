@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "turso": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "https://www.npmjs.com/package/mcp-turso"
+      ]
+    }
+  }
+}

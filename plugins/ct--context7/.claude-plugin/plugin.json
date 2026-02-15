@@ -1,0 +1,11 @@
+{
+  "name": "ct--context7",
+  "version": "1.0.0",
+  "description": "Real-time documentation for any library",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/upstash/context7"
+}

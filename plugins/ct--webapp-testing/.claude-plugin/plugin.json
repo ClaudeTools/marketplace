@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/webapp-testing/"
+  "skills": "./skills/webapp-testing/",
+  "license": "MIT",
+  "homepage": "https://github.com/anthropics/skills/tree/main/skills/webapp-testing"
 }

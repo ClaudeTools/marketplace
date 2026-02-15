@@ -22,10 +22,30 @@
       ]
     },
     {
+      "name": "ct--accessibility-auditor",
+      "description": "WCAG 2.1 AA compliance checker",
+      "version": "1.0.0",
+      "source": "./plugins/ct--accessibility-auditor",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
       "name": "ct--algorithmic-art",
       "description": "Generative art with p5.js",
       "version": "1.0.0",
       "source": "./plugins/ct--algorithmic-art",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--api-designer",
+      "description": "REST and GraphQL best practices",
+      "version": "1.0.0",
+      "source": "./plugins/ct--api-designer",
       "category": "community",
       "tags": [
         "generated"
@@ -52,10 +72,70 @@
       ]
     },
     {
+      "name": "ct--brave-search",
+      "description": "Privacy-first web and local search",
+      "version": "1.0.0",
+      "source": "./plugins/ct--brave-search",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--bug-hunter",
+      "description": "Systematic debugging and root cause analysis",
+      "version": "1.0.0",
+      "source": "./plugins/ct--bug-hunter",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--build-error-resolver",
+      "description": "Fixes build and compilation errors",
+      "version": "1.0.0",
+      "source": "./plugins/ct--build-error-resolver",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
       "name": "ct--canvas-design",
       "description": "Visual art in PNG and PDF formats",
       "version": "1.0.0",
       "source": "./plugins/ct--canvas-design",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--cloudflare",
+      "description": "Cloudflare platform management",
+      "version": "1.0.0",
+      "source": "./plugins/ct--cloudflare",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--code-explainer",
+      "description": "Makes complex code understandable",
+      "version": "1.0.0",
+      "source": "./plugins/ct--code-explainer",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--code-reviewer",
+      "description": "Thorough code review with actionable feedback",
+      "version": "1.0.0",
+      "source": "./plugins/ct--code-reviewer",
       "category": "community",
       "tags": [
         "generated"
@@ -72,10 +152,50 @@
       ]
     },
     {
+      "name": "ct--context7",
+      "description": "Real-time documentation for any library",
+      "version": "1.0.0",
+      "source": "./plugins/ct--context7",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
       "name": "ct--d3js-visualizations",
       "description": "Data visualizations with D3.js",
       "version": "1.0.0",
       "source": "./plugins/ct--d3js-visualizations",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--database-specialist",
+      "description": "Schema design and query optimisation",
+      "version": "1.0.0",
+      "source": "./plugins/ct--database-specialist",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--dependency-auditor",
+      "description": "Outdated and vulnerable dependency scanner",
+      "version": "1.0.0",
+      "source": "./plugins/ct--dependency-auditor",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--devops-engineer",
+      "description": "CI/CD pipelines and infrastructure",
+      "version": "1.0.0",
+      "source": "./plugins/ct--devops-engineer",
       "category": "community",
       "tags": [
         "generated"
@@ -92,10 +212,60 @@
       ]
     },
     {
+      "name": "ct--documentation-writer",
+      "description": "Generates clear, comprehensive docs",
+      "version": "1.0.0",
+      "source": "./plugins/ct--documentation-writer",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
       "name": "ct--docx",
       "description": "Word document creation and editing",
       "version": "1.0.0",
       "source": "./plugins/ct--docx",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--e2e-test-runner",
+      "description": "Playwright end-to-end test automation",
+      "version": "1.0.0",
+      "source": "./plugins/ct--e2e-test-runner",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--exa-search",
+      "description": "AI-powered web search API",
+      "version": "1.0.0",
+      "source": "./plugins/ct--exa-search",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--fetch",
+      "description": "Web content fetching and conversion",
+      "version": "1.0.0",
+      "source": "./plugins/ct--fetch",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--filesystem",
+      "description": "Secure local file operations",
+      "version": "1.0.0",
+      "source": "./plugins/ct--filesystem",
       "category": "community",
       "tags": [
         "generated"
@@ -112,10 +282,50 @@
       ]
     },
     {
+      "name": "ct--git",
+      "description": "Git repository tools",
+      "version": "1.0.0",
+      "source": "./plugins/ct--git",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--git-workflow-manager",
+      "description": "Branching, commits, and PR management",
+      "version": "1.0.0",
+      "source": "./plugins/ct--git-workflow-manager",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
       "name": "ct--git-worktrees",
       "description": "Parallel development with git worktrees",
       "version": "1.0.0",
       "source": "./plugins/ct--git-worktrees",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--google-drive",
+      "description": "Google Drive file access",
+      "version": "1.0.0",
+      "source": "./plugins/ct--google-drive",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--google-maps",
+      "description": "Location and mapping services",
+      "version": "1.0.0",
+      "source": "./plugins/ct--google-maps",
       "category": "community",
       "tags": [
         "generated"
@@ -152,10 +362,90 @@
       ]
     },
     {
+      "name": "ct--memory",
+      "description": "Persistent knowledge graph memory",
+      "version": "1.0.0",
+      "source": "./plugins/ct--memory",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--migration-assistant",
+      "description": "Framework and version upgrade helper",
+      "version": "1.0.0",
+      "source": "./plugins/ct--migration-assistant",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--neon",
+      "description": "Serverless Postgres management",
+      "version": "1.0.0",
+      "source": "./plugins/ct--neon",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--notion",
+      "description": "Knowledge base and documentation",
+      "version": "1.0.0",
+      "source": "./plugins/ct--notion",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
       "name": "ct--pdf",
       "description": "PDF manipulation and extraction",
       "version": "1.0.0",
       "source": "./plugins/ct--pdf",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--performance-optimizer",
+      "description": "Finds and fixes performance bottlenecks",
+      "version": "1.0.0",
+      "source": "./plugins/ct--performance-optimizer",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--perplexity",
+      "description": "AI-powered research and search",
+      "version": "1.0.0",
+      "source": "./plugins/ct--perplexity",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--planner",
+      "description": "Feature planning and task decomposition",
+      "version": "1.0.0",
+      "source": "./plugins/ct--planner",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--playwright",
+      "description": "Browser automation and testing",
+      "version": "1.0.0",
+      "source": "./plugins/ct--playwright",
       "category": "community",
       "tags": [
         "generated"
@@ -172,10 +462,30 @@
       ]
     },
     {
+      "name": "ct--postgres",
+      "description": "Natural language database queries",
+      "version": "1.0.0",
+      "source": "./plugins/ct--postgres",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
       "name": "ct--pptx",
       "description": "PowerPoint presentation creation",
       "version": "1.0.0",
       "source": "./plugins/ct--pptx",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--puppeteer",
+      "description": "Headless browser automation",
+      "version": "1.0.0",
+      "source": "./plugins/ct--puppeteer",
       "category": "community",
       "tags": [
         "generated"
@@ -196,6 +506,16 @@
       "description": "React Native best practices for agents",
       "version": "1.0.0",
       "source": "./plugins/ct--react-native-guidelines",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--refactoring-assistant",
+      "description": "Improves code quality without changing behaviour",
+      "version": "1.0.0",
+      "source": "./plugins/ct--refactoring-assistant",
       "category": "community",
       "tags": [
         "generated"
@@ -232,10 +552,50 @@
       ]
     },
     {
+      "name": "ct--security-auditor",
+      "description": "OWASP-focused vulnerability scanner",
+      "version": "1.0.0",
+      "source": "./plugins/ct--security-auditor",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--sentry",
+      "description": "Error tracking and performance monitoring",
+      "version": "1.0.0",
+      "source": "./plugins/ct--sentry",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--sequential-thinking",
+      "description": "Step-by-step reasoning for complex problems",
+      "version": "1.0.0",
+      "source": "./plugins/ct--sequential-thinking",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
       "name": "ct--skill-creator",
       "description": "Create new Claude Code skills",
       "version": "1.0.0",
       "source": "./plugins/ct--skill-creator",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--slack",
+      "description": "Slack workspace integration",
+      "version": "1.0.0",
+      "source": "./plugins/ct--slack",
       "category": "community",
       "tags": [
         "generated"
@@ -252,10 +612,30 @@
       ]
     },
     {
+      "name": "ct--stripe",
+      "description": "Payment processing integration",
+      "version": "1.0.0",
+      "source": "./plugins/ct--stripe",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
       "name": "ct--subagent-driven-development",
       "description": "Two-stage review with subagents",
       "version": "1.0.0",
       "source": "./plugins/ct--subagent-driven-development",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--supabase",
+      "description": "Supabase project management",
+      "version": "1.0.0",
+      "source": "./plugins/ct--supabase",
       "category": "community",
       "tags": [
         "generated"
@@ -272,6 +652,16 @@
       ]
     },
     {
+      "name": "ct--tdd-guide",
+      "description": "Test-driven development workflow",
+      "version": "1.0.0",
+      "source": "./plugins/ct--tdd-guide",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
       "name": "ct--test-driven-development",
       "description": "RED-GREEN-REFACTOR methodology",
       "version": "1.0.0",
@@ -282,10 +672,40 @@
       ]
     },
     {
+      "name": "ct--test-writer",
+      "description": "Generates comprehensive test suites",
+      "version": "1.0.0",
+      "source": "./plugins/ct--test-writer",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
       "name": "ct--theme-factory",
       "description": "Professional theme styling toolkit",
       "version": "1.0.0",
       "source": "./plugins/ct--theme-factory",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--time",
+      "description": "Time and timezone utilities",
+      "version": "1.0.0",
+      "source": "./plugins/ct--time",
+      "category": "community",
+      "tags": [
+        "generated"
+      ]
+    },
+    {
+      "name": "ct--turso",
+      "description": "Edge SQLite database management",
+      "version": "1.0.0",
+      "source": "./plugins/ct--turso",
       "category": "community",
       "tags": [
         "generated"

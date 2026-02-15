@@ -1,0 +1,11 @@
+{
+  "name": "ct--build-error-resolver",
+  "version": "1.0.0",
+  "description": "Fixes build and compilation errors",
+  "author": {
+    "name": "Community"
+  },
+  "agents": "./agents/",
+  "license": "MIT",
+  "homepage": "https://github.com/affaan-m/everything-claude-code"
+}

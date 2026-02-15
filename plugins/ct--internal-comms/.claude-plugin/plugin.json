@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/internal-comms/"
+  "skills": "./skills/internal-comms/",
+  "license": "MIT",
+  "homepage": "https://github.com/anthropics/skills/tree/main/skills/internal-comms"
 }

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "perplexity": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "https://www.npmjs.com/package/@perplexity-ai/mcp-server"
+      ]
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "ct--git-workflow-manager",
+  "version": "1.0.0",
+  "description": "Branching, commits, and PR management",
+  "author": {
+    "name": "Community"
+  },
+  "agents": "./agents/",
+  "license": "MIT"
+}

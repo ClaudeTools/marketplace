@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "https://www.npmjs.com/package/@playwright/mcp"
+      ]
+    }
+  }
+}

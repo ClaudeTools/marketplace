@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/frontend-design/"
+  "skills": "./skills/frontend-design/",
+  "license": "MIT",
+  "homepage": "https://github.com/anthropics/skills/tree/main/skills/frontend-design"
 }

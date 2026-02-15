@@ -5,5 +5,7 @@
   "author": {
     "name": "Community"
   },
-  "skills": "./skills/web-artifacts-builder/"
+  "skills": "./skills/web-artifacts-builder/",
+  "license": "MIT",
+  "homepage": "https://github.com/anthropics/skills/tree/main/skills/web-artifacts-builder"
 }

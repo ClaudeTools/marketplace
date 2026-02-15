@@ -1,0 +1,11 @@
+{
+  "name": "ct--google-maps",
+  "version": "1.0.0",
+  "description": "Location and mapping services",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/modelcontextprotocol/servers"
+}

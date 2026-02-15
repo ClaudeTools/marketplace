@@ -1,0 +1,11 @@
+{
+  "name": "ct--perplexity",
+  "version": "1.0.0",
+  "description": "AI-powered research and search",
+  "author": {
+    "name": "Community"
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "homepage": "https://github.com/perplexityai/modelcontextprotocol"
+}

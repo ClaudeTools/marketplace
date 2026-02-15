@@ -1,0 +1,11 @@
+{
+  "name": "ct--planner",
+  "version": "1.0.0",
+  "description": "Feature planning and task decomposition",
+  "author": {
+    "name": "Community"
+  },
+  "agents": "./agents/",
+  "license": "MIT",
+  "homepage": "https://github.com/affaan-m/everything-claude-code"
+}

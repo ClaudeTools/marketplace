@@ -1,0 +1,11 @@
+{
+  "name": "ct--refactoring-assistant",
+  "version": "1.0.0",
+  "description": "Improves code quality without changing behaviour",
+  "author": {
+    "name": "Community"
+  },
+  "agents": "./agents/",
+  "license": "MIT",
+  "homepage": "https://github.com/VoltAgent/awesome-claude-code-subagents"
+}

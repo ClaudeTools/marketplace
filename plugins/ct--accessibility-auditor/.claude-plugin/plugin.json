@@ -1,0 +1,10 @@
+{
+  "name": "ct--accessibility-auditor",
+  "version": "1.0.0",
+  "description": "WCAG 2.1 AA compliance checker",
+  "author": {
+    "name": "Community"
+  },
+  "agents": "./agents/",
+  "license": "MIT"
+}
