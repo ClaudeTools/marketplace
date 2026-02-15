@@ -1,6 +1,8 @@
 {
-  "claudetools": {
-    "command": "npx",
-    "args": ["-y", "@claudetools/sync-engine", "stdio"]
+  "mcpServers": {
+    "claudetools": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/scripts/start-sync-engine.sh",
+      "args": ["stdio"]
+    }
   }
 }

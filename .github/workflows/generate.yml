@@ -38,33 +38,154 @@ jobs:
           }
           fs.mkdirSync(pluginsDir, { recursive: true });
 
-          // Generate plugin dirs for each skill
+          // --- YAML frontmatter builder ---
+          function buildFrontmatter(fm) {
+            if (!fm || Object.keys(fm).length === 0) return '';
+            let yaml = '---\n';
+            for (const [k, v] of Object.entries(fm)) {
+              if (v === null || v === undefined) continue;
+              if (Array.isArray(v)) {
+                yaml += k + ':\n';
+                for (const item of v) {
+                  if (typeof item === 'object') {
+                    yaml += '  - ' + JSON.stringify(item) + '\n';
+                  } else {
+                    yaml += '  - ' + item + '\n';
+                  }
+                }
+              } else if (typeof v === 'boolean') {
+                yaml += k + ': ' + (v ? 'true' : 'false') + '\n';
+              } else {
+                const str = String(v);
+                const needsQuote = /[:\\[\\]{}#>|*&!@]/.test(str) || str.includes('\\n');
+                yaml += k + ': ' + (needsQuote ? JSON.stringify(str) : str) + '\n';
+              }
+            }
+            yaml += '---\n\n';
+            return yaml;
+          }
+
+          // --- Write subdirectory files (scripts, references, assets) ---
+          function writeSubdirFiles(baseDir, subdir, files) {
+            if (!files || files.length === 0) return;
+            const dir = path.join(baseDir, subdir);
+            fs.mkdirSync(dir, { recursive: true });
+            for (const f of files) {
+              if (!f.filename || !f.content) continue;
+              // Security: strip path components
+              const safeName = path.basename(f.filename);
+              fs.writeFileSync(path.join(dir, safeName), f.content);
+              if (subdir === 'scripts') {
+                fs.chmodSync(path.join(dir, safeName), 0o755);
+              }
+            }
+          }
+
+          // --- Generate skill plugins ---
           for (const skill of (exts.skills || [])) {
             const slug = skill.slug;
             if (!slug || !/^[a-z0-9][a-z0-9_-]*$/.test(slug)) continue;
 
             const dir = path.join(pluginsDir, 'ct--' + slug);
             const metaDir = path.join(dir, '.claude-plugin');
-            const skillsDir = path.join(dir, 'skills', slug);
+            const skillDir = path.join(dir, 'skills', slug);
 
             fs.mkdirSync(metaDir, { recursive: true });
-            fs.mkdirSync(skillsDir, { recursive: true });
+            fs.mkdirSync(skillDir, { recursive: true });
 
-            // plugin.json
-            fs.writeFileSync(path.join(metaDir, 'plugin.json'), JSON.stringify({
+            // plugin.json — only official schema fields
+            const pluginMeta = {
               name: 'ct--' + slug,
-              version: '1.0.0',
-              description: skill.tagline || skill.name,
-              author: { name: skill.author || 'Community' },
+              version: skill.version || '1.0.0',
+              description: skill.tagline || skill.description || skill.name,
+              author: { name: 'Community' },
               skills: './skills/' + slug + '/'
-            }, null, 2));
+            };
+            if (skill.license) pluginMeta.license = skill.license;
+            if (skill.github_url) pluginMeta.homepage = skill.github_url;
+            fs.writeFileSync(path.join(metaDir, 'plugin.json'), JSON.stringify(pluginMeta, null, 2) + '\\n');
 
-            // SKILL.md
-            const content = skill.body_content || '# ' + skill.name;
-            fs.writeFileSync(path.join(skillsDir, 'SKILL.md'), content);
+            // SKILL.md with frontmatter + content
+            const frontmatter = buildFrontmatter(skill.frontmatter);
+            const content = skill.content || '# ' + skill.name;
+            fs.writeFileSync(path.join(skillDir, 'SKILL.md'), frontmatter + content);
+
+            // Write scripts, references, assets
+            writeSubdirFiles(skillDir, 'scripts', skill.scripts);
+            writeSubdirFiles(skillDir, 'references', skill.references);
+            writeSubdirFiles(skillDir, 'assets', skill.assets);
           }
 
-          console.log('Generated plugin directories');
+          // --- Generate agent plugins ---
+          for (const ag of (exts.agents || [])) {
+            const slug = ag.slug;
+            if (!slug || !/^[a-z0-9][a-z0-9_-]*$/.test(slug)) continue;
+
+            const dir = path.join(pluginsDir, 'ct--' + slug);
+            const metaDir = path.join(dir, '.claude-plugin');
+            const agentsDir = path.join(dir, 'agents');
+
+            fs.mkdirSync(metaDir, { recursive: true });
+            fs.mkdirSync(agentsDir, { recursive: true });
+
+            const pluginMeta = {
+              name: 'ct--' + slug,
+              version: ag.version || '1.0.0',
+              description: ag.tagline || ag.description || ag.name,
+              author: { name: 'Community' },
+              agents: './agents/'
+            };
+            if (ag.license) pluginMeta.license = ag.license;
+            if (ag.github_url) pluginMeta.homepage = ag.github_url;
+            fs.writeFileSync(path.join(metaDir, 'plugin.json'), JSON.stringify(pluginMeta, null, 2) + '\\n');
+
+            // Agent .md file with frontmatter
+            let agentMd = '---\\n';
+            agentMd += 'name: ' + slug + '\\n';
+            if (ag.description) agentMd += 'description: ' + ag.description + '\\n';
+            agentMd += '---\\n\\n';
+            agentMd += ag.content || '# ' + ag.name;
+            fs.writeFileSync(path.join(agentsDir, slug + '.md'), agentMd);
+          }
+
+          // --- Generate MCP server plugins ---
+          for (const mcp of (exts.mcp_servers || [])) {
+            const slug = mcp.slug;
+            if (!slug || !/^[a-z0-9][a-z0-9_-]*$/.test(slug)) continue;
+            if (!mcp.npm_package) continue; // Skip MCP servers without an npm package
+
+            const dir = path.join(pluginsDir, 'ct--' + slug);
+            const metaDir = path.join(dir, '.claude-plugin');
+
+            fs.mkdirSync(metaDir, { recursive: true });
+
+            const pluginMeta = {
+              name: 'ct--' + slug,
+              version: mcp.version || '1.0.0',
+              description: mcp.tagline || mcp.description || mcp.name,
+              author: { name: 'Community' },
+              mcpServers: './.mcp.json'
+            };
+            if (mcp.license) pluginMeta.license = mcp.license;
+            if (mcp.github_url) pluginMeta.homepage = mcp.github_url;
+            fs.writeFileSync(path.join(metaDir, 'plugin.json'), JSON.stringify(pluginMeta, null, 2) + '\\n');
+
+            // .mcp.json
+            const mcpConfig = {
+              mcpServers: {
+                [slug]: {
+                  command: 'npx',
+                  args: ['-y', mcp.npm_package]
+                }
+              }
+            };
+            fs.writeFileSync(path.join(dir, '.mcp.json'), JSON.stringify(mcpConfig, null, 2) + '\\n');
+          }
+
+          const skillCount = (exts.skills || []).length;
+          const agentCount = (exts.agents || []).length;
+          const mcpCount = (exts.mcp_servers || []).filter(m => m.npm_package).length;
+          console.log('Generated ' + skillCount + ' skill, ' + agentCount + ' agent, ' + mcpCount + ' MCP plugins');
           "
 
       - name: Update marketplace.json plugin list
@@ -81,7 +202,7 @@ jobs:
           const pluginsDir = 'plugins';
           const generated = [];
           if (fs.existsSync(pluginsDir)) {
-            for (const entry of fs.readdirSync(pluginsDir)) {
+            for (const entry of fs.readdirSync(pluginsDir).sort()) {
               const pluginJsonPath = path.join(pluginsDir, entry, '.claude-plugin', 'plugin.json');
               if (fs.existsSync(pluginJsonPath)) {
                 const meta = JSON.parse(fs.readFileSync(pluginJsonPath, 'utf8'));

@@ -4,5 +4,7 @@
   "description": "ClaudeTools — stack management, marketplace, and MCP integrations",
   "author": { "name": "ClaudeTools", "url": "https://claudetools.com" },
   "skills": "./skills/",
-  "agents": "./agents/"
+  "agents": "./agents/",
+  "hooks": "./hooks/hooks.json",
+  "mcpServers": "./.mcp.json"
 }
