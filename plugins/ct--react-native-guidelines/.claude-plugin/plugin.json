@@ -6,7 +6,5 @@
     "name": "Community"
   },
   "managed_by": "claudetools-marketplace-ci",
-  "skills": [
-    "skills/react-native-guidelines/"
-  ]
+  "skills": "./skills/react-native-guidelines/"
 }

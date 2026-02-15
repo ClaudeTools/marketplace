@@ -6,7 +6,5 @@
     "name": "Community"
   },
   "managed_by": "claudetools-marketplace-ci",
-  "skills": [
-    "skills/playwright-automation/"
-  ]
+  "skills": "./skills/playwright-automation/"
 }

@@ -6,7 +6,5 @@
     "name": "Community"
   },
   "managed_by": "claudetools-marketplace-ci",
-  "skills": [
-    "skills/web-artifacts-builder/"
-  ]
+  "skills": "./skills/web-artifacts-builder/"
 }

@@ -6,7 +6,5 @@
     "name": "Community"
   },
   "managed_by": "claudetools-marketplace-ci",
-  "skills": [
-    "skills/brand-guidelines/"
-  ]
+  "skills": "./skills/brand-guidelines/"
 }
