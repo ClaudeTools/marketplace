@@ -56,7 +56,6 @@ jobs:
               version: '1.0.0',
               description: skill.tagline || skill.name,
               author: { name: skill.author || 'Community' },
-              managed_by: 'claudetools-marketplace-ci',
               skills: './skills/' + slug + '/'
             }, null, 2));
 
