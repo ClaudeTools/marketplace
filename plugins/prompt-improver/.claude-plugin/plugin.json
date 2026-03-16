@@ -1,6 +1,6 @@
 {
   "name": "prompt-improver",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "description": "Transforms vague prompts into best-in-class XML-structured prompts optimised for Claude Code execution",
   "author": {
     "name": "Owen Innes",
