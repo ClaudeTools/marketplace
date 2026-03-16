@@ -1,6 +1,6 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "claudetools-marketplace",
+  "name": "claudetools",
   "version": "1.0.0",
   "description": "Claude Code plugins by ClaudeTools — guardrails, prompt engineering, and developer tools",
   "owner": {
