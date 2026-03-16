@@ -1,0 +1,28 @@
+{
+  "name": "codebase-pilot",
+  "version": "3.1.0",
+  "description": "Lightweight codebase index for AI agent navigation — tree-sitter + SQLite",
+  "type": "module",
+  "main": "dist/cli.js",
+  "bin": {
+    "codebase-pilot": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "tree-sitter": "^0.21.1",
+    "tree-sitter-typescript": "^0.23.2",
+    "tree-sitter-javascript": "^0.23.1",
+    "better-sqlite3": "^11.8.1",
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "glob": "^11.0.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.13.14",
+    "typescript": "^5.8.2"
+  }
+}

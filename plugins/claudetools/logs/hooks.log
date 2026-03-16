@@ -1,0 +1,489 @@
+2026-03-16T04:44:48Z | aggregate-session.sh | agent=test type=main tool=none | session=agg-sess-001 calls=0 failures=0 edits=0 files=0 churn=0.00
+2026-03-16T04:44:49Z | aggregate-session.sh | agent=test type=main tool=none | session=agg-sess-002 calls=0 failures=0 edits=0 files=0 churn=0.00
+2026-03-16T04:44:49Z | aggregate-session.sh | agent=test type=main tool=none | session=agg-sess-empty calls=0 failures=0 edits=0 files=0 churn=0.00
+2026-03-16T04:44:49Z | aggregate-session.sh | agent=test type=main tool=none | session=sess-with-special calls=0 failures=0 edits=0 files=0 churn=0.00
+2026-03-16T04:44:50Z | archive-before-compact.sh | agent=main type=main tool=none | archiving state to /tmp/claude-precompact-test-archive-12225.json
+2026-03-16T04:44:50Z | archive-before-compact.sh | agent=main type=main tool=none | state archived successfully
+2026-03-16T04:44:50Z | archive-before-compact.sh | agent=main type=main tool=none | archiving state to /tmp/claude-precompact-test-branch-12388.json
+2026-03-16T04:44:50Z | archive-before-compact.sh | agent=main type=main tool=none | state archived successfully
+2026-03-16T04:44:50Z | archive-before-compact.sh | agent=main type=main tool=none | no session_id, skipping
+2026-03-16T04:44:50Z | archive-before-compact.sh | agent=main type=main tool=none | archiving state to /tmp/claude-precompact-test-uncommitted-12591.json
+2026-03-16T04:44:51Z | archive-before-compact.sh | agent=main type=main tool=none | state archived successfully
+2026-03-16T04:44:51Z | archive-before-compact.sh | agent=main type=main tool=none | archiving state to /tmp/claude-precompact-test-nongit-12747.json
+2026-03-16T04:44:51Z | restore-after-compact.sh | agent=main type=main tool=none | restoring context from /tmp/claude-precompact-test-restore-12805.json
+2026-03-16T04:44:51Z | restore-after-compact.sh | agent=main type=main tool=none | context restored and state file cleaned up
+2026-03-16T04:44:51Z | restore-after-compact.sh | agent=main type=main tool=none | restoring context from /tmp/claude-precompact-test-cleanup-12888.json
+2026-03-16T04:44:51Z | restore-after-compact.sh | agent=main type=main tool=none | context restored and state file cleaned up
+2026-03-16T04:44:51Z | restore-after-compact.sh | agent=main type=main tool=none | no state file found, skipping
+2026-03-16T04:44:51Z | restore-after-compact.sh | agent=main type=main tool=none | no session_id, skipping
+2026-03-16T04:44:52Z | archive-before-compact.sh | agent=main type=main tool=none | archiving state to /tmp/claude-precompact-test-roundtrip-13058.json
+2026-03-16T04:44:52Z | archive-before-compact.sh | agent=main type=main tool=none | state archived successfully
+2026-03-16T04:44:52Z | restore-after-compact.sh | agent=main type=main tool=none | restoring context from /tmp/claude-precompact-test-roundtrip-13058.json
+2026-03-16T04:44:52Z | restore-after-compact.sh | agent=main type=main tool=none | context restored and state file cleaned up
+2026-03-16T04:44:52Z | auto-approve-safe.sh | agent=test-agent type=main tool=Read | invoked
+2026-03-16T04:44:52Z | auto-approve-safe.sh | agent=test-agent type=main tool=Read | decision=allow exit=0 reason=safe tool: Read
+2026-03-16T04:44:52Z | auto-approve-safe.sh | agent=test-agent type=main tool=Glob | invoked
+2026-03-16T04:44:52Z | auto-approve-safe.sh | agent=test-agent type=main tool=Glob | decision=allow exit=0 reason=safe tool: Glob
+2026-03-16T04:44:53Z | auto-approve-safe.sh | agent=test-agent type=main tool=Grep | invoked
+2026-03-16T04:44:53Z | auto-approve-safe.sh | agent=test-agent type=main tool=Grep | decision=allow exit=0 reason=safe tool: Grep
+2026-03-16T04:44:53Z | auto-approve-safe.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:44:53Z | auto-approve-safe.sh | agent=test-agent type=main tool=Edit | decision=defer exit=0 reason=
+2026-03-16T04:44:53Z | auto-approve-safe.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:44:53Z | auto-approve-safe.sh | agent=test-agent type=main tool=Write | decision=defer exit=0 reason=
+2026-03-16T04:44:53Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:53Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe file inspection: ls -la /tmp
+2026-03-16T04:44:53Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:53Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe file inspection: cat /tmp/foo.txt
+2026-03-16T04:44:54Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:54Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe file inspection: head -20 /tmp/foo.txt
+2026-03-16T04:44:54Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:54Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe file inspection: tail -f /tmp/log
+2026-03-16T04:44:54Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:54Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe file inspection: wc -l /tmp/foo.txt
+2026-03-16T04:44:54Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:54Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe file inspection: find . -name *.ts
+2026-03-16T04:44:54Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:54Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe file inspection: tree src/
+2026-03-16T04:44:54Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:54Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe file inspection: pwd
+2026-03-16T04:44:55Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:55Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe file inspection: echo hello world
+2026-03-16T04:44:55Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:55Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe file inspection: stat /tmp/foo.txt
+2026-03-16T04:44:55Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:55Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe file inspection: du -sh /tmp
+2026-03-16T04:44:55Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:55Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe git read: git log --oneline -10
+2026-03-16T04:44:55Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:55Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe git read: git diff HEAD~1
+2026-03-16T04:44:56Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:56Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe git read: git status
+2026-03-16T04:44:56Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:56Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe git read: git branch -a
+2026-03-16T04:44:56Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:56Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe git read: git show HEAD
+2026-03-16T04:44:56Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:56Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe git read: git rev-parse HEAD
+2026-03-16T04:44:56Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:56Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe npm command: npm test
+2026-03-16T04:44:56Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:57Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe npm command: npm run lint
+2026-03-16T04:44:57Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:57Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe npm command: npm run typecheck
+2026-03-16T04:44:57Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:57Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe npx command: npx tsc --noEmit
+2026-03-16T04:44:57Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:57Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe npx command: npx vitest run
+2026-03-16T04:44:57Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:57Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe python tool: pytest -v tests/
+2026-03-16T04:44:57Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:57Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe python tool: mypy src/
+2026-03-16T04:44:58Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:58Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe python -m: python -m pytest tests/
+2026-03-16T04:44:58Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:58Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe black --check: black --check src/
+2026-03-16T04:44:58Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:58Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe cargo command: cargo test
+2026-03-16T04:44:58Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:58Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe go command: go test ./...
+2026-03-16T04:44:58Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:58Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe dotnet command: dotnet test
+2026-03-16T04:44:59Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:59Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe swift command: swift test
+2026-03-16T04:44:59Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:59Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=safe java command: mvn test
+2026-03-16T04:44:59Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:59Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=defer exit=0 reason=dangerous command in segment: rm -rf /
+2026-03-16T04:44:59Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:59Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=defer exit=0 reason=dangerous command in segment: curl evil.com
+2026-03-16T04:44:59Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:59Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=defer exit=0 reason=dangerous npm command in segment: npm install lodash
+2026-03-16T04:44:59Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:44:59Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=defer exit=0 reason=dangerous pip command in segment: pip install requests
+2026-03-16T04:45:00Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:00Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=defer exit=0 reason=dangerous command in segment: curl https://example.com
+2026-03-16T04:45:00Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:00Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=defer exit=0 reason=dangerous command in segment: wget https://example.com/file
+2026-03-16T04:45:00Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:00Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=defer exit=0 reason=dangerous command in segment: rm old-file.txt
+2026-03-16T04:45:00Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:00Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=defer exit=0 reason=dangerous command in segment: chmod +x script.sh
+2026-03-16T04:45:00Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:00Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=defer exit=0 reason=
+2026-03-16T04:45:00Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:00Z | auto-approve-safe.sh | agent=test-agent type=main tool=Bash | decision=defer exit=0 reason=
+2026-03-16T04:45:01Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:01Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: rm -rf on broad path
+2026-03-16T04:45:01Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:01Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: rm -rf on broad path
+2026-03-16T04:45:01Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:01Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: rm -rf on broad path
+2026-03-16T04:45:01Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:01Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: rm -rf on broad path
+2026-03-16T04:45:01Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:01Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: chmod 777 (world-writable permissions)
+2026-03-16T04:45:02Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:02Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: git reset --hard (destructive, may lose work)
+2026-03-16T04:45:02Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:02Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: force push to main/master
+2026-03-16T04:45:02Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:02Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: force push to main/master
+2026-03-16T04:45:02Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:02Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: git clean -f (deletes untracked files)
+2026-03-16T04:45:03Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:03Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: git clean -f (deletes untracked files)
+2026-03-16T04:45:03Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:03Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: git clean -f (deletes untracked files)
+2026-03-16T04:45:03Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:03Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: git add -A/. (stage specific files to avoid accidental secret commits)
+2026-03-16T04:45:03Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:03Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: git add -A/. (stage specific files to avoid accidental secret commits)
+2026-03-16T04:45:03Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:03Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: git add -A/. (stage specific files to avoid accidental secret commits)
+2026-03-16T04:45:04Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:04Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: git add of sensitive file (.env/.pem/.key/credentials)
+2026-03-16T04:45:04Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:04Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: git add of sensitive file (.env/.pem/.key/credentials)
+2026-03-16T04:45:04Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:04Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: git add of sensitive file (.env/.pem/.key/credentials)
+2026-03-16T04:45:04Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:04Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: git add of sensitive file (.env/.pem/.key/credentials)
+2026-03-16T04:45:04Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:05Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: curl/wget piped to shell (supply chain risk)
+2026-03-16T04:45:05Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:05Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: curl/wget piped to shell (supply chain risk)
+2026-03-16T04:45:05Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:05Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: package publish/upload (accidental publishing risk)
+2026-03-16T04:45:05Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:05Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: package publish/upload (accidental publishing risk)
+2026-03-16T04:45:05Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:05Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: package publish/upload (accidental publishing risk)
+2026-03-16T04:45:06Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:06Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: .env content piped to another command (secret leakage risk)
+2026-03-16T04:45:06Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:06Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: docker run --privileged (container escape risk)
+2026-03-16T04:45:06Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:06Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: find -delete (bulk file deletion)
+2026-03-16T04:45:06Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:06Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: dd writing to device
+2026-03-16T04:45:07Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:07Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: deploy without typecheck. Run typecheck first: npm run typecheck && npm run deploy
+2026-03-16T04:45:07Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:07Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: deploy without typecheck. Run typecheck first: npm run typecheck && npm run deploy
+2026-03-16T04:45:07Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:07Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: deploy without typecheck. Run typecheck first: npm run typecheck && npm run deploy
+2026-03-16T04:45:07Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:07Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Blocked: deploy without typecheck. Run typecheck first: npm run typecheck && npm run deploy
+2026-03-16T04:45:07Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:08Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=
+2026-03-16T04:45:08Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:08Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Warning: Package name looks hallucinated (too many hyphenated segments) — verify it exists
+2026-03-16T04:45:08Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:08Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=
+2026-03-16T04:45:08Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:08Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=
+2026-03-16T04:45:08Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:08Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=
+2026-03-16T04:45:09Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:09Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=
+2026-03-16T04:45:09Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:09Z | block-dangerous-bash.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=
+2026-03-16T04:45:09Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:09Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | decision=block exit=0 reason=Blocked: TODO/FIXME/STUB marker — implement the feature or skip it
+2026-03-16T04:45:09Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:09Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | decision=block exit=0 reason=Blocked: TODO/FIXME/STUB marker — implement the feature or skip it
+2026-03-16T04:45:10Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:10Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | decision=block exit=0 reason=Blocked: TODO/FIXME/STUB marker — implement the feature or skip it
+2026-03-16T04:45:10Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:10Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | decision=block exit=0 reason=Blocked: stub throw (not implemented/todo/placeholder)
+2026-03-16T04:45:10Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:10Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | decision=block exit=0 reason=Blocked: NotImplementedError — implement fully or tell the user you can't
+2026-03-16T04:45:10Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:10Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | decision=allow exit=0 reason=
+2026-03-16T04:45:10Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:11Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | decision=allow exit=0 reason=
+2026-03-16T04:45:11Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:11Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | decision=allow exit=0 reason=
+2026-03-16T04:45:11Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:11Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | decision=allow exit=0 reason=
+2026-03-16T04:45:11Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:11Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | decision=allow exit=0 reason=
+2026-03-16T04:45:11Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:12Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | decision=allow exit=0 reason=
+2026-03-16T04:45:12Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:12Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | decision=block exit=0 reason=Blocked: TODO/FIXME/STUB marker — implement the feature or skip it
+2026-03-16T04:45:12Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:12Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | decision=allow exit=0 reason=
+2026-03-16T04:45:12Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:12Z | block-stub-writes.sh | agent=test-agent type=main tool=Write | decision=allow exit=0 reason=
+2026-03-16T04:45:12Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:12Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Cross-directory file move detected. Rule: Don't rename files, restructure directories, or add dependencies unless that's the task (no-shortcuts.md). Your current task does not mention restructuring. If restructuring is needed, update the task description first or ask the user.
+2026-03-16T04:45:12Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:12Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=
+2026-03-16T04:45:13Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:13Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Bash | restructure authorized by task
+2026-03-16T04:45:13Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=
+2026-03-16T04:45:13Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:13Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Bash | decision=block exit=0 reason=Deep directory structure creation detected. Rule: Don't rename files, restructure directories, or add dependencies unless that's the task (no-shortcuts.md). Your current task does not mention restructuring. If restructuring is needed, update the task description first or ask the user.
+2026-03-16T04:45:13Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:13Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=
+2026-03-16T04:45:13Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Read | invoked
+2026-03-16T04:45:13Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Read | decision=allow exit=0 reason=
+2026-03-16T04:45:13Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:13Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=
+2026-03-16T04:45:13Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:13Z | block-unasked-restructure.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=
+2026-03-16T04:45:15Z | check-mock-in-prod.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:15Z | check-mock-in-prod.sh | agent=test-agent type=main tool=Edit | decision=warn exit=1 reason=mock patterns in new_string content
+2026-03-16T04:45:15Z | check-mock-in-prod.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:15Z | check-mock-in-prod.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:15Z | check-mock-in-prod.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:15Z | check-mock-in-prod.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:15Z | check-mock-in-prod.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:15Z | check-mock-in-prod.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:15Z | check-mock-in-prod.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:15Z | check-mock-in-prod.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:16Z | check-mock-in-prod.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:16Z | check-mock-in-prod.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:16Z | config-audit-trail.sh | agent=test type=main tool=none | config change recorded source=user file=/home/user/.claude/CLAUDE.md
+2026-03-16T04:45:16Z | config-audit-trail.sh | agent=test type=main tool=none | config change recorded source=hook file=/project/.claude/settings.json
+2026-03-16T04:45:16Z | config-audit-trail.sh | agent=test type=main tool=none | config change recorded source=user "admin" file=/path/with spaces/file.json
+2026-03-16T04:45:16Z | desktop-alert.sh | agent=main type=main tool=none | sending desktop alert type=permission_prompt
+2026-03-16T04:45:17Z | desktop-alert.sh | agent=main type=main tool=none | sending desktop alert type=idle_prompt
+2026-03-16T04:45:17Z | desktop-alert.sh | agent=main type=main tool=none | skipped notification type=task_complete
+2026-03-16T04:45:17Z | desktop-alert.sh | agent=main type=main tool=none | skipped notification type=
+2026-03-16T04:45:17Z | doc-manager.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:17Z | doc-manager.sh | agent=test-agent type=main tool=Edit | processing doc file: /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.XHLb1LiuTC/project/docs/valid-doc.md
+2026-03-16T04:45:17Z | doc-manager.sh | agent=test-agent type=main tool=Edit | auto-updated 'updated:' field to 2026-03-16
+2026-03-16T04:45:17Z | doc-manager.sh | agent=test-agent type=main tool=Edit | doc validation passed: valid-doc.md
+2026-03-16T04:45:17Z | doc-manager.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:17Z | doc-manager.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:17Z | doc-manager.sh | agent=test-agent type=main tool=Edit | processing doc file: /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.QkuSFH9uZe/project/docs/Uppercase-Doc.md
+2026-03-16T04:45:17Z | doc-manager.sh | agent=test-agent type=main tool=Edit | auto-updated 'updated:' field to 2026-03-16
+2026-03-16T04:45:17Z | doc-manager.sh | agent=test-agent type=main tool=Edit | decision=warn exit=1 reason=doc standards violation: Uppercase-Doc.md
+2026-03-16T04:45:17Z | doc-manager.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:17Z | doc-manager.sh | agent=test-agent type=main tool=Edit | processing doc file: /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.J90JS2UUnP/project/docs/no-frontmatter.md
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | decision=warn exit=1 reason=doc standards violation: no-frontmatter.md
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | processing doc file: /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.30V1Xq9qz9/project/docs/generic-title.md
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | auto-updated 'updated:' field to 2026-03-16
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | decision=warn exit=1 reason=doc standards violation: generic-title.md
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | processing doc file: /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.UZAIlcuShp/project/docs/old-but-valid.md
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | auto-updated 'updated:' field to 2026-03-16
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | decision=warn exit=1 reason=doc standards violation: old-but-valid.md
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | processing doc file: /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.j8AzgsZyIP/project/docs/stale-doc.md
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | auto-updated 'updated:' field to 2026-03-16
+2026-03-16T04:45:18Z | doc-manager.sh | agent=test-agent type=main tool=Edit | decision=warn exit=1 reason=doc standards violation: stale-doc.md
+2026-03-16T04:45:19Z | dynamic-rules.sh | agent=test-agent type=main tool=Read | detected project type=node
+2026-03-16T04:45:19Z | dynamic-rules.sh | agent=test-agent type=main tool=Read | detected project type=rust
+2026-03-16T04:45:19Z | dynamic-rules.sh | agent=test-agent type=main tool=Read | detected project type=python
+2026-03-16T04:45:19Z | dynamic-rules.sh | agent=test-agent type=main tool=Read | detected project type=go
+2026-03-16T04:45:19Z | dynamic-rules.sh | agent=test-agent type=main tool=Read | detected project type=general
+2026-03-16T04:45:20Z | dynamic-rules.sh | agent=test-agent type=main tool=Read | detected project type=general
+2026-03-16T04:45:20Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:20Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | file=/src/app.ts edit_count=1
+2026-03-16T04:45:20Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:21Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:21Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | file=/src/app.ts edit_count=2
+2026-03-16T04:45:21Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:21Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:21Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | file=/src/app.ts edit_count=3
+2026-03-16T04:45:21Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | decision=warn exit=1 reason=file app.ts edited 3 times
+2026-03-16T04:45:22Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:22Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | file=/src/a.ts edit_count=3
+2026-03-16T04:45:22Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | decision=warn exit=1 reason=file a.ts edited 3 times
+2026-03-16T04:45:22Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:22Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | file=/src/b.ts edit_count=2
+2026-03-16T04:45:22Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:22Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:22Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:23Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:23Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:23Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:23Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:23Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:23Z | edit-frequency-guard.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:23Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:23Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | decision=warn exit=1 reason=deploy detected, verification required
+2026-03-16T04:45:23Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:23Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | decision=warn exit=1 reason=deploy detected, verification required
+2026-03-16T04:45:23Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:23Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=
+2026-03-16T04:45:24Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:24Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=
+2026-03-16T04:45:24Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:24Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | decision=warn exit=1 reason=deploy detected, verification required
+2026-03-16T04:45:24Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:24Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | decision=warn exit=1 reason=deploy detected, verification required
+2026-03-16T04:45:24Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:24Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | deploy command failed, skipping verification reminder
+2026-03-16T04:45:24Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | decision=allow exit=0 reason=
+2026-03-16T04:45:24Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | invoked
+2026-03-16T04:45:24Z | enforce-deploy-then-verify.sh | agent=test-agent type=main tool=Bash | decision=warn exit=1 reason=deploy detected, verification required
+2026-03-16T04:45:24Z | enforce-git-commits.sh | agent=main type=main tool=none | invoked
+2026-03-16T04:45:25Z | enforce-git-commits.sh | agent=main type=main tool=none | decision=allow exit=0 reason=
+2026-03-16T04:45:25Z | enforce-git-commits.sh | agent=main type=main tool=none | invoked
+2026-03-16T04:45:25Z | enforce-git-commits.sh | agent=main type=main tool=none | decision=reject exit=2 reason=staged but uncommitted changes
+2026-03-16T04:45:25Z | enforce-git-commits.sh | agent=main type=main tool=none | invoked
+2026-03-16T04:45:25Z | enforce-git-commits.sh | agent=main type=main tool=none | decision=reject exit=2 reason=6 uncommitted modified files
+2026-03-16T04:45:25Z | enforce-git-commits.sh | agent=main type=main tool=none | invoked
+2026-03-16T04:45:25Z | enforce-git-commits.sh | agent=main type=main tool=none | decision=allow exit=0 reason=
+2026-03-16T04:45:25Z | enforce-git-commits.sh | agent=main type=main tool=none | invoked
+2026-03-16T04:45:26Z | enforce-git-commits.sh | agent=main type=main tool=none | decision=allow exit=0 reason=
+2026-03-16T04:45:26Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=1 tool_total=1 limit=3 error_key=command not found
+2026-03-16T04:45:26Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=1 tool_total=1 limit=3 error_key=command not found
+2026-03-16T04:45:26Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=2 tool_total=2 limit=3 error_key=command not found
+2026-03-16T04:45:26Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=1 tool_total=1 limit=3 error_key=command not found
+2026-03-16T04:45:27Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=2 tool_total=2 limit=3 error_key=command not found
+2026-03-16T04:45:27Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=3 tool_total=3 limit=3 error_key=command not found
+2026-03-16T04:45:27Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | decision=block exit=2 reason=repeated-failure: Bash same-pattern failed 3 times
+2026-03-16T04:45:27Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=1 tool_total=1 limit=3 error_key=err
+2026-03-16T04:45:27Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=2 tool_total=2 limit=3 error_key=err
+2026-03-16T04:45:27Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=3 tool_total=3 limit=3 error_key=err
+2026-03-16T04:45:27Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | decision=block exit=2 reason=repeated-failure: Bash same-pattern failed 3 times
+2026-03-16T04:45:27Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=4 tool_total=4 limit=3 error_key=err
+2026-03-16T04:45:27Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | decision=block exit=2 reason=repeated-failure: Bash same-pattern failed 4 times
+2026-03-16T04:45:27Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=1 tool_total=1 limit=3 error_key=err
+2026-03-16T04:45:28Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=2 tool_total=2 limit=3 error_key=err
+2026-03-16T04:45:28Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=3 tool_total=3 limit=3 error_key=err
+2026-03-16T04:45:28Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | decision=block exit=2 reason=repeated-failure: Bash same-pattern failed 3 times
+2026-03-16T04:45:28Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=1 tool_total=1 limit=3 error_key=err
+2026-03-16T04:45:28Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=2 tool_total=2 limit=3 error_key=err
+2026-03-16T04:45:28Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Grep | tool=Grep pattern_count=1 tool_total=1 limit=3 error_key=pattern error
+2026-03-16T04:45:28Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=1 tool_total=1 limit=3 error_key=err
+2026-03-16T04:45:29Z | failure-pattern-detector.sh | agent=test-agent type=main tool=Bash | tool=Bash pattern_count=1 tool_total=1 limit=3 error_key=err
+2026-03-16T04:45:29Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:29Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:29Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:29Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Write | decision=allow exit=0 reason=
+2026-03-16T04:45:29Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | invoked
+2026-03-16T04:45:29Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | decision=allow exit=0 reason=
+2026-03-16T04:45:30Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:30Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Edit | decision=block exit=0 reason=Blocked: .env file write/edit blocked for /project/.env — use Read to inspect
+2026-03-16T04:45:30Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:30Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Write | decision=block exit=0 reason=Blocked: .env file write/edit blocked for /project/.env — use Read to inspect
+2026-03-16T04:45:30Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:30Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Edit | decision=block exit=0 reason=Blocked: .env file write/edit blocked for /project/.env.local — use Read to inspect
+2026-03-16T04:45:30Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:30Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Write | decision=block exit=0 reason=Blocked: .env file write/edit blocked for /project/.env.production — use Read to inspect
+2026-03-16T04:45:30Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:30Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Edit | decision=block exit=0 reason=Blocked: private key file matched for /certs/server.pem
+2026-03-16T04:45:31Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:31Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Write | decision=block exit=0 reason=Blocked: private key file matched for /certs/private.key
+2026-03-16T04:45:31Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | invoked
+2026-03-16T04:45:31Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | decision=block exit=0 reason=Blocked: private key file matched for /certs/cert.p12
+2026-03-16T04:45:31Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | invoked
+2026-03-16T04:45:31Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | decision=block exit=0 reason=Blocked: private key file matched for /certs/cert.pfx
+2026-03-16T04:45:31Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | invoked
+2026-03-16T04:45:31Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | decision=block exit=0 reason=Blocked: SSH key file matched for /home/user/.ssh/id_rsa
+2026-03-16T04:45:31Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | invoked
+2026-03-16T04:45:31Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | decision=block exit=0 reason=Blocked: SSH key file matched for /home/user/.ssh/id_ed25519
+2026-03-16T04:45:32Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:32Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Edit | decision=block exit=0 reason=Blocked: sensitive filename pattern matched for /project/credentials.json
+2026-03-16T04:45:32Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | invoked
+2026-03-16T04:45:32Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | decision=block exit=0 reason=Blocked: sensitive filename pattern matched for /project/secret-config.yaml
+2026-03-16T04:45:32Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:32Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Write | decision=block exit=0 reason=Blocked: sensitive filename pattern matched for /project/src/auth-token.ts
+2026-03-16T04:45:32Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | invoked
+2026-03-16T04:45:32Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | decision=block exit=0 reason=Blocked: wallet/keystore file matched for /home/user/wallet.dat
+2026-03-16T04:45:33Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:33Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Edit | decision=block exit=0 reason=Blocked: wallet/keystore file matched for /project/release.keystore
+2026-03-16T04:45:33Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | invoked
+2026-03-16T04:45:33Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | decision=block exit=0 reason=Blocked: sensitive filename pattern matched for /home/user/.aws/credentials
+2026-03-16T04:45:33Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | invoked
+2026-03-16T04:45:33Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Read | decision=block exit=0 reason=Blocked: sensitive filename pattern matched for /home/user/.config/gcloud/credentials.db
+2026-03-16T04:45:33Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:33Z | guard-sensitive-files.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:33Z | inject-prompt-context.sh | agent=main type=main tool=none | inject-prompt-context started
+2026-03-16T04:45:33Z | inject-prompt-context.sh | agent=main type=main tool=none | inject-prompt-context complete
+2026-03-16T04:45:34Z | inject-prompt-context.sh | agent=main type=main tool=none | inject-prompt-context started
+2026-03-16T04:45:34Z | inject-prompt-context.sh | agent=main type=main tool=none | inject-prompt-context complete
+2026-03-16T04:45:34Z | inject-prompt-context.sh | agent=main type=main tool=none | inject-prompt-context started
+2026-03-16T04:45:34Z | inject-prompt-context.sh | agent=main type=main tool=none | inject-prompt-context complete
+2026-03-16T04:45:34Z | inject-prompt-context.sh | agent=main type=main tool=none | inject-prompt-context started
+2026-03-16T04:45:34Z | inject-prompt-context.sh | agent=main type=main tool=none | inject-prompt-context complete
+2026-03-16T04:45:34Z | inject-prompt-context.sh | agent=main type=main tool=none | inject-prompt-context started
+2026-03-16T04:45:34Z | inject-prompt-context.sh | agent=main type=main tool=none | inject-prompt-context complete
+2026-03-16T04:45:34Z | inject-prompt-context.sh | agent=main type=main tool=none | inject-prompt-context started
+2026-03-16T04:45:34Z | inject-prompt-context.sh | agent=main type=main tool=none | inject-prompt-context complete
+2026-03-16T04:45:36Z | require-active-task.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:36Z | require-active-task.sh | agent=test-agent type=main tool=Edit | decision=block exit=0 reason=No active task. Create a task with TaskCreate and set it to in_progress before editing code. This ensures all changes are tracked and reviewable.
+2026-03-16T04:45:36Z | require-active-task.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:36Z | require-active-task.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:36Z | require-active-task.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:36Z | require-active-task.sh | agent=test-agent type=main tool=Edit | decision=block exit=0 reason=No active task. Create a task with TaskCreate and set it to in_progress before editing code. This ensures all changes are tracked and reviewable.
+2026-03-16T04:45:37Z | require-active-task.sh | agent=test-agent type=main tool=Edit | invoked
+2026-03-16T04:45:37Z | require-active-task.sh | agent=test-agent type=main tool=Edit | decision=allow exit=0 reason=
+2026-03-16T04:45:37Z | require-active-task.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:37Z | require-active-task.sh | agent=test-agent type=main tool=Write | decision=allow exit=0 reason=
+2026-03-16T04:45:37Z | session-stop-gate.sh | agent=main type=main tool=none | stop_hook_active=true, allowing stop
+2026-03-16T04:45:37Z | session-stop-gate.sh | agent=main type=main tool=none | invoked
+2026-03-16T04:45:37Z | session-stop-gate.sh | agent=main type=main tool=none | decision=reject exit=2 reason=on main branch
+2026-03-16T04:45:37Z | session-stop-gate.sh | agent=main type=main tool=none | invoked
+2026-03-16T04:45:37Z | session-stop-gate.sh | agent=main type=main tool=none | decision=reject exit=2 reason=on main branch
+2026-03-16T04:45:38Z | session-stop-gate.sh | agent=main type=main tool=none | invoked
+2026-03-16T04:45:38Z | session-stop-gate.sh | agent=main type=main tool=none | decision=reject exit=2 reason=uncommitted changes
+2026-03-16T04:45:38Z | session-stop-gate.sh | agent=main type=main tool=none | invoked
+2026-03-16T04:45:38Z | session-stop-gate.sh | agent=main type=main tool=none | decision=allow exit=0 reason=all tiers passed
+2026-03-16T04:45:38Z | session-stop-gate.sh | agent=main type=main tool=none | invoked
+2026-03-16T04:45:38Z | session-stop-gate.sh | agent=main type=main tool=none | decision=reject exit=2 reason=uncommitted changes
+2026-03-16T04:45:38Z | session-stop-gate.sh | agent=main type=main tool=none | invoked
+2026-03-16T04:45:38Z | session-stop-gate.sh | agent=main type=main tool=none | decision=reject exit=2 reason=stubs in changed files
+2026-03-16T04:45:39Z | session-stop-gate.sh | agent=main type=main tool=none | invoked
+2026-03-16T04:45:39Z | session-stop-gate.sh | agent=main type=main tool=none | decision=warn exit=1 reason=tier 2/3 warnings
+2026-03-16T04:45:39Z | session-stop-gate.sh | agent=main type=main tool=none | invoked
+2026-03-16T04:45:39Z | session-stop-gate.sh | agent=main type=main tool=none | Tier 3: invoking AI audit on 140-line diff
+2026-03-16T04:45:39Z | session-stop-gate.sh | agent=main type=main tool=none | Tier 3: AI unavailable — skipped
+2026-03-16T04:45:39Z | session-stop-gate.sh | agent=main type=main tool=none | decision=warn exit=1 reason=tier 2/3 warnings
+2026-03-16T04:45:39Z | session-stop-gate.sh | agent=main type=main tool=none | invoked
+2026-03-16T04:45:39Z | session-stop-gate.sh | agent=main type=main tool=none | decision=allow exit=0 reason=
+2026-03-16T04:45:40Z | session-stop-gate.sh | agent=main type=main tool=none | invoked
+2026-03-16T04:45:40Z | session-stop-gate.sh | agent=main type=main tool=none | decision=allow exit=0 reason=all tiers passed
+2026-03-16T04:45:40Z | session-stop-gate.sh | agent=main type=main tool=none | invoked
+2026-03-16T04:45:40Z | session-stop-gate.sh | agent=main type=main tool=none | decision=allow exit=0 reason=all tiers passed
+2026-03-16T04:45:40Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:40Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=0 reason=stubs detected
+2026-03-16T04:45:40Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:41Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=2 reason=stubs detected in /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.kzYkl5eXou/todo.ts
+2026-03-16T04:45:41Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:41Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=2 reason=stubs detected in /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.bgnTelwCtp/fixme.ts
+2026-03-16T04:45:41Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:41Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=2 reason=stubs detected in /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.B0Zama8WvU/notimpl.ts
+2026-03-16T04:45:41Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:41Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=2 reason=stubs detected in /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.u6FzCnMdrq/empty.ts
+2026-03-16T04:45:42Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:42Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=2 reason=stubs detected in /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.edTCyABw43/anyabuse.ts
+2026-03-16T04:45:42Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:42Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=2 reason=stubs detected in /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.6Egll4sMkD/asany.ts
+2026-03-16T04:45:42Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:42Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=2 reason=stubs detected in /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.nvhPxhXyLn/stub.py
+2026-03-16T04:45:42Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:42Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=2 reason=stubs detected in /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.FqqOZVhyfA/passonly.py
+2026-03-16T04:45:43Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:43Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=2 reason=stubs detected in /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.asuDzZgL64/ellipsis.py
+2026-03-16T04:45:43Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:43Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=2 reason=stubs detected in /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.s4AbYRtCJt/stub.rs
+2026-03-16T04:45:43Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:43Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=2 reason=stubs detected in /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.TBwBhscjix/unimpl.rs
+2026-03-16T04:45:43Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:43Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=2 reason=stubs detected in /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.xqWxLW5cJf/stub.go
+2026-03-16T04:45:43Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:43Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=2 reason=stubs detected in /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.uDNNB9rFgO/nilreturn.go
+2026-03-16T04:45:44Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:44Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=2 reason=stubs detected in /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.lxRYg43lmL/Stub.java
+2026-03-16T04:45:44Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:44Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=2 reason=stubs detected in /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.OQGpArWCov/Service.cs
+2026-03-16T04:45:44Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:44Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=2 reason=stubs detected in /var/folders/9t/_48t49sn135d8jxkkn02wtg80000gn/T/tmp.Yx2l8OT4ur/service.rb
+2026-03-16T04:45:44Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:44Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=0 reason=stubs detected
+2026-03-16T04:45:44Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:44Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=0 reason=stubs detected
+2026-03-16T04:45:45Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | invoked
+2026-03-16T04:45:45Z | verify-no-stubs.sh | agent=test-agent type=main tool=Write | decision=warn exit=0 reason=stubs detected

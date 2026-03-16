@@ -1,0 +1,376 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/block-dangerous-bash.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/ai-safety-check.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/block-unasked-restructure.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/guard-sensitive-files.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/block-stub-writes.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/require-active-task.sh"
+          },
+          {
+            "type": "prompt",
+            "prompt": "You are a code review gate. Evaluate whether this Edit/Write has appropriate research backing.\n\nHook input:\n$ARGUMENTS\n\nRED FLAGS (return ok: false):\n1. Code references an external API, SDK, or third-party service (fetch to external URL, platform SDK calls, webhook handlers, OAuth flows) — the agent should have used WebSearch or Context7 to check current docs BEFORE writing this code\n2. Code appears to be a BUG FIX (error handling changes, condition fixes, null checks added) but there is no evidence the agent read error output, logs, or stack traces first — fixes must be evidence-based, not guesswork\n3. Code uses platform-specific patterns (Cloudflare Workers, Next.js SSR, database queries) that could have changed since training data — should verify against current docs\n4. Agent appears to be guessing at API formats, method signatures, or return types without checking\n\nGREEN FLAGS (return ok: true):\n- Simple refactoring of existing internal code\n- Test files\n- Internal utility functions not touching external services\n- Code that follows patterns already established in the same file\n- Configuration files\n- CSS/styling changes\n\nIMPORTANT: Only flag clear violations. When in doubt, return ok: true. This gate should catch obvious \"coding without research\" patterns, not slow down normal development.\n\nReturn JSON: {\"ok\": true} or {\"ok\": false, \"reason\": \"Search docs for [specific service/API] before writing this code — never assume API formats from training data\"}",
+            "model": "haiku",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "You are a deterministic-tools enforcement gate. Check if this Edit tool call is being used for a BULK or MECHANICAL operation that should use Bash/sed/grep instead.\n\nHook input:\n$ARGUMENTS\n\nOPERATIONS THAT SHOULD USE BASH (return ok: false):\n- Bulk search-and-replace across many lines (e.g., renaming a variable throughout a file)\n- Import reorganization (reordering/adding many import lines)\n- Package name updates across a file\n- Repetitive identical changes (same pattern applied to many locations)\n- File-wide formatting changes\n\nLEGITIMATE EDIT USES (return ok: true):\n- Writing new code logic\n- Targeted bug fixes (changing specific lines)\n- Adding new functions or components\n- Modifying specific conditions or return values\n- Small, targeted changes (fewer than ~10 lines of old_string)\n- Any change that requires understanding context to write correctly\n\nIMPORTANT: Most Edit calls are legitimate. Only flag obvious bulk/mechanical operations where sed/grep would be faster and more reliable. When in doubt, return ok: true.\n\nReturn JSON: {\"ok\": true} or {\"ok\": false, \"reason\": \"Use Bash with sed/grep for this bulk operation instead of manual Edit — deterministic tools over AI inference\"}",
+            "model": "haiku",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "Grep|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-codebase-pilot.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-team-usage.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/verify-no-stubs.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/edit-frequency-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-mock-in-prod.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/doc-manager.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-deploy-then-verify.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/audit-agent-output.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/semantic-audit-agent.sh"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/capture-outcome.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-task-quality.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/verify-task-done.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-git-commits.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/verify-ran-checks.sh"
+          },
+          {
+            "type": "prompt",
+            "prompt": "You are a strict task completion process auditor. Review this task completion for process compliance violations.\n\nTask completion context:\n$ARGUMENTS\n\nCheck ALL of these requirements and fail if ANY are violated:\n\n1. SCOPE DISCIPLINE: Were only files directly related to the task modified? If unrelated files were changed (e.g., refactoring code not mentioned in the task, cleaning up unrelated imports), that violates \"Only modify files directly related to the current request.\"\n\n2. COMPLETENESS: Does the work match ALL requirements in the task description? Was anything simplified, reduced in scope, or substituted with an easier alternative without approval? The rule is: \"Deliver what was asked. Don't simplify.\"\n\n3. VERIFICATION EVIDENCE: Was real output demonstrated? Phrases like \"it should work now\" or \"this looks correct\" without actual command output, curl responses, or test results violate the verification rules. Must have concrete evidence.\n\n4. RE-READ CHECK: Was the original request compared against actual deliverables? The agent should have explicitly listed any gaps between requirements and what was delivered.\n\n5. LSP/DIAGNOSTIC RESPECT: Were any type errors, lint warnings, or LSP diagnostics dismissed as \"stale\", \"transitional\", or \"will resolve itself\"? If so, that's a violation — errors on disk are real errors.\n\n6. UI VERIFICATION: If UI/frontend files (.tsx in app/, components/, pages/) were modified, was Chrome browser verification performed? Were multiple viewport sizes tested if responsiveness was changed?\n\n7. DEBUGGING WORKFLOW: If this was a bug fix task, was the REPRODUCE → OBSERVE → HYPOTHESIZE → FIX workflow followed? Or did the agent jump straight to guessing a fix?\n\nIMPORTANT: Be strict but fair. Not every task requires all checks (e.g., backend-only tasks don't need Chrome verification). Evaluate based on what's relevant to THIS specific task.\n\nReturn JSON: {\"ok\": true} if process was followed, or {\"ok\": false, \"reason\": \"[specific violation]: [what should have been done instead]\"}",
+            "model": "haiku",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/verify-subagent-independently.sh"
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-task-quality.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-git-commits.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-task-quality.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-stop-gate.sh",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/codebase-pilot/scripts/session-index.sh",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/inject-session-context.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/doc-stale-detector.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/codebase-pilot/scripts/session-index.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-wrap-up.sh",
+            "async": true,
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/aggregate-session.sh",
+            "timeout": 30,
+            "async": true
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/doc-index-generator.sh",
+            "async": true,
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/inject-prompt-context.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/auto-approve-safe.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/failure-pattern-detector.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/capture-failure.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/archive-before-compact.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/restore-after-compact.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "permission_prompt|idle_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/desktop-alert.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "ConfigChange": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/config-audit-trail.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "InstructionsLoaded": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/dynamic-rules.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/codebase-pilot/scripts/session-index.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
