@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claudetools-marketplace",
+  "version": "1.0.0",
+  "description": "Claude Code plugins by ClaudeTools — guardrails, prompt engineering, and developer tools",
+  "owner": {
+    "name": "ClaudeTools",
+    "email": "me@oweninnes.com"
+  },
+  "plugins": [
+    {
+      "name": "prompt-improver",
+      "source": "./plugins/prompt-improver",
+      "description": "Transforms vague prompts into best-in-class XML-structured prompts optimised for Claude Code execution",
+      "version": "6.0.0",
+      "category": "developer-tools",
+      "tags": ["prompting", "prompt-engineering", "xml-structured", "workflow"]
+    }
+  ]
+}
