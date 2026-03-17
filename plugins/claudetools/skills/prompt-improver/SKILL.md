@@ -1,6 +1,6 @@
 ---
 name: prompt-improver
-description: Transforms vague or unstructured user prompts into best-in-class XML-structured prompts optimised for Claude Code execution, then executes them. Use this skill whenever the user asks to improve a prompt, make a prompt better, structure a prompt, rewrite something for Claude Code, prompt engineer a task, or clean up a prompt. Also trigger when a user pastes a rough task description and wants it turned into something Claude Code can execute well, or says things like make this work better, optimise this, or fix this prompt.
+description: Transforms vague prompts into structured XML and executes them. Modes: execute (default), plan (review before running), task (create persistent tasks without executing). Use when the user says improve prompt, make this work better, prompt engineer, or structure a prompt.
 argument-hint: [plan|task] [prompt-text or description of what to improve]
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent
 metadata:
