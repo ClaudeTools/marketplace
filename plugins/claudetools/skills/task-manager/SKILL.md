@@ -1,7 +1,7 @@
 ---
-name: _tasks-deprecated
-description: DEPRECATED — use task-manager instead. This file will be removed.
-argument-hint: []
+name: task-manager
+description: Extended task management with persistence, cross-session continuity, and validation. Use when the user says /task-manager, task status, manage tasks, restore tasks, or session handoff.
+argument-hint: [new|status|restore|decompose|progress|handoff|validate]
 allowed-tools: Read, Bash, Grep, Glob, Write, Edit
 metadata:
   author: Owen Innes
@@ -39,10 +39,10 @@ Display current task state. This is also the default when no argument is given.
 
 1. Run the report script:
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/tasks/scripts/task-report.js" --format markdown
+node "${CLAUDE_PLUGIN_ROOT}/skills/task-manager/scripts/task-report.js" --format markdown
 ```
 2. Present the markdown output to the user.
-3. If the script exits non-zero or `.tasks/tasks.json` does not exist, tell the user: "No tasks found. Use `/tasks new <description>` to create one."
+3. If the script exits non-zero or `.tasks/tasks.json` does not exist, tell the user: "No tasks found. Use `/task-manager new <description>` to create one."
 
 ---
 
@@ -53,7 +53,7 @@ Restore tasks from a previous session into the TodoWrite display. Critical for c
 1. Check if `.tasks/progress.md` exists. If yes, read it FIRST — it provides narrative context about where the previous session left off.
 2. Run the sync script:
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/tasks/scripts/sync-display.js"
+node "${CLAUDE_PLUGIN_ROOT}/skills/task-manager/scripts/sync-display.js"
 ```
 3. Parse the JSON output. It contains an array of task objects with `content` and `status` fields.
 4. Call `TodoWrite` with the restored task list to sync the display.
@@ -87,7 +87,7 @@ Show or update the progress narrative.
 
 1. Check if `.tasks/progress.md` exists.
    - If yes, read and display its contents.
-   - If no, tell the user: "No progress file yet. Run `/tasks handoff` at the end of a session to generate one."
+   - If no, tell the user: "No progress file yet. Run `/task-manager handoff` at the end of a session to generate one."
 2. If the user says "update" or the file is stale (last modified more than 2 hours ago):
    - Read `.tasks/tasks.json` and `.tasks/history.jsonl`
    - Generate an updated session block following the template in `assets/progress-template.md`
@@ -122,7 +122,7 @@ Run deterministic validation on the task state.
 
 1. Run the validation script:
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/tasks/scripts/validate-tasks.js"
+node "${CLAUDE_PLUGIN_ROOT}/skills/task-manager/scripts/validate-tasks.js"
 ```
 2. Report the results:
    - Number of tasks checked
