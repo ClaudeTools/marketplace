@@ -351,3 +351,139 @@ rename the Button component to ActionButton everywhere
 ```
 
 **Pattern shown**: AI inference replaced with grep+sed for mechanical find-and-replace. Verification is fully deterministic.
+
+---
+
+## Example 7: Decision boundary examples with reasoning
+
+### Before (user input)
+```
+add rate limiting to the API
+```
+
+### After (improved prompt)
+```xml
+<context>
+  <project>Hono, TypeScript, Redis, Cloudflare Workers</project>
+  <scope>src/middleware/rate-limit.ts (new), src/api/ routes</scope>
+</context>
+
+<research>
+  Search before implementing:
+  - Cloudflare Workers rate limiting patterns (Workers KV vs Durable Objects vs external Redis)
+  - Hono middleware patterns for request interception
+  Explore the codebase:
+  - Read existing middleware in src/middleware/ for patterns
+  - Check if Redis or KV is already configured
+</research>
+
+<task id="1" name="rate-limit-middleware">
+  <description>
+    Add configurable rate limiting middleware for API endpoints with per-route limits.
+  </description>
+
+  <approach>
+    Before implementing, reason through:
+    - Which storage backend: Workers KV (eventual consistency), Durable Objects (strong consistency), or Redis?
+    - Criteria: latency, accuracy, cost, existing infrastructure.
+    - Algorithm: fixed window, sliding window, or token bucket?
+    Select an approach and commit to it.
+  </approach>
+
+  <examples>
+    <example>
+      <input>GET /api/search — public endpoint, high traffic</input>
+      <output>Rate limit: 60 requests/minute per IP, sliding window</output>
+      <reasoning>
+        Public endpoint with high traffic needs aggressive limiting to prevent abuse.
+        Sliding window prevents burst-then-wait patterns. IP-based because no auth required.
+      </reasoning>
+    </example>
+    <example>
+      <input>POST /api/auth/login — authentication endpoint</input>
+      <output>Rate limit: 5 requests/minute per IP, fixed window, 429 with Retry-After header</output>
+      <reasoning>
+        Authentication endpoints need strict limits to prevent brute force attacks.
+        Fixed window is sufficient here. Include Retry-After header for client backoff.
+      </reasoning>
+    </example>
+    <example>
+      <input>GET /api/users/me — authenticated endpoint, normal traffic</input>
+      <output>Rate limit: 120 requests/minute per user ID, sliding window</output>
+      <reasoning>
+        Authenticated endpoint — rate limit per user ID, not IP, because multiple
+        users may share an IP (corporate NAT). Higher limit because authenticated
+        users are less likely to be abusive.
+      </reasoning>
+    </example>
+  </examples>
+
+  <requirements>
+    - Middleware applied selectively via route-level configuration
+    - Configurable: requests per window, window size, key extraction (IP vs user ID)
+    - Return 429 with Retry-After header when limit exceeded
+    - Log rate limit hits with request context for monitoring
+  </requirements>
+
+  <verification>
+    - Test: 61st request in 60 seconds returns 429
+    - Test: Retry-After header present on 429 response
+    - Test: authenticated endpoint limits by user ID, not IP
+    - Run npx tsc --noEmit
+  </verification>
+</task>
+
+<execution>
+  <constraints>
+    - Use existing Redis/KV connection — do not add a new storage dependency
+    - Rate limit state must survive request restarts (not in-memory only)
+  </constraints>
+  <escape>
+    If the deployment target does not support the chosen storage backend,
+    flag the incompatibility rather than falling back to in-memory limiting.
+  </escape>
+</execution>
+
+<check>
+  - Re-read rate limit middleware — verify all paths implemented
+  - Run npx tsc --noEmit
+  - Run npm test
+  - Report status for each requirement
+</check>
+```
+
+**Pattern shown**: The `<examples>` block includes `<reasoning>` for each case, teaching Claude the decision process — not just the outcome. This is the decision boundary technique: 1 public endpoint (aggressive limit), 1 auth endpoint (strict security limit), 1 authenticated endpoint (per-user limit). The reasoning explains WHY each case is different, so Claude can generalise to new endpoints.
+
+---
+
+## Example 8: Emphasis calibration — safety rules vs general instructions
+
+### Before (all rules at maximum emphasis)
+```xml
+<constraints>
+  CRITICAL: You MUST NEVER use eval() or Function() constructor. NO exceptions.
+  CRITICAL: You MUST run typecheck after EVERY change. ABSOLUTELY REQUIRED.
+  CRITICAL: You MUST NEVER commit without running tests. This is non-negotiable.
+  CRITICAL: You MUST use const instead of let where possible. ALWAYS.
+</constraints>
+```
+
+### After (emphasis calibrated to severity)
+```xml
+<!-- Safety rule: full emphasis is appropriate -->
+<agent_constraints>
+  NEVER use eval() or Function() constructor — these enable code injection attacks
+  and are flagged by security scanners.
+</agent_constraints>
+
+<!-- Workflow rules: calm, direct instructions -->
+<execution>
+  <constraints>
+    - Run typecheck after each change
+    - Run tests before committing
+    - Use const for bindings that are not reassigned
+  </constraints>
+</execution>
+```
+
+**Pattern shown**: The playbook's emphasis decision matrix in action. The eval() prohibition is a genuine security rule (CRITICAL severity) — it keeps NEVER with a WHY explanation. The workflow rules are MEDIUM severity — they use calm, direct instructions without capitalisation. Claude 4.6 follows calm instructions more reliably and may overtrigger on aggressive emphasis for non-safety rules. The authoritative tag name `<agent_constraints>` also adds semantic weight to the security rule.

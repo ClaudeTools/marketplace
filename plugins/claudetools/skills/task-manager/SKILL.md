@@ -1,9 +1,9 @@
 ---
 name: task-manager
 description: Extended task management with persistence, cross-session continuity, and validation. Use when the user says /task-manager, task status, manage tasks, restore tasks, or session handoff.
-argument-hint: [new|status|restore|decompose|progress|handoff|validate]
+argument-hint: [new|start|stop|status|restore|decompose|progress|handoff|validate]
 user-invocable: true
-allowed-tools: Read, Bash, Grep, Glob, Write, Edit
+allowed-tools: Read, Bash, Grep, Glob, Write, Edit, Agent, TeamCreate, TeamDelete, SendMessage
 metadata:
   author: Owen Innes
   version: 1.0.0
@@ -31,6 +31,39 @@ Create a new task.
    - `dependencies` (array of task IDs)
    - `parent_id` (for subtasks)
 4. Confirm creation to the user with the assigned task ID.
+
+---
+
+### start
+
+Pick up the next pending task and execute it.
+
+1. Call the MCP `task_query` tool with `{"status": "pending", "has_blocker": false, "format": "json"}`.
+2. Sort results by priority (critical > high > medium > low), then by creation date (oldest first).
+3. If no eligible tasks exist, tell the user: "No pending tasks available. Create tasks with `/task-manager new` or `/claudetools:prompt-improver task`."
+4. Select the first task. Mark it as in_progress using `task_update` with `{"id": "<task-id>", "status": "in_progress"}`.
+5. Display: task ID, content, priority, tags, and parent context (if any).
+6. Check if the task has subtasks by calling `task_query` with `{"parent_id": "<task-id>", "format": "json"}`.
+   - If subtasks exist and 3+ are independent (no inter-dependencies), use TeamCreate to execute them in parallel. Each teammate gets one subtask.
+   - If subtasks exist but are sequential (have dependencies), execute them in dependency order.
+   - If no subtasks, execute the task directly based on its content.
+7. Check if the task has `metadata.generated_prompt` (set by prompt-improver task mode). If yes, use that prompt to guide execution. If no, work on the task based on its content description.
+8. After execution completes, mark the task as completed using `task_update` and record files_touched.
+
+---
+
+### stop
+
+Mark the current in-progress task as completed.
+
+1. Call the MCP `task_query` tool with `{"status": "in_progress", "format": "json"}`.
+2. If no tasks are in_progress, tell the user: "No task is currently in progress."
+3. If multiple tasks are in_progress, list them and ask the user which to complete.
+4. If exactly one task is in_progress, select it automatically.
+5. Record files_touched: run `git diff --name-only HEAD~1` to detect recently changed files.
+6. Mark the task as completed using `task_update` with `{"id": "<task-id>", "status": "completed", "files_touched": [<detected files>]}`.
+7. Display: completed task summary, files touched, duration.
+8. Show the next eligible pending task (if any) as a suggestion: "Next up: <task content> (<priority>)".
 
 ---
 

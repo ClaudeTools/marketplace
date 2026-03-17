@@ -9,6 +9,7 @@ metadata:
   category: prompt-engineering
   tags: [prompting, xml, claude-code, workflow]
 ---
+> **DEPRECATED:** This standalone version is deprecated. Install the `claudetools` plugin instead, which includes prompt-improver as `claudetools:prompt-improver`.
 
 # Prompt Improver
 

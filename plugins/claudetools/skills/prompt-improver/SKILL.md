@@ -1,7 +1,7 @@
 ---
 name: prompt-improver
 description: Transforms vague or unstructured user prompts into best-in-class XML-structured prompts optimised for Claude Code execution, then executes them. Use this skill whenever the user asks to improve a prompt, make a prompt better, structure a prompt, rewrite something for Claude Code, prompt engineer a task, or clean up a prompt. Also trigger when a user pastes a rough task description and wants it turned into something Claude Code can execute well, or says things like make this work better, optimise this, or fix this prompt.
-argument-hint: [plan] [prompt-text or description of what to improve]
+argument-hint: [plan|task] [prompt-text or description of what to improve]
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent
 metadata:
   author: Owen Innes
@@ -20,8 +20,9 @@ Transform rough user input into structured XML prompts and execute them directly
 |------------|------|-----------|
 | `/prompt-improver <prompt>` | **Execute** (default) | Generate, brief summary, execute immediately |
 | `/prompt-improver plan <prompt>` | **Plan** | Generate, show full XML, wait for user decision |
+| `/prompt-improver task <prompt>` | **Task** | Generate, create persistent tasks via task_create, do not execute |
 
-When the first word of $ARGUMENTS is `plan` (case-insensitive), activate Plan mode. Strip `plan` from the arguments before passing the rest as raw input.
+When the first word of $ARGUMENTS is `plan` or `task` (case-insensitive), activate that mode. Strip the mode word from the arguments before passing the rest as raw input.
 
 ## Execution model
 
@@ -91,17 +92,19 @@ Before building the prompt, think through:
 Apply all transformation rules from the prompting principles:
 - Replace vague adjectives with concrete specifications
 - Add testable verification to every task — active checks (run tests, re-read files, verify output)
-- Include a `<check>` block with end-of-work review steps
+- Include a `<check>` block with end-of-work review steps including requirement-by-requirement status
 - Add `<approach>` blocks for non-trivial decisions (think before implementing, commit to a decision)
-- Add `<examples>` blocks for any pattern-based task (input/output pairs)
+- Add `<examples>` blocks with `<reasoning>` for any decision-point or pattern-based task — decision boundary examples with reasoning are the most effective steering technique
 - Add `<escape>` clause in `<execution>` (flag contradictions rather than working around them)
 - Include research directives for non-trivial tasks
-- Use calm, direct language — no aggressive markers (avoid MUST, NEVER, CRITICAL, non-negotiable)
+- Calibrate emphasis to severity: calm instructions for most rules, but full emphasis (CRITICAL/NEVER) for safety/security rules — the emphasis decision matrix in prompting-principles.md defines the thresholds
 - Put data and context at the top, instructions at the end
 - Write `<constraints>` that prevent likely failure modes for this specific task (not generic boilerplate)
 - Reference existing code patterns where applicable
 - Right-size the prompt for the task scope
-- Use positive framing; state what to do, not what not to do
+- Use positive framing for outputs, negative framing for hard behavioural prohibitions — pair negatives with positive alternatives
+- For autonomous agent prompts: include `<override_rules>` trust hierarchy, `<tool_routing>`, and `<risk_assessment>` blocks from the extended template
+- For complex tasks: add `<known_failure_modes>` if empirical testing reveals recurring failures
 
 For multi-task work, include a `<strategy>` in `<execution>` recommending sequential or parallel execution. Use teams (TeamCreate) when 3+ independent tasks benefit from parallel work. For simple or single tasks, work directly.
 
@@ -163,6 +166,37 @@ The script handles structural checks. Review only:
    - **Revise**: Re-spawn agent with original input + revision notes, present again.
    - **Edit**: Acknowledge changes, ask again.
    - **Discard**: Acknowledge and stop.
+
+### Task mode (`/prompt-improver task ...`)
+
+Create persistent tasks from the generated prompt instead of executing. This mode connects prompt-improver to the task management system.
+
+1. **Run Phase 1 (Generate)** identically to execute/plan modes — same agent, same references, same validation.
+
+2. **Create parent task**: Call the MCP `task_create` tool with:
+   - `content`: the overall description from the user's input
+   - `priority`: "high"
+   - `tags`: ["prompt-improved"]
+   - `metadata`: `{"generated_prompt": "<the full XML prompt>"}`
+
+3. **Create subtasks**: For each `<task>` block in the generated XML prompt:
+   - Call `task_create` with:
+     - `content`: the task name and description/requirements summarised in one line
+     - `parent_id`: the parent task's ID (returned from step 2)
+     - `priority`: derive from position (first tasks get "high", later ones get "medium")
+     - `tags`: ["prompt-improved", task-name-from-xml]
+     - `dependencies`: map `depends-on` attributes to the corresponding subtask IDs (create tasks in order, track ID mapping)
+
+4. **Present the task tree** to the user:
+   ```
+   Created task tree:
+   - [task-parent-id] Overall description (high, prompt-improved)
+     - [task-sub1] First subtask (high, depends on: none)
+     - [task-sub2] Second subtask (medium, depends on: sub1)
+     - [task-sub3] Third subtask (medium, depends on: sub1)
+   ```
+
+5. **Do not execute**. Tell the user: "Tasks created. Run `/claudetools:task-manager start` to begin execution."
 
 ## Edge cases
 
