@@ -2,7 +2,6 @@
 name: task-manager
 description: Extended task management with persistence, cross-session continuity, and validation. Use when the user says /task-manager, task status, manage tasks, restore tasks, or session handoff.
 argument-hint: [new|start|stop|status|restore|decompose|progress|handoff|validate]
-user-invocable: true
 allowed-tools: Read, Bash, Grep, Glob, Write, Edit, Agent, TeamCreate, TeamDelete, SendMessage
 metadata:
   author: Owen Innes
