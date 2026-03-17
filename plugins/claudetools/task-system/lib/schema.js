@@ -65,7 +65,13 @@ export function validateTaskCreate(args) {
     sanitized.metadata = args.metadata;
   }
 
-  return { valid: true, args: sanitized };
+  const result = { valid: true, args: sanitized };
+
+  if (sanitized.content.length < 200) {
+    result.warning = 'Task content is very short. Consider adding acceptance criteria, file references, constraints, and verification commands.';
+  }
+
+  return result;
 }
 
 /**

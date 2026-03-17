@@ -24,12 +24,18 @@ Create a new task with enriched context. The raw input goes through a lightweigh
 
 1. **Parse** the remaining arguments as the raw input.
 
-2. **Resolve and triage** the input:
-   - If the input is a file path, read it. If it's a URL, fetch it. The resolved content is what you assess.
-   - **Already detailed** (comprehensive spec, structured prompt with requirements/verification/approach, implementation guide with code examples): Skip the enrichment agent. The content is already good — go straight to step 4 (task creation). Use the content directly, decomposing into parent + subtasks if the scope warrants it.
-   - **Needs enrichment** (vague, rough notes, missing context, incomplete): Proceed to step 3.
+2. **Gather codebase context** using codebase-pilot MCP tools before any triage or enrichment:
+   - Call `project_map` to get the project overview (languages, structure, entry points, key exports)
+   - For any file paths mentioned in the input, call `file_overview` and `related_files` to verify they exist and understand their structure
+   - For any function/class names mentioned, call `find_symbol` to locate them
+   - Store this context as `{CODEBASE_CONTEXT}` — it will be passed to the enrichment agent or used directly for triage
 
-3. **Enrich** (only if triage says input needs it) — Spawn a general-purpose Agent to analyse the source material and produce a detailed task description. The agent prompt:
+3. **Resolve and triage** the input:
+   - If the input is a file path, read it. If it's a URL, fetch it. The resolved content is what you assess.
+   - **Already detailed** (comprehensive spec, structured prompt with requirements/verification/approach, implementation guide with code examples): Skip the enrichment agent. However, still verify file references against `{CODEBASE_CONTEXT}` — replace any invented paths with real ones discovered from codebase-pilot. Go straight to step 5 (task creation).
+   - **Needs enrichment** (vague, rough notes, missing context, incomplete): Proceed to step 4.
+
+4. **Enrich** (only if triage says input needs it) — Spawn a general-purpose Agent to analyse the source material and produce a detailed task description. The agent prompt:
 
    > You are a task preparation specialist. Your job is to take raw input and produce a detailed, self-contained task description that an executing agent can complete without needing to re-read the source material.
    >
@@ -41,13 +47,16 @@ Create a new task with enriched context. The raw input goes through a lightweigh
    > **Raw input:**
    > {RAW_INPUT}
    >
+   > **Codebase context (from codebase-pilot):**
+   > {CODEBASE_CONTEXT}
+   >
    > **Steps:**
    > 1. **Resolve the input**: If the input is a file path, read the file. If it's a URL, fetch it. If it's plain text, use it directly. The resolved content is your source material.
    > 2. **Assess the source material quality**: Is it a comprehensive spec (detailed, code examples, schemas, verification criteria)? Rough notes? A bug report? A feature request? Your approach depends on what you're working with.
    >    - **Comprehensive source**: Preserve all detail — code examples, schemas, exact content. Your job is to structure it for task execution, not to summarise it.
    >    - **Rough source**: Research the codebase, fill gaps, add concrete requirements, think through the approach.
    >    - **Mixed**: Preserve detailed sections, enrich vague ones.
-   > 3. If the input references files, code patterns, or APIs you need to understand, read them now.
+   > 3. **Use codebase-pilot MCP tools for file discovery.** You have access to: project_map (project overview), find_symbol (locate functions/classes by name), file_overview (list symbols in a file), related_files (find imports/dependents). Use REAL paths from these tools — do not invent file paths. Call find_symbol and file_overview to verify any paths before including them in task content.
    > 4. If the input references external libraries, services, or concepts that need research, use WebSearch to gather what's needed.
    > 5. Think through the approach: what are the concrete steps? What are the dependencies? What could go wrong?
    > 6. Identify relevant codebase context: existing patterns to follow, files that will be touched, conventions to respect.
@@ -96,7 +105,7 @@ Create a new task with enriched context. The raw input goes through a lightweigh
    > [low/medium/high] — [why]
    > ```
    >
-   > Every section is required. If a section has no content (e.g., no patterns to reference), write "None" rather than omitting it. Acceptance criteria must be verb-led and independently testable. Verification must contain exact shell commands, not prose descriptions.
+   > Every section is required and must contain substantive content — not "None" or "N/A" for sections that clearly apply. Acceptance criteria must be verb-led and independently testable (minimum 2 items). File references must include at least one real path verified via codebase-pilot. Verification must contain at least one exact shell command, not prose descriptions.
    >
    > **Output format for decomposed task — a JSON object:**
    > ```json
@@ -136,9 +145,13 @@ Create a new task with enriched context. The raw input goes through a lightweigh
    >
    > Preserve all detail from the source material. If the source includes code examples, schemas, exact file contents, or verification criteria — include them in the appropriate section. A detailed source should produce a proportionally detailed output.
    >
+   > **IMPORTANT: Anti-deferral rule.** When decomposing work into subtasks, create ALL subtasks upfront with equal detail — including verification, polish, and documentation tasks. Do not create only the first 2-3 phases and defer the rest. Every phase must have the same depth of acceptance criteria, file references, constraints, and verification commands. A task an agent cannot execute autonomously is not a task — it is a reminder.
+   >
+   > For decomposed output, each subtask must have: acceptance_criteria (≥2 items), file_references (≥1 real path), and verification_commands (≥1 exact command).
+   >
    > **Return only the markdown block or JSON object. No preamble, no commentary.**
 
-4. **Create tasks** based on the enrichment output:
+5. **Create tasks** based on the enrichment output:
 
    **If single task (markdown block):**
    - Create one task using MCP `task_create` (preferred) or `TaskCreate`
@@ -166,7 +179,14 @@ Create a new task with enriched context. The raw input goes through a lightweigh
    - Each subtask's `metadata` includes `file_references`, `acceptance_criteria`, `out_of_scope`, `verification_commands`, `reference_patterns`, and `risk_level` extracted from the JSON
    - Present the full task tree to the user
 
-5. **Confirm** creation to the user: show task ID(s), summary, priority, tags, and dependency tree (if decomposed).
+6. **Post-creation validation** (mandatory for decomposed tasks):
+   - Read back all created subtasks
+   - Verify each subtask has acceptance criteria (≥2 items), file references (≥1 path), and verification commands (≥1 command)
+   - Check that verification/testing tasks have at least half the content length of the average implementation task — warn if any are significantly thinner
+   - If the input mentioned N phases/steps/layers but only N-2 or fewer subtasks were created, warn about missing phases
+   - Report any issues to the user before confirming
+
+7. **Confirm** creation to the user: show task ID(s), summary, priority, tags, and dependency tree (if decomposed).
 
 ---
 

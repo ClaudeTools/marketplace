@@ -89,6 +89,8 @@ bash ${CLAUDE_SKILL_DIR}/scripts/gather-context.sh .
 ```
 Extract the TYPECHECK, TEST, and BUILD commands. Use these exact commands in verification blocks.
 
+Then use codebase-pilot MCP tools to gather structural context: call `project_map` for the project overview. For any file paths or function/class names mentioned in the raw input, call `find_symbol` to locate them and `file_overview` to understand their structure. Use REAL paths from these tools in your output — do not invent file paths.
+
 **Step 2: Read prompting references**
 Read these files for the XML template, transformation rules, and examples:
 - ${CLAUDE_SKILL_DIR}/references/xml-template.md
@@ -209,7 +211,9 @@ Create persistent tasks from the generated prompt instead of executing. This mod
    - `tags`: ["prompt-improved"]
    - `metadata`: `{"generated_prompt": "<the full XML prompt>"}`
 
-3. **Create subtasks**: For each `<task>` block in the generated XML prompt, call `task_create` with:
+3. **Create subtasks**: When creating subtasks, create ALL phases upfront with equal detail. Verification, testing, and documentation tasks must have the same depth of acceptance criteria and verification commands as implementation tasks. Do not create partial task trees.
+
+   For each `<task>` block in the generated XML prompt, call `task_create` with:
    - `parent_id`: the parent task's ID (returned from step 2)
    - `priority`: derive from position (first tasks get "high", later ones get "medium")
    - `tags`: ["prompt-improved", task-name-from-xml]
@@ -264,7 +268,12 @@ Create persistent tasks from the generated prompt instead of executing. This mod
 
 4. **Parallel execution note**: When the task tree contains 3+ independent subtasks (no mutual dependencies), include a recommendation to use TeamCreate for parallel execution when the user starts the work. Add `"recommended_strategy": "parallel"` or `"sequential"` to the parent task's metadata.
 
-5. **Present the task tree** to the user:
+5. **Completeness validation**: After creating all tasks, verify:
+   - Count the number of `<task>` blocks in the generated prompt vs the number of subtasks created. If there's a mismatch, warn the user about missing tasks.
+   - Verify each subtask has acceptance criteria, file references, and verification commands. Warn about any that are missing sections.
+   - Check that verification/testing tasks are not significantly thinner than implementation tasks.
+
+6. **Present the task tree** to the user:
    ```
    Created task tree:
    - [task-parent-id] Overall description (high, prompt-improved)
@@ -273,7 +282,7 @@ Create persistent tasks from the generated prompt instead of executing. This mod
      - [task-sub3] Third subtask (medium, depends on: sub1)
    ```
 
-6. **Do not execute**. Tell the user: "Tasks created. Run `/claudetools:task-manager start` to begin execution."
+7. **Do not execute**. Tell the user: "Tasks created. Run `/claudetools:task-manager start` to begin execution."
 
 ## Edge cases
 
