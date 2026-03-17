@@ -39,6 +39,10 @@
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/require-active-task.sh"
           },
           {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-task-scope.sh"
+          },
+          {
             "type": "prompt",
             "prompt": "You are a code review gate. Evaluate whether this Edit/Write has appropriate research backing.\n\nHook input:\n$ARGUMENTS\n\nRED FLAGS (return ok: false):\n1. Code references an external API, SDK, or third-party service (fetch to external URL, platform SDK calls, webhook handlers, OAuth flows) — the agent should have used WebSearch or Context7 to check current docs BEFORE writing this code\n2. Code appears to be a BUG FIX (error handling changes, condition fixes, null checks added) but there is no evidence the agent read error output, logs, or stack traces first — fixes must be evidence-based, not guesswork\n3. Code uses platform-specific patterns (Cloudflare Workers, Next.js SSR, database queries) that could have changed since training data — should verify against current docs\n4. Agent appears to be guessing at API formats, method signatures, or return types without checking\n\nGREEN FLAGS (return ok: true):\n- Simple refactoring of existing internal code\n- Test files\n- Internal utility functions not touching external services\n- Code that follows patterns already established in the same file\n- Configuration files\n- CSS/styling changes\n\nIMPORTANT: Only flag clear violations. When in doubt, return ok: true. This gate should catch obvious \"coding without research\" patterns, not slow down normal development.\n\nReturn JSON: {\"ok\": true} or {\"ok\": false, \"reason\": \"Search docs for [specific service/API] before writing this code — never assume API formats from training data\"}",
             "model": "haiku",
@@ -104,6 +108,10 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-deploy-then-verify.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/detect-unasked-deps.sh"
           }
         ]
       },

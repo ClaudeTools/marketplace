@@ -161,6 +161,94 @@ case "$FILE_PATH" in
       '#\s*(TODO|FIXME|HACK|XXX|STUB|PLACEHOLDER):?\s' \
       "$FILE_PATH" 2>/dev/null || true)
     ;;
+
+  *.kt|*.kts)
+    # Kotlin stubs
+    add < <(grep -n -E \
+      'TODO\(\)|throw NotImplementedError|throw UnsupportedOperationException' \
+      "$FILE_PATH" 2>/dev/null || true)
+
+    add < <(grep -n -E \
+      '//\s*(TODO|FIXME|HACK|XXX|STUB|PLACEHOLDER):?\s' \
+      "$FILE_PATH" 2>/dev/null || true)
+    ;;
+
+  *.swift)
+    # Swift stubs
+    add < <(grep -n -E \
+      'fatalError\(.*(not implemented|todo|placeholder)|preconditionFailure' \
+      "$FILE_PATH" 2>/dev/null || true)
+
+    add < <(grep -n -E \
+      '//\s*(TODO|FIXME|HACK|XXX|STUB|PLACEHOLDER):?\s' \
+      "$FILE_PATH" 2>/dev/null || true)
+    ;;
+
+  *.cpp|*.cc|*.cxx|*.c|*.h|*.hpp)
+    # C/C++ stubs
+    add < <(grep -n -E \
+      'throw\s+std::runtime_error\(.*(not implemented|todo)|static_assert\(false' \
+      "$FILE_PATH" 2>/dev/null || true)
+
+    add < <(grep -n -E \
+      '//\s*(TODO|FIXME|HACK|XXX|STUB|PLACEHOLDER):?\s' \
+      "$FILE_PATH" 2>/dev/null || true)
+    ;;
+
+  *.php)
+    # PHP stubs
+    add < <(grep -n -E \
+      'throw new \\?(BadMethodCallException|RuntimeException)\(.*(not implemented|todo)' \
+      "$FILE_PATH" 2>/dev/null || true)
+
+    add < <(grep -n -E \
+      '//\s*(TODO|FIXME|HACK|XXX|STUB|PLACEHOLDER):?\s' \
+      "$FILE_PATH" 2>/dev/null || true)
+    ;;
+
+  *.scala)
+    # Scala stubs
+    add < <(grep -n -E \
+      '\?\?\?|throw new NotImplementedError|throw new UnsupportedOperationException' \
+      "$FILE_PATH" 2>/dev/null || true)
+
+    add < <(grep -n -E \
+      '//\s*(TODO|FIXME|HACK|XXX|STUB|PLACEHOLDER):?\s' \
+      "$FILE_PATH" 2>/dev/null || true)
+    ;;
+
+  *.lua)
+    # Lua stubs
+    add < <(grep -n -E \
+      'error\(.*(not implemented|todo|placeholder)' \
+      "$FILE_PATH" 2>/dev/null || true)
+
+    add < <(grep -n -E \
+      '--\s*(TODO|FIXME|HACK|XXX|STUB|PLACEHOLDER):?\s' \
+      "$FILE_PATH" 2>/dev/null || true)
+    ;;
+
+  *.zig)
+    # Zig stubs
+    add < <(grep -n -E \
+      '@panic\(.*(not implemented|todo)|unreachable' \
+      "$FILE_PATH" 2>/dev/null || true)
+
+    add < <(grep -n -E \
+      '//\s*(TODO|FIXME|HACK|XXX|STUB|PLACEHOLDER):?\s' \
+      "$FILE_PATH" 2>/dev/null || true)
+    ;;
+
+  *.ex|*.exs)
+    # Elixir stubs
+    add < <(grep -n -E \
+      'raise\s+"not implemented"|raise\s+RuntimeError' \
+      "$FILE_PATH" 2>/dev/null || true)
+
+    add < <(grep -n -E \
+      '#\s*(TODO|FIXME|HACK|XXX|STUB|PLACEHOLDER):?\s' \
+      "$FILE_PATH" 2>/dev/null || true)
+    ;;
 esac
 
 # --- Multi-line stub detection: function body is ONLY return []/{}/ null (across lines) ---
@@ -265,6 +353,34 @@ case "$FILE_PATH" in
     TS_SUPPRESS=$({ grep -oE '@ts-ignore|@ts-expect-error' "$FILE_PATH" 2>/dev/null || true; } | wc -l | tr -d ' ')
     if [ "$TS_SUPPRESS" -gt "$TS_IGNORE_LIMIT" ]; then
       ISSUES="${ISSUES}WARNING: ${TS_SUPPRESS} uses of @ts-ignore/@ts-expect-error -- suppressing type safety\n"
+    fi
+    ;;
+
+  *.py)
+    # Python type safety: excessive Any usage
+    PY_ANY_COUNT=$({ grep -oE ':\s*Any\b|->.*Any\b' "$FILE_PATH" 2>/dev/null || true; } | wc -l | tr -d ' ')
+    if [ "$PY_ANY_COUNT" -gt 5 ]; then
+      ISSUES="${ISSUES}WARNING: ${PY_ANY_COUNT} uses of 'Any' type -- likely type shortcuts\n"
+    fi
+
+    # Python: bare except (catches everything including KeyboardInterrupt)
+    BARE_EXCEPT=$({ grep -n -E '^\s*except\s*:' "$FILE_PATH" 2>/dev/null || true; } | wc -l | tr -d ' ')
+    if [ "$BARE_EXCEPT" -gt 0 ]; then
+      ISSUES="${ISSUES}WARNING: ${BARE_EXCEPT} bare except clauses -- should catch specific exceptions\n"
+    fi
+
+    # Python: type: ignore abuse
+    PY_IGNORE=$({ grep -oE '#\s*type:\s*ignore' "$FILE_PATH" 2>/dev/null || true; } | wc -l | tr -d ' ')
+    if [ "$PY_IGNORE" -gt 2 ]; then
+      ISSUES="${ISSUES}WARNING: ${PY_IGNORE} uses of '# type: ignore' -- suppressing type safety\n"
+    fi
+    ;;
+
+  *.go)
+    # Go type safety: excessive interface{} / any usage
+    GO_IFACE_COUNT=$({ grep -oE 'interface\{\}|any\b' "$FILE_PATH" 2>/dev/null || true; } | wc -l | tr -d ' ')
+    if [ "$GO_IFACE_COUNT" -gt 5 ]; then
+      ISSUES="${ISSUES}WARNING: ${GO_IFACE_COUNT} uses of interface{}/any -- consider typed parameters\n"
     fi
     ;;
 esac

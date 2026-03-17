@@ -118,6 +118,29 @@ if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE '(npm\s+run\s+deploy|wrangler\s+d
   fi
 fi
 
+# --- Database destruction ---
+# DROP DATABASE / DROP TABLE without WHERE (SQL injection or accident)
+if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qiE '(DROP\s+(DATABASE|TABLE|SCHEMA)\b|TRUNCATE\s+TABLE)'; then
+  BLOCKED="Blocked: SQL DROP/TRUNCATE command (destructive database operation)"
+fi
+
+# --- Infrastructure destruction ---
+# terraform destroy, kubectl delete namespace, aws ec2 terminate
+if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE '(terraform\s+destroy|kubectl\s+delete\s+namespace|aws\s+.*terminate-instances|gcloud\s+.*delete\s+.*--quiet)'; then
+  BLOCKED="Blocked: infrastructure destruction command — requires explicit user confirmation"
+fi
+
+# --- Credential exposure ---
+# Printing secrets to stdout or piping them
+if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE '(echo|cat|printf)\s+.*(\$[A-Z_]*(SECRET|TOKEN|KEY|PASSWORD|CREDENTIALS|API_KEY))'; then
+  BLOCKED="Blocked: credential exposure via stdout (potential secret leakage)"
+fi
+
+# --- System service disruption ---
+if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE '(systemctl\s+(stop|disable|mask)\s|service\s+\w+\s+stop|kill\s+-9\s+1\b|killall)'; then
+  BLOCKED="Blocked: system service disruption command"
+fi
+
 # --- Hallucinated package detection ---
 # Flag packages with 5+ hyphenated segments (likely hallucinated)
 if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE '(npm|pnpm|yarn)\s+(install|add)\s+(@[a-z0-9-]+/)?[a-z]+-[a-z]+-[a-z]+-[a-z]+-[a-z]+'; then

@@ -23,21 +23,22 @@ fi
 IS_RESTRUCTURE=false
 RESTRUCTURE_REASON=""
 
-# File moves/renames
+# File moves/renames — only block when source and destination directories differ
 if echo "$COMMAND" | grep -qE '^\s*(mv|git mv)\s+' 2>/dev/null; then
-  # Allow mv within the same directory (renaming a single file to fix a typo is fine)
-  # Block cross-directory moves that indicate restructuring
-  if echo "$COMMAND" | grep -qE '(mv|git mv)\s+\S+/\S+\s+\S+/' 2>/dev/null; then
+  # Extract source and destination paths
+  MV_SRC=$(echo "$COMMAND" | sed -E 's/^\s*(mv|git mv)\s+(-[^ ]+\s+)*//' | awk '{print $1}')
+  MV_DST=$(echo "$COMMAND" | sed -E 's/^\s*(mv|git mv)\s+(-[^ ]+\s+)*//' | awk '{print $2}')
+  SRC_DIR=$(dirname "$MV_SRC" 2>/dev/null || echo ".")
+  DST_DIR=$(dirname "$MV_DST" 2>/dev/null || echo ".")
+  # Only block if directories actually differ (cross-directory move)
+  if [ -n "$MV_DST" ] && [ "$SRC_DIR" != "$DST_DIR" ]; then
     IS_RESTRUCTURE=true
-    RESTRUCTURE_REASON="Cross-directory file move detected"
+    RESTRUCTURE_REASON="Cross-directory file move: $SRC_DIR/ -> $DST_DIR/"
   fi
 fi
 
-# Bulk directory creation (new structure)
-if echo "$COMMAND" | grep -qE 'mkdir\s+(-p\s+)?\S+/\S+/\S+' 2>/dev/null; then
-  IS_RESTRUCTURE=true
-  RESTRUCTURE_REASON="Deep directory structure creation detected"
-fi
+# Note: mkdir is intentionally NOT blocked — creating directories is normal
+# when building features. Only moving/renaming existing files is restructuring.
 
 # Bulk find-and-move
 if echo "$COMMAND" | grep -qE 'find\s.*-exec\s+(mv|cp)' 2>/dev/null; then
@@ -70,8 +71,9 @@ if [ -d "$TASK_DIR" ]; then
     DESCRIPTION=$(jq -r '.description // empty' "$task_file" 2>/dev/null || true)
     COMBINED="$SUBJECT $DESCRIPTION"
 
-    # Check for restructure-related keywords
-    if echo "$COMBINED" | grep -qiE 'restructur|reorganiz|rename|move files|refactor.*structure|directory.*layout|folder.*structure|migration|relocat'; then
+    # Check for restructure-related keywords (broad — most tasks that involve
+    # moving files will mention one of these)
+    if echo "$COMBINED" | grep -qiE 'restructur|reorganiz|rename|move files|refactor.*structure|directory.*layout|folder.*structure|migration|relocat|move.*to|split.*into|extract.*from|consolidat'; then
       AUTHORIZED=true
       break
     fi

@@ -58,6 +58,11 @@ if [ -z "$BLOCKED" ] && echo "$CONTENT" | grep -qE 'function\s+[a-zA-Z0-9_]+\([^
   BLOCKED="Blocked: function returns hardcoded null/undefined/{}/ — implement real logic"
 fi
 
+# --- New dependency detection (training-informed) ---
+# Training data: models add heavy frameworks even when user says "stdlib only"
+# This is a SOFT warning, not a block — only fires for new projects (no existing package manager files)
+# The actual enforcement happens via must_not_contain in chain definitions
+
 if [ -n "$BLOCKED" ]; then
   HOOK_DECISION="block" HOOK_REASON="$BLOCKED"
   record_hook_outcome "block-stub-writes" "PreToolUse" "block" "" "" "" "$MODEL_FAMILY"
