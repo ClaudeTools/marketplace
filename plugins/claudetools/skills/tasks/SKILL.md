@@ -1,6 +1,6 @@
 ---
-name: tasks
-description: Extended task management with persistence, cross-session continuity, and validation. Use when the user says /tasks, task status, manage tasks, restore tasks, or session handoff.
+name: task-manager
+description: Extended task management with persistence, cross-session continuity, and validation. Use when the user says /task-manager, task status, manage tasks, restore tasks, or session handoff.
 argument-hint: [new|status|restore|decompose|progress|handoff|validate]
 allowed-tools: Read, Bash, Grep, Glob, Write, Edit
 metadata:
@@ -12,7 +12,7 @@ metadata:
 
 # Task Management
 
-You are executing the `/tasks` skill. This is a subcommand router for the extended task system. It provides persistent storage, cross-session continuity, and deterministic validation on top of the built-in TodoWrite tool.
+You are executing the `/task-manager` skill. This is a subcommand router for the extended task system. It provides persistent storage, cross-session continuity, and deterministic validation on top of the built-in TodoWrite tool.
 
 Parse the first argument to select the subcommand. Default to `status` if no argument is given.
 
