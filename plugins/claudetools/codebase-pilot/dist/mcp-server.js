@@ -2,16 +2,70 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema, } from "@modelcontextprotocol/sdk/types.js";
 import Database from "better-sqlite3";
+import fs from "node:fs";
 import path from "node:path";
 import { getDbPath } from "./db.js";
 import { generateProjectMap } from "./project-map.js";
+export function escapeLike(input) {
+    return input.replace(/[%_\\]/g, "\\$&");
+}
 function getProjectRoot() {
     return process.env.CODEBASE_PILOT_PROJECT_ROOT ?? process.cwd();
 }
-function openReadonly() {
+// Lazy singleton database connection — avoids per-call open/close race conditions
+let cachedDb = null;
+let cachedDbPath = null;
+function getDatabase() {
     const projectRoot = getProjectRoot();
     const dbPath = getDbPath(projectRoot);
-    return new Database(dbPath, { readonly: true });
+    // Return cached connection if still open and pointing at the same path
+    if (cachedDb && cachedDbPath === dbPath) {
+        try {
+            // Verify the connection is still usable
+            cachedDb.prepare("SELECT 1").get();
+            return cachedDb;
+        }
+        catch {
+            // Connection broken — close and reopen
+            try {
+                cachedDb.close();
+            }
+            catch { /* ignore */ }
+            cachedDb = null;
+            cachedDbPath = null;
+        }
+    }
+    // Check if the database file exists
+    if (!fs.existsSync(dbPath)) {
+        return null;
+    }
+    try {
+        cachedDb = new Database(dbPath, { readonly: true });
+        cachedDbPath = dbPath;
+        return cachedDb;
+    }
+    catch (err) {
+        process.stderr.write(`codebase-pilot: failed to open database: ${err}\n`);
+        return null;
+    }
+}
+function closeDatabase() {
+    if (cachedDb) {
+        try {
+            cachedDb.close();
+        }
+        catch { /* ignore */ }
+        cachedDb = null;
+        cachedDbPath = null;
+    }
+}
+function dbErrorMessage() {
+    const projectRoot = getProjectRoot();
+    const dbPath = getDbPath(projectRoot);
+    if (!fs.existsSync(dbPath)) {
+        return `No codebase index found at ${projectRoot}. Run \`codebase-pilot index\` to create one.`;
+    }
+    return `Codebase index could not be opened. It may be corrupt or locked. Run \`codebase-pilot index\` to rebuild.`;
 }
 const TOOLS = [
     {
@@ -93,16 +147,20 @@ const TOOLS = [
         },
     },
 ];
-function handleProjectMap() {
+export function handleProjectMap() {
     const projectRoot = getProjectRoot();
-    return generateProjectMap(projectRoot);
+    const db = getDatabase();
+    if (!db)
+        return dbErrorMessage();
+    return generateProjectMap(projectRoot, db);
 }
-function handleFindSymbol(args) {
-    const db = openReadonly();
+export function handleFindSymbol(args) {
+    const db = getDatabase();
+    if (!db)
+        return dbErrorMessage();
     // Sanitize the search term for FTS5
     const sanitized = args.name.replace(/[^\w*]/g, "");
     if (!sanitized) {
-        db.close();
         return "Invalid search term";
     }
     // Use FTS5 for search — add wildcard for prefix matching
@@ -134,7 +192,6 @@ function handleFindSymbol(args) {
          LIMIT 30`)
             .all(ftsQuery);
     }
-    db.close();
     if (results.length === 0) {
         return `No symbols found matching "${args.name}"`;
     }
@@ -148,18 +205,20 @@ function handleFindSymbol(args) {
     }
     return lines.join("\n");
 }
-function handleFindUsages(args) {
-    const db = openReadonly();
+export function handleFindUsages(args) {
+    const db = getDatabase();
+    if (!db)
+        return dbErrorMessage();
     // Find files that import this symbol
+    const safeName = escapeLike(args.name);
     const results = db
         .prepare(`SELECT f.path, i.symbols
        FROM imports i
        JOIN files f ON i.file_id = f.id
-       WHERE i.symbols LIKE ?
+       WHERE i.symbols LIKE ? ESCAPE '\\'
        ORDER BY f.path
        LIMIT 50`)
-        .all(`%${args.name}%`);
-    db.close();
+        .all(`%${safeName}%`);
     if (results.length === 0) {
         return `No files import "${args.name}"`;
     }
@@ -169,13 +228,14 @@ function handleFindUsages(args) {
     }
     return lines.join("\n");
 }
-function handleFileOverview(args) {
-    const db = openReadonly();
+export function handleFileOverview(args) {
+    const db = getDatabase();
+    if (!db)
+        return dbErrorMessage();
     const file = db
         .prepare("SELECT id, language, size FROM files WHERE path = ?")
         .get(args.path);
     if (!file) {
-        db.close();
         return `File not found in index: ${args.path}`;
     }
     const symbols = db
@@ -189,7 +249,6 @@ function handleFileOverview(args) {
     const imports = db
         .prepare("SELECT source, symbols FROM imports WHERE file_id = ? ORDER BY source")
         .all(file.id);
-    db.close();
     const lines = [
         `## ${args.path}`,
         `Language: ${file.language} | Size: ${file.size} bytes | ${symbols.length} symbols`,
@@ -214,13 +273,14 @@ function handleFileOverview(args) {
     }
     return lines.join("\n");
 }
-function handleRelatedFiles(args) {
-    const db = openReadonly();
+export function handleRelatedFiles(args) {
+    const db = getDatabase();
+    if (!db)
+        return dbErrorMessage();
     const file = db
         .prepare("SELECT id FROM files WHERE path = ?")
         .get(args.path);
     if (!file) {
-        db.close();
         return `File not found in index: ${args.path}`;
     }
     // Files this file imports from
@@ -232,15 +292,16 @@ function handleRelatedFiles(args) {
         .all(file.id);
     // Files that import from this file (by matching import source to this file's path)
     const basename = args.path.replace(/\.(ts|tsx|js|jsx|mjs|cjs)$/, "");
+    const safeBasename = escapeLike(path.basename(basename));
+    const safeFullBasename = escapeLike(basename);
     const importedBy = db
         .prepare(`SELECT f.path, i.source, i.symbols, 'imported_by' as direction
        FROM imports i
        JOIN files f ON i.file_id = f.id
-       WHERE i.source LIKE ? OR i.source LIKE ? OR i.source LIKE ?
+       WHERE i.source LIKE ? ESCAPE '\\' OR i.source LIKE ? ESCAPE '\\' OR i.source LIKE ? ESCAPE '\\'
        ORDER BY f.path
        LIMIT 30`)
-        .all(`%${path.basename(basename)}`, `%/${basename}`, `./${basename}`);
-    db.close();
+        .all(`%${safeBasename}`, `%/${safeFullBasename}`, `./${safeFullBasename}`);
     const lines = [`## Related files for ${args.path}`, ""];
     if (importsFrom.length > 0) {
         lines.push("### Imports from");
@@ -264,7 +325,41 @@ function handleRelatedFiles(args) {
     return lines.join("\n");
 }
 export async function startMcpServer() {
+    // --- Process-level error handling ---
+    // Ignore SIGPIPE — standard for stdio servers (client may disconnect)
+    process.on("SIGPIPE", () => { });
+    // Catch unhandled errors to prevent process crashes
+    process.on("uncaughtException", (err) => {
+        process.stderr.write(`codebase-pilot: uncaught exception: ${err}\n`);
+    });
+    process.on("unhandledRejection", (reason) => {
+        process.stderr.write(`codebase-pilot: unhandled rejection: ${reason}\n`);
+    });
+    // Handle stdout write errors (EPIPE when client disconnects)
+    process.stdout.on("error", (err) => {
+        if (err.code === "EPIPE") {
+            closeDatabase();
+            process.exit(0);
+        }
+        process.stderr.write(`codebase-pilot: stdout error: ${err}\n`);
+    });
+    // Graceful shutdown on signals
+    const shutdown = () => {
+        closeDatabase();
+        process.exit(0);
+    };
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
+    // --- Server setup ---
     const server = new Server({ name: "codebase-pilot", version: "1.0.0" }, { capabilities: { tools: {} } });
+    // Transport lifecycle handlers
+    server.onerror = (err) => {
+        process.stderr.write(`codebase-pilot: server error: ${err}\n`);
+    };
+    server.onclose = () => {
+        closeDatabase();
+        process.exit(0);
+    };
     server.setRequestHandler(ListToolsRequestSchema, async () => ({
         tools: TOOLS,
     }));
@@ -305,5 +400,10 @@ export async function startMcpServer() {
     });
     const transport = new StdioServerTransport();
     await server.connect(transport);
+    // Detect client disconnect via stdin EOF
+    process.stdin.on("end", () => {
+        closeDatabase();
+        process.exit(0);
+    });
 }
 //# sourceMappingURL=mcp-server.js.map

@@ -5,6 +5,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import Database from "better-sqlite3";
+import fs from "node:fs";
 import path from "node:path";
 import { getDbPath } from "./db.js";
 import { generateProjectMap } from "./project-map.js";
@@ -50,10 +51,58 @@ function getProjectRoot(): string {
   return process.env.CODEBASE_PILOT_PROJECT_ROOT ?? process.cwd();
 }
 
-function openReadonly(): Database.Database {
+// Lazy singleton database connection — avoids per-call open/close race conditions
+let cachedDb: Database.Database | null = null;
+let cachedDbPath: string | null = null;
+
+function getDatabase(): Database.Database | null {
   const projectRoot = getProjectRoot();
   const dbPath = getDbPath(projectRoot);
-  return new Database(dbPath, { readonly: true });
+
+  // Return cached connection if still open and pointing at the same path
+  if (cachedDb && cachedDbPath === dbPath) {
+    try {
+      // Verify the connection is still usable
+      cachedDb.prepare("SELECT 1").get();
+      return cachedDb;
+    } catch {
+      // Connection broken — close and reopen
+      try { cachedDb.close(); } catch { /* ignore */ }
+      cachedDb = null;
+      cachedDbPath = null;
+    }
+  }
+
+  // Check if the database file exists
+  if (!fs.existsSync(dbPath)) {
+    return null;
+  }
+
+  try {
+    cachedDb = new Database(dbPath, { readonly: true });
+    cachedDbPath = dbPath;
+    return cachedDb;
+  } catch (err) {
+    process.stderr.write(`codebase-pilot: failed to open database: ${err}\n`);
+    return null;
+  }
+}
+
+function closeDatabase(): void {
+  if (cachedDb) {
+    try { cachedDb.close(); } catch { /* ignore */ }
+    cachedDb = null;
+    cachedDbPath = null;
+  }
+}
+
+function dbErrorMessage(): string {
+  const projectRoot = getProjectRoot();
+  const dbPath = getDbPath(projectRoot);
+  if (!fs.existsSync(dbPath)) {
+    return `No codebase index found at ${projectRoot}. Run \`codebase-pilot index\` to create one.`;
+  }
+  return `Codebase index could not be opened. It may be corrupt or locked. Run \`codebase-pilot index\` to rebuild.`;
 }
 
 const TOOLS = [
@@ -145,16 +194,18 @@ const TOOLS = [
 
 export function handleProjectMap(): string {
   const projectRoot = getProjectRoot();
-  return generateProjectMap(projectRoot);
+  const db = getDatabase();
+  if (!db) return dbErrorMessage();
+  return generateProjectMap(projectRoot, db);
 }
 
 export function handleFindSymbol(args: { name: string; kind?: string }): string {
-  const db = openReadonly();
+  const db = getDatabase();
+  if (!db) return dbErrorMessage();
 
   // Sanitize the search term for FTS5
   const sanitized = args.name.replace(/[^\w*]/g, "");
   if (!sanitized) {
-    db.close();
     return "Invalid search term";
   }
 
@@ -192,8 +243,6 @@ export function handleFindSymbol(args: { name: string; kind?: string }): string 
       .all(ftsQuery) as SymbolRow[];
   }
 
-  db.close();
-
   if (results.length === 0) {
     return `No symbols found matching "${args.name}"`;
   }
@@ -211,7 +260,8 @@ export function handleFindSymbol(args: { name: string; kind?: string }): string 
 }
 
 export function handleFindUsages(args: { name: string }): string {
-  const db = openReadonly();
+  const db = getDatabase();
+  if (!db) return dbErrorMessage();
 
   // Find files that import this symbol
   const safeName = escapeLike(args.name);
@@ -226,8 +276,6 @@ export function handleFindUsages(args: { name: string }): string {
     )
     .all(`%${safeName}%`) as ImportRow[];
 
-  db.close();
-
   if (results.length === 0) {
     return `No files import "${args.name}"`;
   }
@@ -241,14 +289,14 @@ export function handleFindUsages(args: { name: string }): string {
 }
 
 export function handleFileOverview(args: { path: string }): string {
-  const db = openReadonly();
+  const db = getDatabase();
+  if (!db) return dbErrorMessage();
 
   const file = db
     .prepare("SELECT id, language, size FROM files WHERE path = ?")
     .get(args.path) as { id: number; language: string; size: number } | undefined;
 
   if (!file) {
-    db.close();
     return `File not found in index: ${args.path}`;
   }
 
@@ -266,8 +314,6 @@ export function handleFileOverview(args: { path: string }): string {
   const imports = db
     .prepare("SELECT source, symbols FROM imports WHERE file_id = ? ORDER BY source")
     .all(file.id) as { source: string; symbols: string | null }[];
-
-  db.close();
 
   const lines: string[] = [
     `## ${args.path}`,
@@ -298,14 +344,14 @@ export function handleFileOverview(args: { path: string }): string {
 }
 
 export function handleRelatedFiles(args: { path: string }): string {
-  const db = openReadonly();
+  const db = getDatabase();
+  if (!db) return dbErrorMessage();
 
   const file = db
     .prepare("SELECT id FROM files WHERE path = ?")
     .get(args.path) as { id: number } | undefined;
 
   if (!file) {
-    db.close();
     return `File not found in index: ${args.path}`;
   }
 
@@ -338,8 +384,6 @@ export function handleRelatedFiles(args: { path: string }): string {
       `./${safeFullBasename}`
     ) as RelatedRow[];
 
-  db.close();
-
   const lines: string[] = [`## Related files for ${args.path}`, ""];
 
   if (importsFrom.length > 0) {
@@ -368,10 +412,49 @@ export function handleRelatedFiles(args: { path: string }): string {
 }
 
 export async function startMcpServer(): Promise<void> {
+  // --- Process-level error handling ---
+  // Ignore SIGPIPE — standard for stdio servers (client may disconnect)
+  process.on("SIGPIPE", () => { /* intentionally ignored — standard for stdio servers */ });
+
+  // Catch unhandled errors to prevent process crashes
+  process.on("uncaughtException", (err) => {
+    process.stderr.write(`codebase-pilot: uncaught exception: ${err}\n`);
+  });
+  process.on("unhandledRejection", (reason) => {
+    process.stderr.write(`codebase-pilot: unhandled rejection: ${reason}\n`);
+  });
+
+  // Handle stdout write errors (EPIPE when client disconnects)
+  process.stdout.on("error", (err) => {
+    if ((err as NodeJS.ErrnoException).code === "EPIPE") {
+      closeDatabase();
+      process.exit(0);
+    }
+    process.stderr.write(`codebase-pilot: stdout error: ${err}\n`);
+  });
+
+  // Graceful shutdown on signals
+  const shutdown = () => {
+    closeDatabase();
+    process.exit(0);
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+
+  // --- Server setup ---
   const server = new Server(
     { name: "codebase-pilot", version: "1.0.0" },
     { capabilities: { tools: {} } }
   );
+
+  // Transport lifecycle handlers
+  server.onerror = (err) => {
+    process.stderr.write(`codebase-pilot: server error: ${err}\n`);
+  };
+  server.onclose = () => {
+    closeDatabase();
+    process.exit(0);
+  };
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: TOOLS,
@@ -416,4 +499,10 @@ export async function startMcpServer(): Promise<void> {
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
+
+  // Detect client disconnect via stdin EOF
+  process.stdin.on("end", () => {
+    closeDatabase();
+    process.exit(0);
+  });
 }

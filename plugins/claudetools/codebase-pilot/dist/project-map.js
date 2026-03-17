@@ -1,9 +1,9 @@
 import path from "node:path";
 import Database from "better-sqlite3";
 import { getDbPath } from "./db.js";
-export function generateProjectMap(projectRoot) {
-    const dbPath = getDbPath(projectRoot);
-    const db = new Database(dbPath, { readonly: true });
+export function generateProjectMap(projectRoot, existingDb) {
+    const ownDb = !existingDb;
+    const db = existingDb ?? new Database(getDbPath(projectRoot), { readonly: true });
     const projectName = path.basename(projectRoot);
     // Language breakdown
     const languages = db
@@ -61,7 +61,9 @@ export function generateProjectMap(projectRoot) {
        ORDER BY s.kind, s.name
        LIMIT 15`)
         .all();
-    db.close();
+    // Close only if we opened it ourselves (CLI path)
+    if (ownDb)
+        db.close();
     // Build the compact map
     const lines = [];
     lines.push(`# ${projectName}`);

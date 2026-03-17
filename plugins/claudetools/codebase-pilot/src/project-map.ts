@@ -20,9 +20,9 @@ interface TopExport {
   line: number;
 }
 
-export function generateProjectMap(projectRoot: string): string {
-  const dbPath = getDbPath(projectRoot);
-  const db = new Database(dbPath, { readonly: true });
+export function generateProjectMap(projectRoot: string, existingDb?: Database.Database): string {
+  const ownDb = !existingDb;
+  const db = existingDb ?? new Database(getDbPath(projectRoot), { readonly: true });
 
   const projectName = path.basename(projectRoot);
 
@@ -99,7 +99,8 @@ export function generateProjectMap(projectRoot: string): string {
     )
     .all() as TopExport[];
 
-  db.close();
+  // Close only if we opened it ourselves (CLI path)
+  if (ownDb) db.close();
 
   // Build the compact map
   const lines: string[] = [];

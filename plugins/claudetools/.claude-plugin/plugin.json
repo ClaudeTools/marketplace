@@ -1,6 +1,6 @@
 {
   "name": "claudetools",
-  "version": "3.3.0",
+  "version": "3.2.0",
   "description": "Universal guardrail and quality system for Claude Code -- adaptive hooks, self-learning metrics, skills for code, research, writing, and data analysis. Zero config.",
   "author": {
     "name": "owenob1"
@@ -20,6 +20,12 @@
       "args": [
         "${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js",
         "mcp-server"
+      ]
+    },
+    "task-system": {
+      "command": "node",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/task-system/server.js"
       ]
     }
   }

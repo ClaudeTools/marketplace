@@ -1,0 +1,10 @@
+{
+  "name": "task-system",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MCP server for extended task management",
+  "main": "server.js",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1"
+  }
+}
