@@ -20,16 +20,153 @@ Parse the first argument to select the subcommand. Default to `status` if no arg
 
 ### new
 
-Create a new task.
+Create a new task with enriched context. The raw input goes through a lightweight enrichment pipeline before becoming a task — so the resulting task is detailed enough for an agent to execute without further clarification.
 
-1. Parse the remaining arguments as the task description.
-2. Use the `TaskCreate` tool to add the task to the TodoWrite display.
-3. If the MCP `task_create` tool is available, call it instead — it supports richer metadata:
-   - `priority` (low, medium, high, critical)
-   - `tags` (array of strings)
-   - `dependencies` (array of task IDs)
-   - `parent_id` (for subtasks)
-4. Confirm creation to the user with the assigned task ID.
+1. **Parse** the remaining arguments as the raw input.
+
+2. **Resolve and triage** the input:
+   - If the input is a file path, read it. If it's a URL, fetch it. The resolved content is what you assess.
+   - **Already detailed** (comprehensive spec, structured prompt with requirements/verification/approach, implementation guide with code examples): Skip the enrichment agent. The content is already good — go straight to step 4 (task creation). Use the content directly, decomposing into parent + subtasks if the scope warrants it.
+   - **Needs enrichment** (vague, rough notes, missing context, incomplete): Proceed to step 3.
+
+3. **Enrich** (only if triage says input needs it) — Spawn a general-purpose Agent to analyse the source material and produce a detailed task description. The agent prompt:
+
+   > You are a task preparation specialist. Your job is to take raw input and produce a detailed, self-contained task description that an executing agent can complete without needing to re-read the source material.
+   >
+   > **CRITICAL: You are a RESEARCH agent only. You MUST NOT:**
+   > - Call task_create, task_update, or any task management tools
+   > - Execute the task or make changes to the codebase
+   > - Create files or modify anything
+   >
+   > **Raw input:**
+   > {RAW_INPUT}
+   >
+   > **Steps:**
+   > 1. **Resolve the input**: If the input is a file path, read the file. If it's a URL, fetch it. If it's plain text, use it directly. The resolved content is your source material.
+   > 2. **Assess the source material quality**: Is it a comprehensive spec (detailed, code examples, schemas, verification criteria)? Rough notes? A bug report? A feature request? Your approach depends on what you're working with.
+   >    - **Comprehensive source**: Preserve all detail — code examples, schemas, exact content. Your job is to structure it for task execution, not to summarise it.
+   >    - **Rough source**: Research the codebase, fill gaps, add concrete requirements, think through the approach.
+   >    - **Mixed**: Preserve detailed sections, enrich vague ones.
+   > 3. If the input references files, code patterns, or APIs you need to understand, read them now.
+   > 4. If the input references external libraries, services, or concepts that need research, use WebSearch to gather what's needed.
+   > 5. Think through the approach: what are the concrete steps? What are the dependencies? What could go wrong?
+   > 6. Identify relevant codebase context: existing patterns to follow, files that will be touched, conventions to respect.
+   >
+   > **Step 5: Decide the output structure.**
+   > Assess the source material's scope and complexity:
+   >
+   > - **Single task** (simple fix, small feature, one-file change, clear single deliverable): Output a single markdown block.
+   > - **Parent + subtasks** (multi-step implementation, spec with phases/layers, multiple independent deliverables, or >5 concrete requirements): Output a JSON object with `{"type": "decomposed", "parent": {...}, "subtasks": [{...}, ...]}`.
+   >
+   > Use decomposition when the source material has natural separation points (phases, layers, independent components). Prefer fewer substantial subtasks (3-7) over many trivial ones. Each subtask must be self-contained and executable independently of the parent description.
+   >
+   > **Output format for single task — a markdown block with these sections:**
+   >
+   > ```markdown
+   > ## Title
+   > [concise descriptive title]
+   >
+   > ## Description
+   > [what needs to be done and why, in user-story format when applicable]
+   >
+   > ## Acceptance Criteria
+   > - [ ] [verb-led, measurable, testable criterion 1]
+   > - [ ] [verb-led, measurable, testable criterion 2]
+   >
+   > ## File References
+   > - Read: [exact paths to study for context]
+   > - Modify: [exact paths that will be changed]
+   > - Do not touch: [exact paths that must remain unchanged]
+   >
+   > ## Reference Patterns
+   > - Follow pattern in [path] for [what aspect]
+   >
+   > ## Constraints
+   > - [hard limit 1]
+   > - [hard limit 2]
+   >
+   > ## Out of Scope
+   > - [explicitly excluded thing 1]
+   >
+   > ## Verification
+   > - `[exact shell command 1]` — [what it proves]
+   > - `[exact shell command 2]` — [what it proves]
+   >
+   > ## Risk Level
+   > [low/medium/high] — [why]
+   > ```
+   >
+   > Every section is required. If a section has no content (e.g., no patterns to reference), write "None" rather than omitting it. Acceptance criteria must be verb-led and independently testable. Verification must contain exact shell commands, not prose descriptions.
+   >
+   > **Output format for decomposed task — a JSON object:**
+   > ```json
+   > {
+   >   "type": "decomposed",
+   >   "parent": {
+   >     "title": "...",
+   >     "description": "...",
+   >     "acceptance_criteria": ["verb-led criterion 1", "..."],
+   >     "file_references": { "read": ["..."], "modify": ["..."], "do_not_touch": ["..."] },
+   >     "reference_patterns": ["Follow pattern in /path for aspect"],
+   >     "constraints": ["..."],
+   >     "out_of_scope": ["..."],
+   >     "verification_commands": [{ "command": "...", "proves": "..." }],
+   >     "risk_level": "low|medium|high",
+   >     "risk_reason": "..."
+   >   },
+   >   "subtasks": [
+   >     {
+   >       "title": "...",
+   >       "description": "...",
+   >       "acceptance_criteria": ["..."],
+   >       "file_references": { "read": ["..."], "modify": ["..."], "do_not_touch": ["..."] },
+   >       "reference_patterns": ["..."],
+   >       "constraints": ["..."],
+   >       "out_of_scope": ["..."],
+   >       "verification_commands": [{ "command": "...", "proves": "..." }],
+   >       "risk_level": "low|medium|high",
+   >       "risk_reason": "...",
+   >       "priority": "high",
+   >       "tags": ["..."],
+   >       "depends_on": []
+   >     }
+   >   ]
+   > }
+   > ```
+   >
+   > Preserve all detail from the source material. If the source includes code examples, schemas, exact file contents, or verification criteria — include them in the appropriate section. A detailed source should produce a proportionally detailed output.
+   >
+   > **Return only the markdown block or JSON object. No preamble, no commentary.**
+
+4. **Create tasks** based on the enrichment output:
+
+   **If single task (markdown block):**
+   - Create one task using MCP `task_create` (preferred) or `TaskCreate`
+   - `content`: The full enriched markdown block (not a summary)
+   - `priority`: Infer from content — default `medium`, use `high` for urgency/blockers/critical fixes
+   - `tags`: Extract from content — technology names, component names, task type
+   - `metadata`: Extract structured fields from the markdown and store them for programmatic access:
+     ```json
+     {
+       "source": "<original input>",
+       "file_references": { "read": [...], "modify": [...], "do_not_touch": [...] },
+       "acceptance_criteria": ["..."],
+       "out_of_scope": ["..."],
+       "verification_commands": [{ "command": "...", "proves": "..." }],
+       "reference_patterns": ["..."],
+       "risk_level": "low|medium|high"
+     }
+     ```
+
+   **If decomposed (JSON with parent + subtasks):**
+   - Create the parent task first with the parent's full content rendered as markdown
+   - Create each subtask with `parent_id` set to the parent's task ID
+   - Map `depends_on` indices to the created subtask IDs for `dependencies`
+   - Each subtask's `content` is its full description/acceptance_criteria/constraints/verification — not a one-liner
+   - Each subtask's `metadata` includes `file_references`, `acceptance_criteria`, `out_of_scope`, `verification_commands`, `reference_patterns`, and `risk_level` extracted from the JSON
+   - Present the full task tree to the user
+
+5. **Confirm** creation to the user: show task ID(s), summary, priority, tags, and dependency tree (if decomposed).
 
 ---
 
@@ -41,13 +178,14 @@ Pick up the next pending task and execute it.
 2. Sort results by priority (critical > high > medium > low), then by creation date (oldest first).
 3. If no eligible tasks exist, tell the user: "No pending tasks available. Create tasks with `/task-manager new` or `/claudetools:prompt-improver task`."
 4. Select the first task. Mark it as in_progress using `task_update` with `{"id": "<task-id>", "status": "in_progress"}`.
-5. Display: task ID, content, priority, tags, and parent context (if any).
-6. Check if the task has subtasks by calling `task_query` with `{"parent_id": "<task-id>", "format": "json"}`.
-   - If subtasks exist and 3+ are independent (no inter-dependencies), use TeamCreate to execute them in parallel. Each teammate gets one subtask.
-   - If subtasks exist but are sequential (have dependencies), execute them in dependency order.
-   - If no subtasks, execute the task directly based on its content.
-7. Check if the task has `metadata.generated_prompt` (set by prompt-improver task mode). If yes, use that prompt to guide execution. If no, work on the task based on its content description.
-8. After execution completes, mark the task as completed using `task_update` and record files_touched.
+5. Display: task ID, content, priority, tags, and parent context (if any). If the task has `metadata.verification_commands`, show them so the user knows how completion will be verified.
+6. **ALL task execution uses TeamCreate.** Create a team for the task, then spawn teammates to do the work:
+   - Check if the task has subtasks by calling `task_query` with `{"parent_id": "<task-id>", "format": "json"}`.
+   - **Subtasks exist, 2+ independent**: Use TeamCreate, spawn one teammate per independent subtask. Each teammate gets the full subtask content, file_references, constraints, and verification_commands from metadata. Execute independent subtasks in parallel. Once a dependency completes, launch the next wave of newly-unblocked subtasks as new teammates.
+   - **Subtasks exist, all sequential**: Use TeamCreate, spawn one teammate for the first subtask. When it completes, spawn the next. Each teammate gets full context.
+   - **No subtasks (single task)**: Use TeamCreate with a single teammate to execute the task. This keeps execution isolated and the main context clean.
+7. Check if the task has `metadata.generated_prompt` (set by prompt-improver task mode). If yes, pass that prompt to the teammate to guide execution. If no, the teammate works from the task content description.
+8. After all teammates complete, mark the task as completed using `task_update` and record files_touched. Clean up the team with TeamDelete.
 
 ---
 
