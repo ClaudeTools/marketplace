@@ -23,6 +23,19 @@
         "agents",
         "training"
       ]
+    },
+    {
+      "name": "sequential-thinking",
+      "source": "./plugins/sequential-thinking",
+      "description": "Sequential thinking MCP server for structured problem-solving — breaks complex problems into numbered thought steps with revision and branching",
+      "version": "1.1.0",
+      "category": "developer-tools",
+      "tags": [
+        "thinking",
+        "reasoning",
+        "mcp",
+        "chain-of-thought"
+      ]
     }
   ]
 }

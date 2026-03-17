@@ -1,0 +1,25 @@
+{
+  "name": "sequential-thinking",
+  "version": "1.1.0",
+  "description": "Sequential thinking MCP server for structured problem-solving. Breaks down complex problems into numbered thought steps with revision, branching, and hypothesis verification.",
+  "author": {
+    "name": "Anthropic"
+  },
+  "license": "MIT",
+  "keywords": [
+    "thinking",
+    "reasoning",
+    "problem-solving",
+    "mcp",
+    "chain-of-thought"
+  ],
+  "mcpServers": {
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    }
+  }
+}
