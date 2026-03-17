@@ -30,11 +30,10 @@ STAGED=$(git -C "$CWD" diff --cached --name-only 2>/dev/null | wc -l | tr -d ' '
 if [ "$STAGED" -gt 0 ]; then
   HOOK_DECISION="reject" HOOK_REASON="staged but uncommitted changes"
   cat >&2 <<EOF
-GIT COMMIT REQUIRED: You have ${STAGED} staged files that are not committed.
+You have ${STAGED} staged files that are not committed.
+Uncommitted work is lost during context compaction and is invisible to teammates.
 
 Run: git commit -m "feat: <description>"
-
-Do not complete tasks or go idle with uncommitted work. Commit first.
 EOF
   record_hook_outcome "enforce-git-commits" "TaskCompleted" "block" "" "" "" "$MODEL_FAMILY"
   exit 2
@@ -46,13 +45,12 @@ UNCOMMITTED_LIMIT=${UNCOMMITTED_LIMIT%.*}
 if [ "$UNCOMMITTED" -gt "$UNCOMMITTED_LIMIT" ]; then
   HOOK_DECISION="reject" HOOK_REASON="${UNCOMMITTED} uncommitted modified files"
   cat >&2 <<EOF
-GIT COMMIT REQUIRED: You have ${UNCOMMITTED} modified files that are not committed.
+You have ${UNCOMMITTED} modified files that are not committed.
+Uncommitted work is lost during context compaction and is invisible to teammates.
 
-Stage your changes and commit:
+Stage and commit:
   git add <specific files you changed>
   git commit -m "feat: <description>"
-
-Do not complete tasks or go idle with uncommitted work.
 EOF
   record_hook_outcome "enforce-git-commits" "TaskCompleted" "block" "" "uncommitted_file_limit" "$UNCOMMITTED_LIMIT" "$MODEL_FAMILY"
   exit 2

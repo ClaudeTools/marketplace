@@ -128,19 +128,19 @@ if [ -f "$CWD/package.json" ]; then
     TC_OUT=$(cd "$CWD" && npm run typecheck 2>&1 | tail -20) || true
     TC_EXIT=$?
     if [ "$TC_EXIT" -ne 0 ]; then
-      TYPECHECK_FAIL="TypeScript typecheck FAILED (independent verification — do not trust agent's claim):\n$(echo "$TC_OUT" | grep -E 'error TS|Error:' | head -10)"
+      TYPECHECK_FAIL="TypeScript typecheck failed (fresh run):\n$(echo "$TC_OUT" | grep -E 'error TS|Error:' | head -10)"
     fi
   elif [ -f "$CWD/tsconfig.json" ]; then
     TC_OUT=$(cd "$CWD" && npx tsc --noEmit 2>&1 | tail -20) || true
     TC_EXIT=$?
     if [ "$TC_EXIT" -ne 0 ]; then
-      TYPECHECK_FAIL="TypeScript typecheck FAILED (independent verification — do not trust agent's claim):\n$(echo "$TC_OUT" | grep -E 'error TS|Error:' | head -10)"
+      TYPECHECK_FAIL="TypeScript typecheck failed (fresh run):\n$(echo "$TC_OUT" | grep -E 'error TS|Error:' | head -10)"
     fi
   fi
 fi
 
 if [ -n "$ISSUES" ] || [ -n "$TYPECHECK_FAIL" ] || [ -n "$SCOPE_WARNINGS" ]; then
-  echo "AGENT AUDIT: ${FILES_WITH_ISSUES}/${FILES_CHECKED} files checked (${FILE_COUNT} total changed)"
+  echo "Post-agent review: ${FILES_WITH_ISSUES}/${FILES_CHECKED} files checked (${FILE_COUNT} total changed)"
   if [ -n "$SCOPE_WARNINGS" ]; then
     echo ""
     echo "Scope warnings:"
@@ -156,9 +156,8 @@ if [ -n "$ISSUES" ] || [ -n "$TYPECHECK_FAIL" ] || [ -n "$SCOPE_WARNINGS" ]; the
     echo -e "$TYPECHECK_FAIL"
   fi
   echo ""
-  echo "NEVER trust an agent's self-reported quality gates. This audit ran independently."
-  echo "NEVER dismiss diagnostic output as 'stale' or 'transitional' — if the file has errors, it has errors."
-  echo "Action: fix all violations, re-run typecheck, verify before proceeding."
+  echo "These results come from a fresh check of the current file state."
+  echo "Fix all issues and re-run typecheck before proceeding."
   exit 1
 fi
 

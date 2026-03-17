@@ -1,8 +1,12 @@
 #!/bin/bash
-# PreToolUse hook for Grep|Bash — redirects symbol-level searches to codebase-pilot index
-# When a search term matches a known symbol in .codeindex/db.sqlite, blocks the grep
-# and suggests using find_symbol/find_usages MCP tools instead (faster + more precise).
-# Exits 0 always. Outputs block JSON only when a symbol match is found.
+# PreToolUse hook for Grep|Bash — intercepts symbol-level searches and runs
+# codebase-pilot CLI directly (no MCP dependency).
+#
+# When a search term matches a known symbol in .codeindex/db.sqlite, blocks
+# the grep and returns results from the index inline. This is faster and more
+# precise than grep for symbol lookups.
+#
+# Exit 0 always. Outputs block JSON with inline results when a symbol match is found.
 
 set -euo pipefail
 
@@ -11,17 +15,18 @@ source "$(dirname "$0")/hook-log.sh"
 hook_log "invoked"
 trap 'hook_log_result $? "${HOOK_DECISION:-allow}" "${HOOK_REASON:-}"' EXIT
 
-# Require sqlite3
-if ! command -v sqlite3 >/dev/null 2>&1; then
-  exit 0
-fi
+# Find the codebase-pilot CLI
+PILOT_CLI="${CLAUDE_PLUGIN_ROOT:-}/codebase-pilot/dist/cli.js"
+[ -f "$PILOT_CLI" ] || exit 0
 
 # Find .codeindex/db.sqlite by walking up from CWD
 DB_PATH=""
+PROJECT_ROOT=""
 DIR="$(pwd)"
 while [ "$DIR" != "/" ]; do
   if [ -f "$DIR/.codeindex/db.sqlite" ]; then
     DB_PATH="$DIR/.codeindex/db.sqlite"
+    PROJECT_ROOT="$DIR"
     break
   fi
   DIR=$(dirname "$DIR")
@@ -29,21 +34,26 @@ done
 
 [ -z "$DB_PATH" ] && exit 0
 
+# Require sqlite3 for quick pre-check (avoids slow node startup for non-matches)
+if ! command -v sqlite3 >/dev/null 2>&1; then
+  exit 0
+fi
+
 # Extract tool name
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null || true)
 SEARCH_TERM=""
-SUGGESTION="find_symbol"
+CLI_COMMAND="find-symbol"
 
 case "$TOOL_NAME" in
   Grep)
     RAW_PATTERN=$(echo "$INPUT" | jq -r '.tool_input.pattern // empty' 2>/dev/null || true)
     [ -z "$RAW_PATTERN" ] && exit 0
 
-    # Detect import/require patterns → suggest find_usages
+    # Detect import/require patterns → use find-usages
     if echo "$RAW_PATTERN" | grep -qiE '^(import|from|require)\b'; then
       SEARCH_TERM=$(echo "$RAW_PATTERN" | grep -oE '[A-Za-z_][A-Za-z0-9_]{2,}' | tail -1 || true)
-      SUGGESTION="find_usages"
-    # Detect definition searches → suggest find_symbol
+      CLI_COMMAND="find-usages"
+    # Detect definition searches → use find-symbol
     elif echo "$RAW_PATTERN" | grep -qiE '^(function|class|interface|type|enum|const|let|var|def|export)\b'; then
       SEARCH_TERM=$(echo "$RAW_PATTERN" | grep -oE '[A-Za-z_][A-Za-z0-9_]{2,}' | tail -1 || true)
     # Plain identifier with no regex metacharacters → could be a symbol
@@ -64,7 +74,7 @@ case "$TOOL_NAME" in
 
     # Detect import patterns in the command
     if [ -n "$SEARCH_TERM" ] && echo "$CMD" | grep -qiE 'import|from|require'; then
-      SUGGESTION="find_usages"
+      CLI_COMMAND="find-usages"
     fi
     ;;
 
@@ -78,35 +88,26 @@ esac
 [ ${#SEARCH_TERM} -lt 3 ] && exit 0
 echo "$SEARCH_TERM" | grep -qE '^[A-Za-z_][A-Za-z0-9_]*$' || exit 0
 
-# Query the index for exact symbol match
+# Quick pre-check with sqlite3 (fast) before invoking node (slower)
 SAFE_TERM="${SEARCH_TERM//\'/\'\'}"
-MATCHES=$(sqlite3 -separator '|' "$DB_PATH" \
-  "SELECT s.name, s.kind, f.path, s.line
-   FROM symbols s JOIN files f ON s.file_id = f.id
-   WHERE s.name = '$SAFE_TERM'
-   LIMIT 10" 2>/dev/null || true)
+MATCHES=$(sqlite3 "$DB_PATH" \
+  "SELECT COUNT(*) FROM symbols s WHERE s.name = '$SAFE_TERM'" 2>/dev/null || echo "0")
 
-[ -z "$MATCHES" ] && exit 0
+[ "$MATCHES" -eq 0 ] && exit 0
+[ "$MATCHES" -gt 8 ] && exit 0  # Too generic, let grep handle it
 
-# Too many matches = overly generic term, let grep handle it
-MATCH_COUNT=$(echo "$MATCHES" | wc -l | tr -d ' ')
-[ "$MATCH_COUNT" -gt 8 ] && exit 0
+# Run the CLI directly — get full results inline
+RESULT=$(CODEBASE_PILOT_PROJECT_ROOT="$PROJECT_ROOT" \
+  node "$PILOT_CLI" "$CLI_COMMAND" "$SEARCH_TERM" 2>/dev/null || true)
 
-# Build match list for the redirect message
-MATCH_LIST=$(echo "$MATCHES" | head -5 | while IFS='|' read -r name kind path line; do
-  echo "  - $kind '$name' in $path:$line"
-done)
+[ -z "$RESULT" ] && exit 0
 
-REASON="Codebase index hit: '$SEARCH_TERM' is a known symbol ($MATCH_COUNT match(es)).
+REASON="Codebase index has precise results for '$SEARCH_TERM' ($MATCHES match(es)). Using indexed lookup instead of grep:
 
-Use MCP tool \`$SUGGESTION\` instead — returns exact locations with signatures and relationships.
-
-Index matches:
-$MATCH_LIST
-Call: $SUGGESTION(name: \"$SEARCH_TERM\")"
+$RESULT"
 
 HOOK_DECISION="block"
-HOOK_REASON="redirect to $SUGGESTION for '$SEARCH_TERM'"
+HOOK_REASON="indexed lookup for '$SEARCH_TERM' via $CLI_COMMAND"
 
 jq -n --arg reason "$REASON" \
   '{

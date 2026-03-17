@@ -50,14 +50,13 @@ if [ "$CHANGED_COUNT" -eq 0 ]; then
     *)
       HOOK_DECISION="reject" HOOK_REASON="zero files changed for implementation task"
       cat >&2 <<EOF
-TASK COMPLETION BLOCKED: No files were changed.
+No files were changed for this task.
 
 Task: ${TASK_SUBJECT}
 Description: ${TASK_DESCRIPTION:-N/A}
 
-You marked this task as complete but git shows zero changed files.
-Have you actually done this? If so, commit your changes first.
-If not, do the work before marking complete.
+Git shows zero changed files. If the work is done, commit your changes first.
+If not, implement the task before marking it complete.
 EOF
       exit 2
       ;;
@@ -128,7 +127,7 @@ case "$RESULT" in
     REASON=$(echo "$RESULT" | head -1)
     HOOK_DECISION="reject" HOOK_REASON="$REASON"
     cat >&2 <<EOF
-TASK COMPLETION BLOCKED: Work does not match requirements.
+Work does not match the task requirements.
 
 Task: ${TASK_SUBJECT}
 Verification: ${REASON}
@@ -139,8 +138,7 @@ ${TASK_DESCRIPTION:-$TASK_SUBJECT}
 Files changed: ${CHANGED_COUNT}
 $(echo "$CHANGED" | head -15)
 
-Have you ACTUALLY completed this task? Re-read the requirements above.
-If something is missing, implement it now. Do not mark complete until ALL requirements are met.
+Re-read the requirements above. If something is missing, implement it before marking complete.
 EOF
     exit 2
     ;;

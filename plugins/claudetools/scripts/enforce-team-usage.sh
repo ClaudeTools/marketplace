@@ -72,7 +72,7 @@ if [ -n "$TEAM_NAME" ]; then
 fi
 
 # BLOCK: ALL Agent calls without team — no exceptions
-BLOCKED="Implementation agents MUST use TeamCreate. Call TeamCreate first, then spawn named teammates with team_name, name, and isolation: worktree parameters. Only Explore and Plan agents are allowed without a team (they are read-only research agents)."
+BLOCKED="Implementation agents need a team for coordination. Call TeamCreate first, then spawn named teammates with team_name, name, and isolation: worktree parameters. Only Explore and Plan agents work without a team (they are read-only)."
 
 HOOK_DECISION="block" HOOK_REASON="$BLOCKED"
 

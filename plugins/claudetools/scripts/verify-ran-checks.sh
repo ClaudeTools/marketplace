@@ -96,8 +96,9 @@ fi
 
 # Decision: need at least some evidence of verification
 if [ "$EVIDENCE_FOUND" -lt 2 ]; then
-  echo "VERIFICATION GATE FAILED: No evidence of test/typecheck/build commands found." >&2
-  echo "Before completing this task, run verification commands:" >&2
+  echo "No test or typecheck commands were detected this session." >&2
+  echo "Untested changes may introduce regressions that are harder to fix later." >&2
+  echo "Run verification commands before completing:" >&2
 
   # Suggest project-specific commands
   if [ -f "$CWD/package.json" ]; then

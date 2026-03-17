@@ -72,7 +72,7 @@ fi
 if [ "$IS_GIT" -eq 1 ]; then
   CURRENT_BRANCH=$(git -C "$CWD" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
   if [ "$CURRENT_BRANCH" = "main" ] || [ "$CURRENT_BRANCH" = "master" ]; then
-    TIER1_FAIL+=("[BRANCH] On $CURRENT_BRANCH — create a feature branch first")
+    TIER1_FAIL+=("On $CURRENT_BRANCH — working directly on main skips code review. Create a feature branch first.")
     HOOK_DECISION="reject"; HOOK_REASON="on main branch"
     summary
     record_hook_outcome "session-stop-gate" "Stop" "block" "" "" "" "$MODEL_FAMILY"
@@ -94,7 +94,7 @@ if [ "$IS_GIT" -eq 1 ]; then
 
   if [ -n "$CHANGED_FILES" ]; then
     FILE_COUNT=$(echo "$CHANGED_FILES" | wc -l | tr -d ' ')
-    TIER1_FAIL+=("[UNCOMMITTED] $FILE_COUNT uncommitted file(s) — commit or stash before stopping")
+    TIER1_FAIL+=("$FILE_COUNT uncommitted file(s). Uncommitted work is lost when the session ends — commit or stash before stopping.")
     HOOK_DECISION="reject"; HOOK_REASON="uncommitted changes"
     summary
     record_hook_outcome "session-stop-gate" "Stop" "block" "" "" "" "$MODEL_FAMILY"
@@ -116,8 +116,7 @@ fi
 if [ "$IS_GIT" -eq 1 ]; then
   SENSITIVE_STAGED=$(git -C "$CWD" diff --cached --name-only 2>/dev/null | grep -iE '\.(env|key|pem|p12|pfx|keystore)$|credentials|secrets' || true)
   if [ -n "$SENSITIVE_STAGED" ]; then
-    TIER1_FAIL+=("Sensitive files staged: $(echo "$SENSITIVE_STAGED" | tr '\n' ', ')")
-    TIER1_FAIL+=("[SENSITIVE] Sensitive files staged — unstage before committing")
+    TIER1_FAIL+=("Sensitive files staged: $(echo "$SENSITIVE_STAGED" | tr '\n' ', ') — unstage these before committing to avoid leaking credentials.")
     HOOK_DECISION="reject"; HOOK_REASON="sensitive files staged"
     summary
     record_hook_outcome "session-stop-gate" "Stop" "block" "" "" "" "$MODEL_FAMILY"
@@ -153,7 +152,7 @@ if [ -n "$RECENT_CODE_FILES" ]; then
 fi
 
 if [ "$STUB_COUNT" -gt 0 ]; then
-  TIER1_FAIL+=("[STUBS] $STUB_COUNT stub/TODO patterns in recent changes — implement or remove them")
+  TIER1_FAIL+=("$STUB_COUNT stub/TODO patterns in recent changes — implement or remove them before stopping.")
   HOOK_DECISION="reject"; HOOK_REASON="stubs in changed files"
   summary
   printf '%b\n' "$STUB_VIOLATIONS" >&2
@@ -172,7 +171,7 @@ fi
 WEASEL_HITS=$(echo "$INPUT" | grep -oiE 'should work|looks correct|appears to|I believe this fixes|it should be fine|probably works|seems to work|I think this is right|this might fix|likely resolves' 2>/dev/null || true)
 if [ -n "$WEASEL_HITS" ]; then
   WEASEL_COUNT=$(echo "$WEASEL_HITS" | wc -l | tr -d ' ')
-  TIER2_WARNINGS+=("$WEASEL_COUNT weasel phrase(s) detected — verify claims with tests, not confidence")
+  TIER2_WARNINGS+=("$WEASEL_COUNT uncertain phrase(s) detected — verify claims with tests, not confidence")
 fi
 
 # --- 2b. Scope check on recent commit ---

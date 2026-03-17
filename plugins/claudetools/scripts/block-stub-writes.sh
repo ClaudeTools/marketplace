@@ -35,27 +35,27 @@ BLOCKED=""
 
 # Stub throws
 if echo "$CONTENT" | grep -qiE 'throw new Error\(.*(not implemented|todo|fixme|placeholder)'; then
-  BLOCKED="Blocked: stub throw (not implemented/todo/placeholder)"
+  BLOCKED="Blocked: stub throw detected. Write the actual implementation instead. If out of scope, skip creating this function entirely."
 fi
 
 # TODO/FIXME markers as the ONLY content (not in a real comment explaining context)
 if [ -z "$BLOCKED" ] && echo "$CONTENT" | grep -qE '^\s*(//|#)\s*(TODO|FIXME|STUB|PLACEHOLDER):?\s'; then
-  BLOCKED="Blocked: TODO/FIXME/STUB marker — implement the feature or skip it"
+  BLOCKED="Blocked: TODO/FIXME/STUB marker. Implement the feature now, or skip creating this code entirely."
 fi
 
 # NotImplementedError (Python)
 if [ -z "$BLOCKED" ] && echo "$CONTENT" | grep -qE 'raise\s+NotImplementedError'; then
-  BLOCKED="Blocked: NotImplementedError — implement fully or tell the user you can't"
+  BLOCKED="Blocked: NotImplementedError. Write the full implementation, or skip creating this function entirely."
 fi
 
 # Empty function bodies being written
 if [ -z "$BLOCKED" ] && echo "$CONTENT" | grep -qE 'function\s+[a-zA-Z0-9_]+\([^)]*\)\s*\{\s*\}'; then
-  BLOCKED="Blocked: empty function body — implement the function or don't create it"
+  BLOCKED="Blocked: empty function body. Write the implementation, or skip creating this function entirely."
 fi
 
 # Functions that only return hardcoded null/undefined/{}/[]
 if [ -z "$BLOCKED" ] && echo "$CONTENT" | grep -qE 'function\s+[a-zA-Z0-9_]+\([^)]*\)\s*\{\s*return\s+(null|undefined|\{\}|\[\])\s*;?\s*\}'; then
-  BLOCKED="Blocked: function returns hardcoded null/undefined/{}/ — implement real logic"
+  BLOCKED="Blocked: function returns only a hardcoded empty value. Write the real logic, or skip creating this function entirely."
 fi
 
 # --- New dependency detection (training-informed) ---

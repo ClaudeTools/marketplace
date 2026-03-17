@@ -67,16 +67,11 @@ BREADCRUMB="/tmp/claude-deploy-pending-${SESSION_ID}"
 echo "${DEPLOY_TYPE}|$(date -u +%Y-%m-%dT%H:%M:%SZ)|${COMMAND}" > "$BREADCRUMB" 2>/dev/null || true
 
 HOOK_DECISION="warn" HOOK_REASON="deploy detected, verification required"
-echo "DEPLOY DETECTED (${DEPLOY_TYPE})"
-echo "============================================"
-echo "Rule: After deploying, hit the endpoint with real data and show the response. (no-shortcuts.md)"
-echo ""
-echo "You MUST now verify the deployment:"
+echo "Deploy completed (${DEPLOY_TYPE}). Verify it works before continuing:"
 echo "  1. curl the deployed endpoint with real data"
 echo "  2. Check the response for correctness"
 echo "  3. If UI changes: open in Chrome and verify visually"
 echo ""
-echo "Do NOT claim the deploy is working without showing real output."
-echo "Do NOT use AI to 'verify' the deploy — use curl, Chrome, or real tools."
+echo "Unverified deploys waste debugging time later."
 record_hook_outcome "enforce-deploy-then-verify" "PostToolUse" "warn" "Bash" "" "" "$MODEL_FAMILY"
 exit 1

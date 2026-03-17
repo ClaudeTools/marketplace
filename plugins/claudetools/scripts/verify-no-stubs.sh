@@ -389,13 +389,11 @@ esac
 ISSUES=$(echo -e "$ISSUES" | sed '/^$/d')
 
 if [ -n "$ISSUES" ]; then
-  echo "STUB/PLACEHOLDER DETECTED in $FILE_PATH:" >&2
+  echo "Stubs detected in $FILE_PATH:" >&2
   echo -e "$ISSUES" >&2
   echo "" >&2
-  echo "MANDATORY: Fix these violations NOW before doing anything else." >&2
-  echo "Rule: No stubs, TODOs, or placeholder implementations." >&2
-  echo "WARNING: TaskCompleted hook WILL BLOCK completion if these remain." >&2
-  echo "Action: Re-read the file, fix every violation, then continue." >&2
+  echo "Stubs cause runtime crashes and hide incomplete work from reviewers." >&2
+  echo "Replace each stub with a working implementation, then continue." >&2
   HOOK_DECISION="warn" HOOK_REASON="stubs detected in $FILE_PATH"
   record_hook_outcome "verify-no-stubs" "PostToolUse" "warn" "" "" "" "$MODEL_FAMILY"
   exit 2

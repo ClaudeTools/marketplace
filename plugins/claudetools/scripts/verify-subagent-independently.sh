@@ -43,13 +43,13 @@ if [ -f "$CWD/package.json" ]; then
   if grep -q '"typecheck"' "$CWD/package.json" 2>/dev/null; then
     TC_OUT=$(cd "$CWD" && npm run typecheck 2>&1 | tail -15) || true
     if echo "$TC_OUT" | grep -qE 'error TS|Error:|FAIL'; then
-      TYPECHECK_RESULT="TYPECHECK FAILED (independent — do NOT trust subagent's claim):\n$(echo "$TC_OUT" | grep -E 'error TS|Error:' | head -10)"
+      TYPECHECK_RESULT="Typecheck failed (fresh run):\n$(echo "$TC_OUT" | grep -E 'error TS|Error:' | head -10)"
       ISSUES="${ISSUES}\n${TYPECHECK_RESULT}"
     fi
   elif [ -f "$CWD/tsconfig.json" ]; then
     TC_OUT=$(cd "$CWD" && npx tsc --noEmit 2>&1 | tail -15) || true
     if echo "$TC_OUT" | grep -qE 'error TS|Error:'; then
-      TYPECHECK_RESULT="TYPECHECK FAILED (independent):\n$(echo "$TC_OUT" | grep -E 'error TS|Error:' | head -10)"
+      TYPECHECK_RESULT="Typecheck failed (fresh run):\n$(echo "$TC_OUT" | grep -E 'error TS|Error:' | head -10)"
       ISSUES="${ISSUES}\n${TYPECHECK_RESULT}"
     fi
   fi
@@ -59,7 +59,7 @@ fi
 if [ -f "$CWD/package.json" ] && grep -q '"test"' "$CWD/package.json" 2>/dev/null; then
   TEST_OUT=$(cd "$CWD" && timeout 60 npm test 2>&1 | tail -15) || true
   if echo "$TEST_OUT" | grep -qE 'FAIL|failed|ERROR' && ! echo "$TEST_OUT" | grep -qE '0 failed'; then
-    ISSUES="${ISSUES}\nTESTS FAILED (independent):\n$(echo "$TEST_OUT" | grep -E 'FAIL|failed|ERROR' | head -5)"
+    ISSUES="${ISSUES}\nTests failed (fresh run):\n$(echo "$TEST_OUT" | grep -E 'FAIL|failed|ERROR' | head -5)"
   fi
 fi
 
@@ -76,25 +76,21 @@ while IFS= read -r file; do
 done <<< "$ALL_CHANGED"
 
 if [ -n "$STUB_FILES" ]; then
-  ISSUES="${ISSUES}\nSTUBS FOUND in subagent output:${STUB_FILES}"
+  ISSUES="${ISSUES}\nStubs found in changed files:${STUB_FILES}"
 fi
 
 # --- Report ---
 if [ -n "$ISSUES" ]; then
   HOOK_DECISION="warn" HOOK_REASON="independent verification found issues"
-  echo "INDEPENDENT SUBAGENT VERIFICATION (agent: ${AGENT_ID}, type: ${AGENT_TYPE})"
-  echo "================================================================="
-  echo "Rule: NEVER trust a subagent's self-reported results. This is independent verification."
+  echo "Subagent (${AGENT_TYPE}) changed ${FILE_COUNT} files. Fresh verification found issues:"
   echo ""
-  echo "${FILE_COUNT} files changed. Issues found:"
   echo -e "$ISSUES"
   echo ""
-  echo "ACTION REQUIRED: Fix all issues above. Do NOT rely on the subagent's claim that things pass."
-  echo "Read the actual changed files yourself before proceeding."
+  echo "Fix these issues, then review the changed files before proceeding."
   exit 1
 fi
 
 # Clean — but still remind orchestrator to verify
-echo "INDEPENDENT VERIFICATION: Subagent (${AGENT_TYPE}) changed ${FILE_COUNT} files. Typecheck/tests pass independently."
-echo "Reminder: Read the actual changed files before trusting the subagent's work summary."
+echo "Subagent (${AGENT_TYPE}) changed ${FILE_COUNT} files. Typecheck and tests pass."
+echo "Review the changed files before proceeding."
 exit 0

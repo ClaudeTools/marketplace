@@ -53,7 +53,7 @@ if [ "$FOUND_ACTIVE" = true ]; then
 fi
 
 # No active task found — block the edit
-BLOCKED="No active task. Create a task with TaskCreate and set it to in_progress before editing code. This ensures all changes are tracked and reviewable."
+BLOCKED="No active task. Create a task with TaskCreate and set it to in_progress before editing code. Without a task, changes are untracked and cannot be reviewed or verified at completion."
 
 HOOK_DECISION="block"; HOOK_REASON="$BLOCKED"
 

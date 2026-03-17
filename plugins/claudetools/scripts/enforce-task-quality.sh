@@ -107,7 +107,7 @@ done <<< "$CHANGED"
 
 # --- Hard violations: stubs, type abuse → reject ---
 if [ "$VIOLATION_COUNT" -gt 0 ]; then
-  echo "QUALITY GATE FAILED: ${VIOLATION_COUNT} violations found. Fix these before completing:" >&2
+  echo "${VIOLATION_COUNT} issues found. Fix these before completing:" >&2
   echo -e "$VIOLATIONS" >&2
   echo "" >&2
   echo "Fix all violations, then mark the task complete again." >&2
@@ -121,9 +121,9 @@ if [ "$UI_FILES_CHANGED" -gt 0 ]; then
   HAS_VISUAL_CHECK=$(echo "$INPUT" | grep -ciE 'chrome|screenshot|verified in browser|visual.?verif|browser.?test|checked in browser|rendered.?correct' 2>/dev/null || true)
   HAS_VISUAL_CHECK=${HAS_VISUAL_CHECK:-0}
   if [ "$HAS_VISUAL_CHECK" -eq 0 ]; then
-    echo "QUALITY GATE FAILED: ${UI_FILES_CHANGED} UI files (.tsx) changed but no Chrome visual verification detected." >&2
-    echo "Rule: ALL UI/UX changes must be verified in Chrome after deployment." >&2
-    echo "Action: Open the changed pages in Chrome, take a screenshot or confirm they render correctly, then complete the task." >&2
+    echo "${UI_FILES_CHANGED} UI files (.tsx) changed but no visual verification detected." >&2
+    echo "UI changes that aren't verified in a browser often have layout or rendering issues that are invisible in code." >&2
+    echo "Open the changed pages in Chrome, confirm they render correctly, then complete the task." >&2
     exit 2
   fi
 fi
@@ -134,7 +134,7 @@ if [ -f "$CWD/package.json" ]; then
     TC_EXIT=0
     TC_OUTPUT=$(cd "$CWD" && npm run typecheck 2>&1) || TC_EXIT=$?
     if [ "$TC_EXIT" -ne 0 ] || echo "$TC_OUTPUT" | grep -qE 'error TS|Type error'; then
-      echo "QUALITY GATE FAILED: typecheck errors. Fix type errors before completing." >&2
+      echo "Typecheck errors found. Fix type errors before completing." >&2
       echo "--- Last 10 lines of typecheck output ---" >&2
       echo "$TC_OUTPUT" | tail -10 >&2
       echo "--- End typecheck output ---" >&2
@@ -170,7 +170,7 @@ if [ -n "$CHANGED" ]; then
     PKG_NAME=$(basename "$tdir")
     TEST_OUT=$(cd "$tdir" && npm test 2>&1 | tail -10) || true
     if echo "$TEST_OUT" | grep -qE 'FAIL|failed' && ! echo "$TEST_OUT" | grep -qE 'pre-existing|0 failed'; then
-      echo "QUALITY GATE FAILED: Tests failing in $PKG_NAME." >&2
+      echo "Tests failing in $PKG_NAME." >&2
       echo "$TEST_OUT" | grep -E 'FAIL|failed' | head -5 >&2
       echo "" >&2
       echo "Fix failing tests before completing the task." >&2
@@ -183,19 +183,19 @@ fi
 # --- Prevent merge to main without passing all checks ---
 CURRENT_BRANCH=$(git -C "$CWD" rev-parse --abbrev-ref HEAD 2>/dev/null || true)
 if [ "$CURRENT_BRANCH" = "main" ] || [ "$CURRENT_BRANCH" = "master" ]; then
-  echo "QUALITY GATE FAILED: You are on the main branch." >&2
-  echo "All work must be done on a feature branch, not directly on main." >&2
-  echo "Create a branch: git checkout -b feat/<description>" >&2
+  echo "You are on the main branch." >&2
+  echo "Working directly on main skips code review and can break the build for all users." >&2
+  echo "Create a feature branch first: git checkout -b feat/<description>" >&2
   HOOK_DECISION="reject"; HOOK_REASON="working on main branch"
   exit 2
 fi
 
 # --- Soft warnings (exit 1 = injected into conversation, does not block) ---
 if [ -n "$WARNINGS" ]; then
-  echo "QUALITY WARNINGS (non-blocking):" >&2
+  echo "Suggestions (non-blocking):" >&2
   echo -e "$WARNINGS" >&2
   echo "" >&2
-  echo "These won't block completion but should be addressed." >&2
+  echo "These won't block completion but are worth addressing." >&2
   exit 1
 fi
 
