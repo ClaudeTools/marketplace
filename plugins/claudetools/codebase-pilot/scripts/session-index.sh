@@ -138,18 +138,22 @@ if command -v sqlite3 &>/dev/null && [[ -f "$METRICS_DB_PATH" ]]; then
     TASK_TEXT=$(echo "${INPUT:-}" | jq -r '(.tool_input.prompt // .tool_input.description // .prompt // "") | .[0:2000]' 2>/dev/null || true)
     FTS_MEMS=""
     if [[ -n "$TASK_TEXT" && ${#TASK_TEXT} -gt 10 ]]; then
-      FTS_TERMS=$(echo "$TASK_TEXT" | tr '[:upper:]' '[:lower:]' | \
-        grep -oE '\b[a-z]{4,}\b' | \
+      FTS_TERMS=$(echo "$TASK_TEXT" | \
+        grep -oE '\b[A-Z][a-zA-Z0-9]{2,}\b|\b[a-z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*\b|\b[a-z_]{4,}\b' | \
+        tr '[:upper:]' '[:lower:]' | \
         grep -vE '^(this|that|with|from|have|been|will|would|could|should|there|their|about|which|when|what|make|just|more|also|than|them|then|these|those|each|into|some|like|over|such|only|after|before|other|your|does|were|being|here|very|most|much|need|want|help|please|using|file|code)$' | \
         sort -u | head -6)
       if [[ -n "$FTS_TERMS" ]]; then
         FTS_QUERY=$(echo "$FTS_TERMS" | tr '\n' ' ' | sed 's/ *$//' | sed 's/ / OR /g')
+        # Composite ranking: FTS relevance + confidence + usage frequency
         FTS_MEMS=$(sqlite3 "$METRICS_DB_PATH" \
           "SELECT m.type, m.description FROM memories m
-           WHERE m.rowid IN (
-             SELECT rowid FROM memories_fts WHERE memories_fts MATCH '$FTS_QUERY'
-             ORDER BY rank LIMIT 3
-           ) AND m.confidence > 0.3 AND m.type != 'feedback';" 2>/dev/null || true)
+           INNER JOIN (
+             SELECT rowid, rank FROM memories_fts WHERE memories_fts MATCH '$FTS_QUERY'
+           ) fts ON m.rowid = fts.rowid
+           WHERE m.confidence > 0.3 AND m.type != 'feedback'
+           ORDER BY (fts.rank * -1.0 + m.confidence * 5.0 + MIN(m.access_count, 10) * 0.5) DESC
+           LIMIT 3;" 2>/dev/null || true)
       fi
     fi
 

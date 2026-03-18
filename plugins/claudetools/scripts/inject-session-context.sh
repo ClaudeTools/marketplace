@@ -29,10 +29,8 @@ ensure_metrics_db || exit 0
 session_count=$(sqlite3 "$METRICS_DB" \
   "SELECT COUNT(*) FROM session_metrics;" 2>/dev/null) || session_count=0
 
-if [ "$session_count" -eq 0 ] 2>/dev/null; then
-  # Silent first run — no data yet
-  exit 0
-fi
+# --- Session history (only if we have prior sessions) ---
+if [ "$session_count" -gt 0 ] 2>/dev/null; then
 
 # Query last 5 sessions
 avg_churn=$(sqlite3 "$METRICS_DB" \
@@ -93,6 +91,8 @@ if [ -f "$METRICS_DB" ]; then
     "DELETE FROM project_memories
      WHERE confidence < ${MEM_PRUNE} AND times_reinforced < 2;" 2>/dev/null || true
 fi
+
+fi  # end session_count > 0
 
 # --- Surface memory candidates from previous sessions ---
 PLUGIN_DATA="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}/data"

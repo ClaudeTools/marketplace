@@ -79,9 +79,10 @@ if command -v sqlite3 &>/dev/null; then
       fi
 
       if [ -n "$PROMPT_TEXT" ] && [ ${#PROMPT_TEXT} -gt 5 ]; then
-        # Extract key terms: 4+ chars, filter stopwords
-        TERMS=$(echo "$PROMPT_TEXT" | tr '[:upper:]' '[:lower:]' | \
-          grep -oE '\b[a-z]{4,}\b' | \
+        # Extract key terms: lowercase words 4+, CamelCase, snake_case identifiers
+        TERMS=$(echo "$PROMPT_TEXT" | \
+          grep -oE '\b[A-Z][a-zA-Z0-9]{2,}\b|\b[a-z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*\b|\b[a-z_]{4,}\b' | \
+          tr '[:upper:]' '[:lower:]' | \
           grep -vE '^(this|that|with|from|have|been|will|would|could|should|there|their|about|which|when|what|make|just|more|also|than|them|then|these|those|each|into|some|like|over|such|only|after|before|other|your|does|were|being|here|very|most|much|need|want|help|please|using|file|code|sure|okay|take|look|know|find|they|been|done)$' | \
           sort -u | head -8)
 
@@ -93,12 +94,15 @@ if command -v sqlite3 &>/dev/null; then
           MEM_LIMIT=$(get_threshold "memory_retrieval_limit" "$MODEL_FAMILY")
           MEM_LIMIT=${MEM_LIMIT%.*}
 
+          # Composite ranking: FTS relevance + confidence + usage frequency
           MATCHED=$(sqlite3 "$METRICS_DB" \
             "SELECT m.id, m.type, m.description FROM memories m
-             WHERE m.rowid IN (
-               SELECT rowid FROM memories_fts WHERE memories_fts MATCH '${FTS_QUERY}'
-               ORDER BY rank LIMIT ${MEM_LIMIT}
-             ) AND m.confidence > 0.3;" 2>/dev/null || true)
+             INNER JOIN (
+               SELECT rowid, rank FROM memories_fts WHERE memories_fts MATCH '${FTS_QUERY}'
+             ) fts ON m.rowid = fts.rowid
+             WHERE m.confidence > 0.3
+             ORDER BY (fts.rank * -1.0 + m.confidence * 5.0 + MIN(m.access_count, 10) * 0.5) DESC
+             LIMIT ${MEM_LIMIT};" 2>/dev/null || true)
 
           if [ -n "$MATCHED" ]; then
             echo "$MATCHED" | while IFS='|' read -r mid mtype mdesc; do
