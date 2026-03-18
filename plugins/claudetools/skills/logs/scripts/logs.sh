@@ -44,67 +44,74 @@ get_project_dirs() {
 # ---- Subcommands ----
 
 cmd_btw() {
+  # Default to last 1 for btw (override before parse_common_opts)
+  local btw_default_last=1
+  local has_last=0
+  for arg in "$@"; do [ "$arg" = "--last" ] && has_last=1; done
+  [ "$has_last" -eq 0 ] && LAST_N=$btw_default_last
+
   parse_common_opts "$@"
   local count=0
-  local total=0
 
+  # Collect all btw files across projects, sorted newest first
+  local btw_files=()
   while IFS= read -r pdir; do
     [ -z "$pdir" ] && continue
-    local pname
-    pname=$(basename "$pdir")
-
     while IFS= read -r session_file; do
       [ -z "$session_file" ] && continue
       local sid sdir
       sid=$(session_id_from_path "$session_file")
       sdir=$(session_dir_for "$session_file")
-
       [ -n "${SESSION_FILTER:-}" ] && [[ "$sid" != *"$SESSION_FILTER"* ]] && continue
-
       while IFS= read -r btw_file; do
         [ -z "$btw_file" ] && continue
         [ -n "$DATE_FILTER" ] && ! session_after_date "$btw_file" "$DATE_FILTER" && continue
-        total=$((total + 1))
-        [ "$count" -ge "$LAST_N" ] && continue
-        count=$((count + 1))
-
-        local ts
-        ts=$(first_timestamp "$btw_file")
-        local date_str
-        date_str=$(format_timestamp "${ts:-unknown}")
-
-        echo "--- Session: ${sid:0:8} (${date_str%% *}) ---"
-        echo ""
-
-        # Extract Q&A pairs
-        jq -c 'select(.type == "user" or .type == "assistant")' "$btw_file" 2>/dev/null | while IFS= read -r entry; do
-          local etype ets content text
-          etype=$(echo "$entry" | jq -r '.type' 2>/dev/null)
-          ets=$(echo "$entry" | jq -r '.timestamp // ""' 2>/dev/null)
-          content=$(echo "$entry" | jq -c '.message.content // ""' 2>/dev/null)
-          text=$(extract_text "$content")
-          text=$(strip_system_reminders "$text")
-          [ -z "$text" ] && continue
-
-          local time_str
-          time_str=$(format_timestamp "$ets")
-
-          if [ "$etype" = "user" ]; then
-            echo "[${time_str}] Q: $(truncate_text "$text" 300)"
-          else
-            echo "[${time_str}] A: $(truncate_text "$text" 500)"
-          fi
-        done
-        echo ""
+        btw_files+=("$btw_file")
       done < <(list_subagents "$sdir" "agent-aside_question-*.jsonl")
     done < <(list_sessions "$pdir")
   done < <(get_project_dirs)
 
-  if [ "$total" -eq 0 ]; then
+  if [ ${#btw_files[@]} -eq 0 ]; then
     echo "No /btw conversations found."
-  else
-    echo "Found ${total} /btw conversations (showing ${count})"
+    return
   fi
+
+  # Show requested number of btw conversations
+  for btw_file in "${btw_files[@]}"; do
+    [ "$count" -ge "$LAST_N" ] && break
+    count=$((count + 1))
+
+    # Extract Q and A in one jq pass
+    local qa
+    qa=$(jq -r '
+      select(.type == "user" or .type == "assistant") |
+      .type as $t |
+      (.message.content // "") |
+      (if type == "array" then [.[] | select(.type == "text") | .text] | join("\n")
+       elif type == "string" then .
+       else tostring end) |
+      if . != "" then
+        if $t == "user" then "Q: " + .
+        else "A: " + .
+        end
+      else empty end
+    ' "$btw_file" 2>/dev/null)
+
+    [ -z "$qa" ] && continue
+
+    # Strip system reminders
+    qa=$(echo "$qa" | sed ':a;N;$!ba;s/<system-reminder>[^<]*<\/system-reminder>//g' | sed '/^$/d')
+
+    if [ "$LAST_N" -gt 1 ]; then
+      local ts
+      ts=$(first_timestamp "$btw_file")
+      echo "--- $(format_timestamp "${ts:-unknown}") ---"
+    fi
+    echo "$qa"
+    [ "$LAST_N" -gt 1 ] && echo ""
+  done
+
+  [ ${#btw_files[@]} -gt "$LAST_N" ] && echo "(${#btw_files[@]} total, showing $LAST_N)"
 }
 
 cmd_search() {
