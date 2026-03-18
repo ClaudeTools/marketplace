@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # capture-outcome.sh — PostToolUse hook: record tool outcome to metrics.db
+# Batches inserts to reduce SQLite lock contention. Flushes every 10 outcomes or 30s.
 # Must be fast (<10ms). Telemetry never blocks.
 
 set -euo pipefail
@@ -30,10 +31,41 @@ fi
 # Ensure DB exists (no-op after first call)
 ensure_metrics_db || exit 0
 
-# Insert outcome — parameterised query, no SQL injection risk
-sqlite3 "$METRICS_DB" \
-  "INSERT INTO tool_outcomes (session_id, tool_name, success, file_path, timestamp) VALUES (?1, ?2, 1, ?3, datetime('now'));" \
-  "$session_id" "$tool_name" "$file_path" \
-  2>/dev/null || true
+# --- Batch insert: append to spool file, flush when threshold reached ---
+SPOOL_DIR="/tmp/claude-outcome-spool-${PPID}"
+mkdir -p "$SPOOL_DIR" 2>/dev/null || true
+SPOOL_FILE="$SPOOL_DIR/pending.sql"
+LOCK_FILE="$SPOOL_DIR/flush.lock"
+
+# Append this outcome to the spool (tab-separated for safety)
+printf "INSERT INTO tool_outcomes (session_id, tool_name, success, file_path, timestamp) VALUES ('%s', '%s', 1, '%s', datetime('now'));\n" \
+  "${session_id//\'/\'\'}" "${tool_name//\'/\'\'}" "${file_path//\'/\'\'}" >> "$SPOOL_FILE" 2>/dev/null || true
+
+# Count pending outcomes
+PENDING=$(wc -l < "$SPOOL_FILE" 2>/dev/null || echo 0)
+
+# Check staleness (flush if spool file is >30s old)
+STALE=0
+if [ -f "$SPOOL_FILE" ]; then
+  FILE_AGE=$(( $(date +%s) - $(stat -c %Y "$SPOOL_FILE" 2>/dev/null || date +%s) ))
+  [ "$FILE_AGE" -ge 30 ] && STALE=1
+fi
+
+# Flush if 10+ pending or stale
+if [ "$PENDING" -ge 10 ] || [ "$STALE" -eq 1 ]; then
+  # Non-blocking flush with lock to prevent concurrent flushes
+  (
+    flock -n 200 2>/dev/null || exit 0
+    if [ -f "$SPOOL_FILE" ] && [ -s "$SPOOL_FILE" ]; then
+      # Wrap in transaction for atomicity
+      {
+        echo "BEGIN TRANSACTION;"
+        cat "$SPOOL_FILE"
+        echo "COMMIT;"
+      } | sqlite3 "$METRICS_DB" 2>/dev/null || true
+      : > "$SPOOL_FILE"  # Truncate after successful flush
+    fi
+  ) 200>"$LOCK_FILE" &
+fi
 
 exit 0

@@ -225,14 +225,22 @@ get_target_rates() {
 }
 
 detect_model_family() {
+  # Cache result in environment to avoid repeated JSON parsing across hook calls
+  if [ -n "${_CACHED_MODEL_FAMILY:-}" ]; then
+    echo "$_CACHED_MODEL_FAMILY"
+    return
+  fi
+
   local model="${CLAUDE_MODEL:-}"
   if [ -z "$model" ]; then
     model=$(echo "${INPUT:-}" | jq -r '.model // empty' 2>/dev/null || true)
   fi
   case "$model" in
-    *opus*) echo "opus" ;;
-    *sonnet*) echo "sonnet" ;;
-    *haiku*) echo "haiku" ;;
-    *) echo "unknown" ;;
+    *opus*) _CACHED_MODEL_FAMILY="opus" ;;
+    *sonnet*) _CACHED_MODEL_FAMILY="sonnet" ;;
+    *haiku*) _CACHED_MODEL_FAMILY="haiku" ;;
+    *) _CACHED_MODEL_FAMILY="unknown" ;;
   esac
+  export _CACHED_MODEL_FAMILY
+  echo "$_CACHED_MODEL_FAMILY"
 }

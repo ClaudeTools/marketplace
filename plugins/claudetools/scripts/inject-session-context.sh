@@ -17,7 +17,16 @@ if [ -n "$_session_id" ]; then
   touch "/tmp/.claude-session-start-${_session_id}"
 fi
 
-# sqlite3 required
+# --- Dependency health check: warn if critical tools are missing ---
+MISSING_DEPS=""
+command -v sqlite3 &>/dev/null || MISSING_DEPS="${MISSING_DEPS}sqlite3 (metrics, self-learning, memory FTS), "
+command -v jq &>/dev/null || MISSING_DEPS="${MISSING_DEPS}jq (hook input parsing), "
+if [ -n "$MISSING_DEPS" ]; then
+  MISSING_DEPS=${MISSING_DEPS%, }
+  echo "[claudetools] Missing dependencies: ${MISSING_DEPS}. Some guardrails will silently bypass. Install with: apt install ${MISSING_DEPS%%(*}" >&2
+fi
+
+# sqlite3 required for remaining setup
 if ! command -v sqlite3 &>/dev/null; then
   exit 0
 fi
