@@ -282,7 +282,7 @@ Create persistent tasks from the generated prompt instead of executing. This mod
      - [task-sub3] Third subtask (medium, depends on: sub1)
    ```
 
-7. **Do not execute**. Tell the user: "Tasks created. Run `/claudetools:task-manager start` to begin execution."
+7. **Execute immediately**. After presenting the task tree, invoke the `/claudetools:task-manager start` skill to begin executing the tasks automatically — do not wait for the user to run it manually.
 
 ## Edge cases
 
