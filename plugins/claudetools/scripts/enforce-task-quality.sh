@@ -180,6 +180,26 @@ if [ -n "$CHANGED" ]; then
   done < <(echo -e "$TEST_DIRS")
 fi
 
+# --- Debugging workflow check (bug fix tasks should show evidence of diagnosis) ---
+TASK_SUBJECT=$(echo "$INPUT" | jq -r '.task_subject // .subject // ""' 2>/dev/null || true)
+TASK_DESC=$(echo "$INPUT" | jq -r '.task_description // .description // ""' 2>/dev/null || true)
+TASK_TEXT="${TASK_SUBJECT} ${TASK_DESC}"
+
+if echo "$TASK_TEXT" | grep -qiE '\b(bug|fix|error|crash|issue|broken|failing)\b'; then
+  # Bug fix task — check for evidence of REPRODUCE→OBSERVE→FIX workflow
+  EVIDENCE=$(echo "$INPUT" | grep -ciE 'error:|stack.?trace|reproduced|observed|caused by|root cause|logs show|exception|traceback|reproduction' 2>/dev/null || echo 0)
+  if [ "$EVIDENCE" -eq 0 ]; then
+    echo "Bug fix task detected but no diagnostic evidence found." >&2
+    echo "Follow the REPRODUCE → OBSERVE → HYPOTHESIZE → FIX workflow:" >&2
+    echo "  1. Reproduce the error and capture the output" >&2
+    echo "  2. Read logs/stack traces to observe what happened" >&2
+    echo "  3. Form a hypothesis about the root cause" >&2
+    echo "  4. Fix based on evidence, not guesswork" >&2
+    HOOK_DECISION="reject"; HOOK_REASON="bug fix without diagnostic evidence"
+    exit 2
+  fi
+fi
+
 # --- Prevent merge to main without passing all checks ---
 CURRENT_BRANCH=$(git -C "$CWD" rev-parse --abbrev-ref HEAD 2>/dev/null || true)
 if [ "$CURRENT_BRANCH" = "main" ] || [ "$CURRENT_BRANCH" = "master" ]; then
