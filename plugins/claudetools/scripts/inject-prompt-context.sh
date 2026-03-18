@@ -79,12 +79,12 @@ if command -v sqlite3 &>/dev/null; then
       fi
 
       if [ -n "$PROMPT_TEXT" ] && [ ${#PROMPT_TEXT} -gt 5 ]; then
-        # Extract key terms: lowercase words 4+, CamelCase, snake_case identifiers
+        # Extract key terms: words 4+, CamelCase, snake_case, hyphenated identifiers
         TERMS=$(echo "$PROMPT_TEXT" | \
-          grep -oE '\b[A-Z][a-zA-Z0-9]{2,}\b|\b[a-z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*\b|\b[a-z_]{4,}\b' | \
-          tr '[:upper:]' '[:lower:]' | \
-          grep -vE '^(this|that|with|from|have|been|will|would|could|should|there|their|about|which|when|what|make|just|more|also|than|them|then|these|those|each|into|some|like|over|such|only|after|before|other|your|does|were|being|here|very|most|much|need|want|help|please|using|file|code|sure|okay|take|look|know|find|they|been|done)$' | \
-          sort -u | head -8)
+          grep -oE '\b[A-Z][a-zA-Z0-9]{2,}\b|\b[a-z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*\b|\b[a-z_]{4,}\b|\b[a-z]+-[a-z]+(-[a-z]+)*\b' | \
+          tr '[:upper:]' '[:lower:]' | sed 's/-/ /g' | tr ' ' '\n' | \
+          grep -vE '^(this|that|with|from|have|been|will|would|could|should|there|their|about|which|when|what|make|just|more|also|than|them|then|these|those|each|into|some|like|over|such|only|after|before|other|your|does|were|being|here|very|most|much|need|want|help|please|using|file|code|sure|okay|take|look|know|find|they|been|done|change|changes|implement|check|test|system|work)$' | \
+          sort -u | head -10)
 
         if [ -n "$TERMS" ]; then
           # Build FTS5 MATCH query: term1 OR term2 OR term3
@@ -94,24 +94,54 @@ if command -v sqlite3 &>/dev/null; then
           MEM_LIMIT=$(get_threshold "memory_retrieval_limit" "$MODEL_FAMILY")
           MEM_LIMIT=${MEM_LIMIT%.*}
 
-          # Composite ranking: FTS relevance + confidence + usage frequency
+          # Composite ranking: FTS relevance + confidence + access frequency + type + recency
+          # Type weights: feedback=3 (actionable rules), reference=2, user=2, project=1
+          # Recency boost: memories accessed in last 7 days get up to +2.1 extra score
           MATCHED=$(sqlite3 "$METRICS_DB" \
-            "SELECT m.id, m.type, m.description FROM memories m
+            "SELECT m.id, m.type, m.description, m.content FROM memories m
              INNER JOIN (
                SELECT rowid, rank FROM memories_fts WHERE memories_fts MATCH '${FTS_QUERY}'
              ) fts ON m.rowid = fts.rowid
              WHERE m.confidence > 0.3
-             ORDER BY (fts.rank * -1.0 + m.confidence * 5.0 + MIN(m.access_count, 10) * 0.5) DESC
+             ORDER BY (
+               fts.rank * -1.0
+               + m.confidence * 5.0
+               + MIN(m.access_count, 10) * 0.5
+               + CASE m.type
+                   WHEN 'feedback' THEN 3.0
+                   WHEN 'reference' THEN 2.0
+                   WHEN 'user' THEN 2.0
+                   WHEN 'project' THEN 1.0
+                   ELSE 0.0
+                 END
+               + CASE WHEN m.last_accessed IS NOT NULL
+                   THEN MAX(0, 7.0 - julianday('now') + julianday(m.last_accessed)) * 0.3
+                   ELSE 0.0
+                 END
+             ) DESC
              LIMIT ${MEM_LIMIT};" 2>/dev/null || true)
 
           if [ -n "$MATCHED" ]; then
-            echo "$MATCHED" | while IFS='|' read -r mid mtype mdesc; do
+            # Output memory content (truncated) for richer context
+            echo "$MATCHED" | while IFS='|' read -r mid mtype mdesc mcontent; do
               [ -z "$mdesc" ] && continue
-              echo "[memory] (${mtype}) ${mdesc}"
-              # Update access stats
-              sqlite3 "$METRICS_DB" \
-                "UPDATE memories SET access_count = access_count + 1, last_accessed = datetime('now') WHERE id='$mid';" 2>/dev/null || true
+              # For short memories, inject full content; for long ones, description + first line of content
+              if [ ${#mcontent} -le 200 ] || [ -z "$mcontent" ]; then
+                echo "[memory:${mtype}] ${mdesc}"
+              else
+                # Extract first actionable line from content (skip frontmatter)
+                FIRST_LINE=$(echo "$mcontent" | grep -v '^---' | grep -v '^$' | grep -v '^name:' | grep -v '^description:' | grep -v '^type:' | head -1)
+                if [ -n "$FIRST_LINE" ] && [ "$FIRST_LINE" != "$mdesc" ]; then
+                  echo "[memory:${mtype}] ${mdesc} — ${FIRST_LINE}"
+                else
+                  echo "[memory:${mtype}] ${mdesc}"
+                fi
+              fi
             done
+            # Batch update access stats
+            MATCHED_IDS=$(echo "$MATCHED" | cut -d'|' -f1 | sed "s/.*/'&'/" | paste -sd,)
+            sqlite3 "$METRICS_DB" \
+              "UPDATE memories SET access_count = access_count + 1, last_accessed = datetime('now') WHERE id IN (${MATCHED_IDS});" 2>/dev/null || true
           fi
         fi
       fi

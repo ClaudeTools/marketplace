@@ -116,6 +116,10 @@ CREATE TRIGGER IF NOT EXISTS memories_au AFTER UPDATE ON memories BEGIN
   INSERT INTO memories_fts(rowid, name, description, content)
   VALUES (new.rowid, new.name, new.description, new.content);
 END;
+CREATE TRIGGER IF NOT EXISTS memories_ad AFTER DELETE ON memories BEGIN
+  INSERT INTO memories_fts(memories_fts, rowid, name, description, content)
+  VALUES ('delete', old.rowid, old.name, old.description, old.content);
+END;
 
 CREATE TABLE IF NOT EXISTS hook_outcomes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -338,6 +342,9 @@ SQL
     VALUES ('delete', old.rowid, old.name, old.description, old.content);
     INSERT INTO memories_fts(rowid, name, description, content)
     VALUES (new.rowid, new.name, new.description, new.content); END;" 2>/dev/null || true
+  sqlite3 "$METRICS_DB" "CREATE TRIGGER IF NOT EXISTS memories_ad AFTER DELETE ON memories BEGIN
+    INSERT INTO memories_fts(memories_fts, rowid, name, description, content)
+    VALUES ('delete', old.rowid, old.name, old.description, old.content); END;" 2>/dev/null || true
 
   # Migration: add step_execution_id to hook_outcomes if missing
   sqlite3 "$METRICS_DB" "ALTER TABLE hook_outcomes ADD COLUMN step_execution_id TEXT REFERENCES step_executions(step_execution_id);" 2>/dev/null || true

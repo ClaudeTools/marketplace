@@ -1,7 +1,7 @@
 #!/bin/bash
-# PreToolUse:Agent hook — enforces TeamCreate for ALL Agent tool calls
-# Blocks ALL bare Agent calls. Requires: team_name, name, isolation:worktree, team must exist.
-# Checks tmux availability and teammateMode setting.
+# PreToolUse:Agent hook — enforces TeamCreate for Agent tool calls when teams are enabled
+# When CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1: blocks bare Agent calls, requires team_name/name/worktree
+# When teams feature is off: allows Agent calls freely (with naming advisory)
 # Exit 0 always — blocking done via JSON stdout with permissionDecision "block"
 
 set -euo pipefail
@@ -21,6 +21,16 @@ AGENT_NAME=$(echo "$INPUT" | jq -r '.tool_input.name // empty' 2>/dev/null || tr
 
 # ALLOW: solo research agents (read-only, no team coordination needed)
 if [[ "$SUBAGENT_TYPE" == "Explore" || "$SUBAGENT_TYPE" == "Plan" ]]; then
+  exit 0
+fi
+
+# --- Feature flag: if teams are not available, allow with advisory ---
+TEAMS_ENABLED="${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-}"
+if [ "$TEAMS_ENABLED" != "1" ]; then
+  hook_log "teams feature disabled — allowing without team requirement"
+  if [ -z "$AGENT_NAME" ]; then
+    echo '{"systemMessage":"Tip: naming your agents (name: \"descriptive-name\") improves coordination and audit trail readability."}'
+  fi
   exit 0
 fi
 
