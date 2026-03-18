@@ -107,10 +107,11 @@ done <<< "$CHANGED"
 
 # --- Hard violations: stubs, type abuse → reject ---
 if [ "$VIOLATION_COUNT" -gt 0 ]; then
-  echo "${VIOLATION_COUNT} issues found. Fix these before completing:" >&2
+  echo "${VIOLATION_COUNT} quality issue(s) found:" >&2
   echo -e "$VIOLATIONS" >&2
   echo "" >&2
-  echo "Fix all violations, then mark the task complete again." >&2
+  echo "Why: Stubs, type abuse, and mocks in production code indicate incomplete work." >&2
+  echo "What to do: Replace stubs with real implementations, fix 'any' types with proper types, remove mocks from non-test files. Then mark the task complete again." >&2
 HOOK_DECISION="reject"; HOOK_REASON="quality gate failed"
   exit 2
 fi
@@ -134,10 +135,10 @@ if [ -f "$CWD/package.json" ]; then
     TC_EXIT=0
     TC_OUTPUT=$(cd "$CWD" && npm run typecheck 2>&1) || TC_EXIT=$?
     if [ "$TC_EXIT" -ne 0 ] || echo "$TC_OUTPUT" | grep -qE 'error TS|Type error'; then
-      echo "Typecheck errors found. Fix type errors before completing." >&2
-      echo "--- Last 10 lines of typecheck output ---" >&2
+      echo "Typecheck errors found." >&2
+      echo "Why: Type errors on disk are real errors — they cause runtime failures and block CI." >&2
+      echo "What to do: Run 'npm run typecheck' to see all errors, fix them, then complete." >&2
       echo "$TC_OUTPUT" | tail -10 >&2
-      echo "--- End typecheck output ---" >&2
       exit 2
     fi
   fi

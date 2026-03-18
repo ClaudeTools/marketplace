@@ -55,6 +55,27 @@ function getProjectRoot(): string {
 let cachedDb: Database.Database | null = null;
 let cachedDbPath: string | null = null;
 
+// Simple LRU cache for query results (1-minute TTL, max 50 entries)
+const queryCache = new Map<string, { result: string; expires: number }>();
+const CACHE_TTL_MS = 60_000;
+const CACHE_MAX_SIZE = 50;
+
+function cachedQuery(key: string, fn: () => string): string {
+  const now = Date.now();
+  const cached = queryCache.get(key);
+  if (cached && cached.expires > now) {
+    return cached.result;
+  }
+  const result = fn();
+  // Evict oldest entries if at capacity
+  if (queryCache.size >= CACHE_MAX_SIZE) {
+    const firstKey = queryCache.keys().next().value;
+    if (firstKey !== undefined) queryCache.delete(firstKey);
+  }
+  queryCache.set(key, { result, expires: now + CACHE_TTL_MS });
+  return result;
+}
+
 function getDatabase(): Database.Database | null {
   const projectRoot = getProjectRoot();
   const dbPath = getDbPath(projectRoot);
@@ -200,6 +221,11 @@ export function handleProjectMap(): string {
 }
 
 export function handleFindSymbol(args: { name: string; kind?: string }): string {
+  const cacheKey = `find_symbol:${args.name}:${args.kind ?? ""}`;
+  return cachedQuery(cacheKey, () => handleFindSymbolUncached(args));
+}
+
+function handleFindSymbolUncached(args: { name: string; kind?: string }): string {
   const db = getDatabase();
   if (!db) return dbErrorMessage();
 
@@ -260,6 +286,11 @@ export function handleFindSymbol(args: { name: string; kind?: string }): string 
 }
 
 export function handleFindUsages(args: { name: string }): string {
+  const cacheKey = `find_usages:${args.name}`;
+  return cachedQuery(cacheKey, () => handleFindUsagesUncached(args));
+}
+
+function handleFindUsagesUncached(args: { name: string }): string {
   const db = getDatabase();
   if (!db) return dbErrorMessage();
 
@@ -344,6 +375,11 @@ export function handleFileOverview(args: { path: string }): string {
 }
 
 export function handleRelatedFiles(args: { path: string }): string {
+  const cacheKey = `related_files:${args.path}`;
+  return cachedQuery(cacheKey, () => handleRelatedFilesUncached(args));
+}
+
+function handleRelatedFilesUncached(args: { path: string }): string {
   const db = getDatabase();
   if (!db) return dbErrorMessage();
 
