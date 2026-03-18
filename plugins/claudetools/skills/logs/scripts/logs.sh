@@ -10,6 +10,7 @@ source "$SCRIPT_DIR/lib/parse-jsonl.sh"
 
 PROJECT_DIR=""
 LAST_N=10
+DATE_FILTER=""
 
 # ---- Argument parsing helpers ----
 
@@ -20,6 +21,7 @@ parse_common_opts() {
       --all)   PROJECT_DIR="ALL"; shift ;;
       --session) SESSION_FILTER="${2:-}"; shift 2 ;;
       --project) PROJECT_DIR="${2:-}"; shift 2 ;;
+      --from)  DATE_FILTER=$(parse_date_filter "${2:-today}"); shift 2 ;;
       *)       EXTRA_ARGS+=("$1"); shift ;;
     esac
   done
@@ -61,6 +63,7 @@ cmd_btw() {
 
       while IFS= read -r btw_file; do
         [ -z "$btw_file" ] && continue
+        [ -n "$DATE_FILTER" ] && ! session_after_date "$btw_file" "$DATE_FILTER" && continue
         total=$((total + 1))
         [ "$count" -ge "$LAST_N" ] && continue
         count=$((count + 1))
@@ -124,6 +127,7 @@ cmd_search() {
       local sid
       sid=$(session_id_from_path "$session_file")
       [ -n "${SESSION_FILTER:-}" ] && [[ "$sid" != *"$SESSION_FILTER"* ]] && continue
+      [ -n "$DATE_FILTER" ] && ! session_after_date "$session_file" "$DATE_FILTER" && continue
 
       # Search for term in the file
       if ! grep -qi "$term" "$session_file" 2>/dev/null; then
@@ -180,6 +184,7 @@ cmd_tools() {
       local sid
       sid=$(session_id_from_path "$session_file")
       [ -n "${SESSION_FILTER:-}" ] && [[ "$sid" != *"$SESSION_FILTER"* ]] && continue
+      [ -n "$DATE_FILTER" ] && ! session_after_date "$session_file" "$DATE_FILTER" && continue
 
       local ts
       ts=$(first_timestamp "$session_file")
@@ -214,6 +219,7 @@ cmd_errors() {
       local sid
       sid=$(session_id_from_path "$session_file")
       [ -n "${SESSION_FILTER:-}" ] && [[ "$sid" != *"$SESSION_FILTER"* ]] && continue
+      [ -n "$DATE_FILTER" ] && ! session_after_date "$session_file" "$DATE_FILTER" && continue
 
       # Look for error entries
       local errors
@@ -271,6 +277,7 @@ cmd_conversation() {
       local sid
       sid=$(session_id_from_path "$session_file")
       [[ "$sid" != *"$target_session"* ]] && continue
+      [ -n "$DATE_FILTER" ] && ! session_after_date "$session_file" "$DATE_FILTER" && continue
 
       local ts
       ts=$(first_timestamp "$session_file")
@@ -319,6 +326,8 @@ cmd_summary() {
       [ -z "$session_file" ] && continue
       [ "$count" -ge "$LAST_N" ] && break
 
+      [ -n "$DATE_FILTER" ] && ! session_after_date "$session_file" "$DATE_FILTER" && continue
+
       local sid ts user_count tool_count file_size
       sid=$(session_id_from_path "$session_file")
       ts=$(first_timestamp "$session_file")
@@ -359,15 +368,17 @@ Options:
   --last N             Show last N results (default: 10)
   --all                Search all projects, not just current
   --session ID         Filter to a specific session (partial match)
+  --from VALUE         Filter by date: today, yesterday, "N days ago", "this week", YYYY-MM-DD
   --help               Show this help
 
 Examples:
-  logs.sh                          # summary of last 10 sessions
-  logs.sh btw --last 5             # last 5 /btw conversations
-  logs.sh search "memory" --last 3 # search for "memory" in last 3 sessions
-  logs.sh tools --session abc123   # tool usage for a specific session
-  logs.sh conversation             # latest session conversation
-  logs.sh errors --all             # errors across all projects
+  logs.sh                             # summary of last 10 sessions
+  logs.sh btw --last 5                # last 5 /btw conversations
+  logs.sh btw --all --from today      # all /btw conversations from today
+  logs.sh search "memory" --from yesterday  # search "memory" since yesterday
+  logs.sh tools --session abc123      # tool usage for a specific session
+  logs.sh summary --from 2026-03-15   # sessions since a specific date
+  logs.sh errors --all                # errors across all projects
 USAGE
 }
 

@@ -94,9 +94,9 @@ if command -v sqlite3 &>/dev/null; then
           MEM_LIMIT=$(get_threshold "memory_retrieval_limit" "$MODEL_FAMILY")
           MEM_LIMIT=${MEM_LIMIT%.*}
 
-          # Composite ranking: FTS relevance + confidence + access frequency + type + recency
-          # Type weights: feedback=3 (actionable rules), reference=2, user=2, project=1
-          # Recency boost: memories accessed in last 7 days get up to +2.1 extra score
+          # Composite ranking: FTS relevance + confidence + access + type + recency - verbosity penalty
+          # Type weights: feedback=3 (actionable), reference=2, user=2, project=1
+          # Verbosity penalty: long content matches broadly — penalize to favor specific memories
           MATCHED=$(sqlite3 -separator $'\x1f' "$METRICS_DB" \
             "SELECT m.id, m.type, m.description, m.content FROM memories m
              INNER JOIN (
@@ -117,6 +117,10 @@ if command -v sqlite3 &>/dev/null; then
                + CASE WHEN m.last_accessed IS NOT NULL
                    THEN MAX(0, 7.0 - julianday('now') + julianday(m.last_accessed)) * 0.3
                    ELSE 0.0
+                 END
+               - CASE WHEN LENGTH(m.content) > 500 THEN 2.0
+                      WHEN LENGTH(m.content) > 200 THEN 1.0
+                      ELSE 0.0
                  END
              ) DESC
              LIMIT ${MEM_LIMIT};" 2>/dev/null || true)

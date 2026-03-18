@@ -90,6 +90,42 @@ format_timestamp() {
   echo "$ts" | sed 's/T/ /;s/\.[0-9]*Z$//' | cut -c1-16
 }
 
+# Convert natural language date to epoch timestamp.
+# Supports: today, yesterday, "N days ago", "this week", YYYY-MM-DD
+parse_date_filter() {
+  local value="$1"
+  case "$value" in
+    today)
+      date -d "today 00:00:00" +%s 2>/dev/null ;;
+    yesterday)
+      date -d "yesterday 00:00:00" +%s 2>/dev/null ;;
+    *"days ago"*)
+      local n
+      n=$(echo "$value" | grep -oP '^\d+')
+      [ -n "$n" ] && date -d "$n days ago 00:00:00" +%s 2>/dev/null ;;
+    "this week")
+      date -d "last monday 00:00:00" +%s 2>/dev/null ;;
+    [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9])
+      date -d "$value 00:00:00" +%s 2>/dev/null ;;
+    *)
+      echo "Unknown date filter: $value" >&2
+      return 1 ;;
+  esac
+}
+
+# Returns 0 (true) if session's first timestamp >= epoch, 1 otherwise.
+session_after_date() {
+  local jsonl_file="$1"
+  local epoch="$2"
+  local ts
+  ts=$(first_timestamp "$jsonl_file")
+  [ -z "$ts" ] && return 1
+  local file_epoch
+  file_epoch=$(date -d "$ts" +%s 2>/dev/null)
+  [ -z "$file_epoch" ] && return 1
+  [ "$file_epoch" -ge "$epoch" ]
+}
+
 # Truncate text to a max length, appending "..." if truncated
 truncate_text() {
   local text="$1"
