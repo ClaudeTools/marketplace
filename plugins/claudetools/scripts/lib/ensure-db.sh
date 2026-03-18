@@ -2,7 +2,16 @@
 # ensure-db.sh — Create metrics.db with schema if missing
 # Usage: source "$(dirname "$0")/lib/ensure-db.sh"
 
-METRICS_DB="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}/data/metrics.db"
+# DB path: prefer a stable location that survives plugin version upgrades.
+# When CLAUDE_PLUGIN_ROOT is a versioned cache path (e.g. .../claudetools/3.7.3/),
+# store the DB one level above the version directory so it persists across upgrades.
+_plugin_root="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+if [[ "$_plugin_root" =~ /plugins/cache/.*/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  # Versioned install path — use parent directory (plugin name level) for stable DB
+  METRICS_DB="$(dirname "$_plugin_root")/data/metrics.db"
+else
+  METRICS_DB="${_plugin_root}/data/metrics.db"
+fi
 
 ensure_metrics_db() {
   local db_dir

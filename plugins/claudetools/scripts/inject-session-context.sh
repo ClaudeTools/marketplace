@@ -57,15 +57,21 @@ if [ -d "$MEMORY_DIR" ]; then
     [ -z "$M_TYPE" ] && M_TYPE="unknown"
     [ -z "$M_BODY" ] && M_BODY=$(cat "$memfile")
 
+    # Auto-generated files get lower confidence and 'auto' source
+    M_SOURCE="human"; M_CONF="1.0"
+    case "$BASENAME" in
+      auto_*|auto-*) M_SOURCE="auto"; M_CONF="0.6" ;;
+    esac
+
     E_NAME=$(echo "$M_NAME" | sed "s/'/''/g")
     E_DESC=$(echo "$M_DESC" | sed "s/'/''/g")
     E_TYPE=$(echo "$M_TYPE" | sed "s/'/''/g")
     E_BODY=$(echo "$M_BODY" | sed "s/'/''/g")
     E_PATH=$(echo "$memfile" | sed "s/'/''/g")
 
-    sqlite3 "$METRICS_DB" "INSERT INTO memories (id, content, type, name, description, source, file_path, created_at)
-      VALUES ('$MEM_ID', '$E_BODY', '$E_TYPE', '$E_NAME', '$E_DESC', 'human', '$E_PATH', datetime('now'))
-      ON CONFLICT(id) DO UPDATE SET content=excluded.content, type=excluded.type, name=excluded.name, description=excluded.description, file_path=excluded.file_path;" 2>/dev/null && INDEXED=$((INDEXED + 1))
+    sqlite3 "$METRICS_DB" "INSERT INTO memories (id, content, type, name, description, source, file_path, confidence, created_at)
+      VALUES ('$MEM_ID', '$E_BODY', '$E_TYPE', '$E_NAME', '$E_DESC', '$M_SOURCE', '$E_PATH', $M_CONF, datetime('now'))
+      ON CONFLICT(id) DO UPDATE SET content=excluded.content, type=excluded.type, name=excluded.name, description=excluded.description, file_path=excluded.file_path, source=excluded.source, confidence=excluded.confidence;" 2>/dev/null && INDEXED=$((INDEXED + 1))
   done
   # Rebuild FTS index after bulk insert
   if [ "$INDEXED" -gt 0 ]; then

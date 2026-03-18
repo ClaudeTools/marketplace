@@ -97,7 +97,7 @@ if command -v sqlite3 &>/dev/null; then
           # Composite ranking: FTS relevance + confidence + access frequency + type + recency
           # Type weights: feedback=3 (actionable rules), reference=2, user=2, project=1
           # Recency boost: memories accessed in last 7 days get up to +2.1 extra score
-          MATCHED=$(sqlite3 "$METRICS_DB" \
+          MATCHED=$(sqlite3 -separator $'\x1f' "$METRICS_DB" \
             "SELECT m.id, m.type, m.description, m.content FROM memories m
              INNER JOIN (
                SELECT rowid, rank FROM memories_fts WHERE memories_fts MATCH '${FTS_QUERY}'
@@ -122,8 +122,10 @@ if command -v sqlite3 &>/dev/null; then
              LIMIT ${MEM_LIMIT};" 2>/dev/null || true)
 
           if [ -n "$MATCHED" ]; then
+            MATCH_COUNT=$(echo "$MATCHED" | grep -c $'\x1f' || echo 1)
+            hook_log "inject-prompt-context: injecting ${MATCH_COUNT} memories for: ${FTS_QUERY}"
             # Output memory content (truncated) for richer context
-            echo "$MATCHED" | while IFS='|' read -r mid mtype mdesc mcontent; do
+            echo "$MATCHED" | while IFS=$'\x1f' read -r mid mtype mdesc mcontent; do
               [ -z "$mdesc" ] && continue
               # For short memories, inject full content; for long ones, description + first line of content
               if [ ${#mcontent} -le 200 ] || [ -z "$mcontent" ]; then
@@ -138,10 +140,13 @@ if command -v sqlite3 &>/dev/null; then
                 fi
               fi
             done
-            # Batch update access stats
-            MATCHED_IDS=$(echo "$MATCHED" | cut -d'|' -f1 | sed "s/.*/'&'/" | paste -sd,)
+            # Update access stats using the same FTS query (avoids multi-line content parsing issues)
             sqlite3 "$METRICS_DB" \
-              "UPDATE memories SET access_count = access_count + 1, last_accessed = datetime('now') WHERE id IN (${MATCHED_IDS});" 2>/dev/null || true
+              "UPDATE memories SET access_count = access_count + 1, last_accessed = datetime('now')
+               WHERE rowid IN (
+                 SELECT rowid FROM memories_fts WHERE memories_fts MATCH '${FTS_QUERY}'
+                 ORDER BY rank LIMIT ${MEM_LIMIT}
+               ) AND confidence > 0.3;" 2>/dev/null || true
           fi
         fi
       fi
