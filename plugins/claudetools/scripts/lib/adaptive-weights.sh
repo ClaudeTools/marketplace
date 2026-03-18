@@ -28,6 +28,8 @@ get_threshold() {
       ai_audit_diff_threshold) echo "30" ;;
       outcome_retention_days) echo "90" ;;
       stub_sensitivity) echo "1.0" ;;
+      memory_retrieval_limit) echo "3" ;;
+      memory_fts_min_rank) echo "-5" ;;
       *) echo "3" ;; # safe default
     esac
     return

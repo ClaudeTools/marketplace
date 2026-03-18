@@ -113,6 +113,67 @@ if [[ -n "$DB_PATH" ]] && command -v sqlite3 &>/dev/null; then
   fi
 fi
 
+# --- Subagent memory + capabilities injection ---
+PLUGIN_ROOT_DIR="$(dirname "$PILOT_DIR")"
+SUBAGENT_CONTEXT="$PLUGIN_ROOT_DIR/assets/subagent-context.md"
+METRICS_DB_PATH="$PLUGIN_ROOT_DIR/data/metrics.db"
+
+# Inject static capabilities doc
+if [[ -f "$SUBAGENT_CONTEXT" ]]; then
+  echo ""
+  echo "--- Plugin Context (auto-injected) ---"
+  cat "$SUBAGENT_CONTEXT"
+fi
+
+# Inject relevant memories for this agent's task
+if command -v sqlite3 &>/dev/null && [[ -f "$METRICS_DB_PATH" ]]; then
+  MEM_COUNT=$(sqlite3 "$METRICS_DB_PATH" "SELECT COUNT(*) FROM memories;" 2>/dev/null || echo "0")
+  if [[ "$MEM_COUNT" -gt 0 ]]; then
+    # Always inject top feedback-type memories (behavioral rules)
+    FEEDBACK_MEMS=$(sqlite3 "$METRICS_DB_PATH" \
+      "SELECT type, description FROM memories WHERE type='feedback' AND confidence > 0.3
+       ORDER BY confidence DESC, access_count DESC LIMIT 3;" 2>/dev/null || true)
+
+    # Also inject task-relevant memories via FTS5
+    TASK_TEXT=$(echo "${INPUT:-}" | jq -r '(.tool_input.prompt // .tool_input.description // .prompt // "") | .[0:2000]' 2>/dev/null || true)
+    FTS_MEMS=""
+    if [[ -n "$TASK_TEXT" && ${#TASK_TEXT} -gt 10 ]]; then
+      FTS_TERMS=$(echo "$TASK_TEXT" | tr '[:upper:]' '[:lower:]' | \
+        grep -oE '\b[a-z]{4,}\b' | \
+        grep -vE '^(this|that|with|from|have|been|will|would|could|should|there|their|about|which|when|what|make|just|more|also|than|them|then|these|those|each|into|some|like|over|such|only|after|before|other|your|does|were|being|here|very|most|much|need|want|help|please|using|file|code)$' | \
+        sort -u | head -6)
+      if [[ -n "$FTS_TERMS" ]]; then
+        FTS_QUERY=$(echo "$FTS_TERMS" | tr '\n' ' ' | sed 's/ *$//' | sed 's/ / OR /g')
+        FTS_MEMS=$(sqlite3 "$METRICS_DB_PATH" \
+          "SELECT m.type, m.description FROM memories m
+           WHERE m.rowid IN (
+             SELECT rowid FROM memories_fts WHERE memories_fts MATCH '$FTS_QUERY'
+             ORDER BY rank LIMIT 3
+           ) AND m.confidence > 0.3 AND m.type != 'feedback';" 2>/dev/null || true)
+      fi
+    fi
+
+    if [[ -n "$FEEDBACK_MEMS" || -n "$FTS_MEMS" ]]; then
+      echo ""
+      if [[ -n "$FEEDBACK_MEMS" ]]; then
+        echo "$FEEDBACK_MEMS" | while IFS='|' read -r mtype mdesc; do
+          [[ -z "$mdesc" ]] && continue
+          echo "[memory:${mtype}] ${mdesc}"
+        done
+      fi
+      if [[ -n "$FTS_MEMS" ]]; then
+        echo "$FTS_MEMS" | while IFS='|' read -r mtype mdesc; do
+          [[ -z "$mdesc" ]] && continue
+          echo "[memory:${mtype}] ${mdesc}"
+        done
+      fi
+    fi
+  fi
+  echo "--- End Plugin Context ---"
+elif [[ -f "$SUBAGENT_CONTEXT" ]]; then
+  echo "--- End Plugin Context ---"
+fi
+
 echo ""
 echo "Use MCP tools project_map, find_symbol, find_usages, file_overview, related_files for detailed navigation."
 

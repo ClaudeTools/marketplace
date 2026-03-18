@@ -59,5 +59,61 @@ if [ -f "$failure_log" ]; then
   fi
 fi
 
+# --- Active memory retrieval (FTS5) ---
+if command -v sqlite3 &>/dev/null; then
+  source "$(dirname "$0")/lib/ensure-db.sh"
+  source "$(dirname "$0")/lib/adaptive-weights.sh"
+  if ensure_metrics_db 2>/dev/null; then
+    # Check if memories table has any rows
+    MEM_COUNT=$(sqlite3 "$METRICS_DB" "SELECT COUNT(*) FROM memories;" 2>/dev/null || echo "0")
+    if [ "$MEM_COUNT" -gt 0 ] 2>/dev/null; then
+      # Extract user's prompt text from hook input
+      PROMPT_TEXT=$(echo "$INPUT" | jq -r '.content // .message // ""' 2>/dev/null || true)
+      if [ -z "$PROMPT_TEXT" ]; then
+        PROMPT_TEXT=$(echo "$INPUT" | jq -r '
+          if (.content | type) == "array" then
+            [.content[] | select(type == "string" or .type == "text") |
+             if type == "string" then . else .text end] | join(" ")
+          else (.content // "") end
+        ' 2>/dev/null || true)
+      fi
+
+      if [ -n "$PROMPT_TEXT" ] && [ ${#PROMPT_TEXT} -gt 5 ]; then
+        # Extract key terms: 4+ chars, filter stopwords
+        TERMS=$(echo "$PROMPT_TEXT" | tr '[:upper:]' '[:lower:]' | \
+          grep -oE '\b[a-z]{4,}\b' | \
+          grep -vE '^(this|that|with|from|have|been|will|would|could|should|there|their|about|which|when|what|make|just|more|also|than|them|then|these|those|each|into|some|like|over|such|only|after|before|other|your|does|were|being|here|very|most|much|need|want|help|please|using|file|code|sure|okay|take|look|know|find|they|been|done)$' | \
+          sort -u | head -8)
+
+        if [ -n "$TERMS" ]; then
+          # Build FTS5 MATCH query: term1 OR term2 OR term3
+          FTS_QUERY=$(echo "$TERMS" | tr '\n' ' ' | sed 's/ *$//' | sed 's/ / OR /g')
+
+          MODEL_FAMILY=$(detect_model_family 2>/dev/null || echo "unknown")
+          MEM_LIMIT=$(get_threshold "memory_retrieval_limit" "$MODEL_FAMILY")
+          MEM_LIMIT=${MEM_LIMIT%.*}
+
+          MATCHED=$(sqlite3 "$METRICS_DB" \
+            "SELECT m.id, m.type, m.description FROM memories m
+             WHERE m.rowid IN (
+               SELECT rowid FROM memories_fts WHERE memories_fts MATCH '${FTS_QUERY}'
+               ORDER BY rank LIMIT ${MEM_LIMIT}
+             ) AND m.confidence > 0.3;" 2>/dev/null || true)
+
+          if [ -n "$MATCHED" ]; then
+            echo "$MATCHED" | while IFS='|' read -r mid mtype mdesc; do
+              [ -z "$mdesc" ] && continue
+              echo "[memory] (${mtype}) ${mdesc}"
+              # Update access stats
+              sqlite3 "$METRICS_DB" \
+                "UPDATE memories SET access_count = access_count + 1, last_accessed = datetime('now') WHERE id='$mid';" 2>/dev/null || true
+            done
+          fi
+        fi
+      fi
+    fi
+  fi
+fi
+
 hook_log "inject-prompt-context complete"
 exit 0

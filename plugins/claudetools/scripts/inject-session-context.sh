@@ -94,4 +94,15 @@ if [ -f "$METRICS_DB" ]; then
      WHERE confidence < ${MEM_PRUNE} AND times_reinforced < 2;" 2>/dev/null || true
 fi
 
+# --- Surface memory candidates from previous sessions ---
+PLUGIN_DATA="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}/data"
+CANDIDATES_FILE="$PLUGIN_DATA/memory-candidates.jsonl"
+if [ -f "$CANDIDATES_FILE" ] && [ -s "$CANDIDATES_FILE" ]; then
+  CAND_COUNT=$(wc -l < "$CANDIDATES_FILE" 2>/dev/null | tr -d ' ')
+  if [ "${CAND_COUNT:-0}" -gt 0 ] 2>/dev/null; then
+    echo "[Memory] ${CAND_COUNT} memory candidates from previous sessions. Review with: cat ${CANDIDATES_FILE}"
+    echo "Consider saving valuable ones to memory/ and clearing the staging file."
+  fi
+fi
+
 exit 0

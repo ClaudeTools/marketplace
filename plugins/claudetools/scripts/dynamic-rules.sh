@@ -95,4 +95,8 @@ if command -v sqlite3 &>/dev/null && [ -f "${METRICS_DB:-/dev/null}" ]; then
   fi
 fi
 
+# --- 4. Memory encouragement ---
+echo ""
+echo "Save learnings to memory/ when you discover project patterns, user preferences, or make significant decisions."
+
 exit 0

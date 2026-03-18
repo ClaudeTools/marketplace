@@ -109,6 +109,12 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/doc-manager.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/memory-index.sh",
+            "timeout": 5,
+            "async": true
           }
         ]
       },
@@ -213,6 +219,16 @@
             "timeout": 60
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/memory-extract-fast.sh",
+            "async": true,
+            "timeout": 10
+          }
+        ]
       }
     ],
     "SessionStart": [
@@ -283,6 +299,26 @@
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/doc-index-generator.sh",
             "async": true,
             "timeout": 15
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/memory-extract-deep.sh",
+            "async": true,
+            "timeout": 60
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/memory-consolidate.sh",
+            "async": true,
+            "timeout": 30
           }
         ]
       }

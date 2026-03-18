@@ -80,6 +80,43 @@ CREATE INDEX IF NOT EXISTS idx_sessions_timestamp ON session_metrics(timestamp);
 CREATE INDEX IF NOT EXISTS idx_memories_category ON project_memories(category);
 CREATE INDEX IF NOT EXISTS idx_memories_confidence ON project_memories(confidence DESC);
 
+-- Active memory system: native memory/ file index + FTS5 search
+CREATE TABLE IF NOT EXISTS memories (
+  id TEXT PRIMARY KEY,
+  content TEXT NOT NULL,
+  type TEXT NOT NULL,
+  name TEXT,
+  description TEXT,
+  tags TEXT DEFAULT '[]',
+  confidence REAL DEFAULT 1.0,
+  access_count INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now')),
+  last_accessed TEXT,
+  source TEXT DEFAULT 'human',
+  file_path TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(type);
+CREATE INDEX IF NOT EXISTS idx_memories_confidence_desc ON memories(confidence DESC);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(
+  name, description, content,
+  content='memories',
+  content_rowid='rowid',
+  tokenize='porter unicode61'
+);
+
+-- Triggers to keep FTS in sync
+CREATE TRIGGER IF NOT EXISTS memories_ai AFTER INSERT ON memories BEGIN
+  INSERT INTO memories_fts(rowid, name, description, content)
+  VALUES (new.rowid, new.name, new.description, new.content);
+END;
+CREATE TRIGGER IF NOT EXISTS memories_au AFTER UPDATE ON memories BEGIN
+  INSERT INTO memories_fts(memories_fts, rowid, name, description, content)
+  VALUES ('delete', old.rowid, old.name, old.description, old.content);
+  INSERT INTO memories_fts(rowid, name, description, content)
+  VALUES (new.rowid, new.name, new.description, new.content);
+END;
+
 CREATE TABLE IF NOT EXISTS hook_outcomes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   session_id TEXT NOT NULL,
@@ -142,7 +179,9 @@ INSERT OR IGNORE INTO threshold_overrides (metric_name, default_value, current_v
   ('uncommitted_file_limit', 5, 5, 2, 15, 'enforce-git-commits: modified file count before blocking'),
   ('large_change_threshold', 15, 15, 5, 50, 'session-stop-gate: files in commit before scope warning'),
   ('ai_audit_diff_threshold', 30, 30, 10, 100, 'session-stop-gate: diff lines before AI audit triggers'),
-  ('outcome_retention_days', 90, 90, 30, 365, 'aggregate-session: days to keep tool_outcomes');
+  ('outcome_retention_days', 90, 90, 30, 365, 'aggregate-session: days to keep tool_outcomes'),
+  ('memory_retrieval_limit', 3, 3, 1, 5, 'active-memory: max memories injected per prompt'),
+  ('memory_fts_min_rank', -5, -5, -20, -1, 'active-memory: FTS5 rank threshold (more negative = looser)');
 SQL
   fi
 
@@ -279,6 +318,27 @@ SQL
     created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')));" 2>/dev/null || true
   sqlite3 "$METRICS_DB" "CREATE INDEX IF NOT EXISTS idx_gaps_status ON guardrail_gaps(status);" 2>/dev/null || true
 
+  # Migration: active memory system tables
+  sqlite3 "$METRICS_DB" "CREATE TABLE IF NOT EXISTS memories (
+    id TEXT PRIMARY KEY, content TEXT NOT NULL, type TEXT NOT NULL,
+    name TEXT, description TEXT, tags TEXT DEFAULT '[]', confidence REAL DEFAULT 1.0,
+    access_count INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')),
+    last_accessed TEXT, source TEXT DEFAULT 'human', file_path TEXT);" 2>/dev/null || true
+  sqlite3 "$METRICS_DB" "CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(type);" 2>/dev/null || true
+  sqlite3 "$METRICS_DB" "CREATE INDEX IF NOT EXISTS idx_memories_confidence_desc ON memories(confidence DESC);" 2>/dev/null || true
+  # FTS5 virtual table — CREATE VIRTUAL TABLE doesn't support IF NOT EXISTS in all SQLite builds
+  sqlite3 "$METRICS_DB" "CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(
+    name, description, content, content='memories', content_rowid='rowid',
+    tokenize='porter unicode61');" 2>/dev/null || true
+  sqlite3 "$METRICS_DB" "CREATE TRIGGER IF NOT EXISTS memories_ai AFTER INSERT ON memories BEGIN
+    INSERT INTO memories_fts(rowid, name, description, content)
+    VALUES (new.rowid, new.name, new.description, new.content); END;" 2>/dev/null || true
+  sqlite3 "$METRICS_DB" "CREATE TRIGGER IF NOT EXISTS memories_au AFTER UPDATE ON memories BEGIN
+    INSERT INTO memories_fts(memories_fts, rowid, name, description, content)
+    VALUES ('delete', old.rowid, old.name, old.description, old.content);
+    INSERT INTO memories_fts(rowid, name, description, content)
+    VALUES (new.rowid, new.name, new.description, new.content); END;" 2>/dev/null || true
+
   # Migration: add step_execution_id to hook_outcomes if missing
   sqlite3 "$METRICS_DB" "ALTER TABLE hook_outcomes ADD COLUMN step_execution_id TEXT REFERENCES step_executions(step_execution_id);" 2>/dev/null || true
 
@@ -297,5 +357,7 @@ SQL
     ('uncommitted_file_limit', 5, 5, 2, 15, 'enforce-git-commits: modified file count before blocking'),
     ('large_change_threshold', 15, 15, 5, 50, 'session-stop-gate: files in commit before scope warning'),
     ('ai_audit_diff_threshold', 30, 30, 10, 100, 'session-stop-gate: diff lines before AI audit triggers'),
-    ('outcome_retention_days', 90, 90, 30, 365, 'aggregate-session: days to keep tool_outcomes');" 2>/dev/null || true
+    ('outcome_retention_days', 90, 90, 30, 365, 'aggregate-session: days to keep tool_outcomes'),
+    ('memory_retrieval_limit', 3, 3, 1, 5, 'active-memory: max memories injected per prompt'),
+    ('memory_fts_min_rank', -5, -5, -20, -1, 'active-memory: FTS5 rank threshold (more negative = looser)');" 2>/dev/null || true
 }
