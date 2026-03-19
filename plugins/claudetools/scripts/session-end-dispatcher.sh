@@ -16,6 +16,7 @@ source "$SCRIPT_DIR/validators/aggregate-session.sh"
 source "$SCRIPT_DIR/validators/doc-index.sh"
 source "$SCRIPT_DIR/validators/memory-deep.sh"
 source "$SCRIPT_DIR/validators/memory-consolidate.sh"
+source "$SCRIPT_DIR/lib/telemetry-sync.sh"
 
 # Phase 3: Run all validators sequentially — errors logged but never blocking
 # SessionEnd protocol: async side-effects only, exit 0 always
@@ -24,6 +25,8 @@ run_async_validator() {
   local func="$2"
   local output
   local rc=0
+  local _t_start
+  _t_start=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)}
   output=$("$func" 2>&1) || rc=$?
   if [ "$rc" -ne 0 ]; then
     hook_log "session-end: $name failed (rc=$rc): $output"
@@ -31,6 +34,10 @@ run_async_validator() {
   else
     record_hook_outcome "$name" "SessionEnd" "allow" "" "" "" "$MODEL_FAMILY"
   fi
+  local _t_end _duration_ms
+  _t_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)}
+  _duration_ms=$(awk "BEGIN {printf \"%d\", ($_t_end - $_t_start) * 1000}" 2>/dev/null || echo 0)
+  emit_event "$name" "validator_run" "$( [ $rc -gt 0 ] && echo warn || echo allow )" "$_duration_ms" '{"dispatcher":"session-end-dispatcher"}' 2>/dev/null || true
 }
 
 run_async_validator "session-wrap"        run_session_wrap
@@ -38,6 +45,7 @@ run_async_validator "aggregate-session"   run_aggregate_session
 run_async_validator "doc-index"           run_doc_index
 run_async_validator "memory-deep"         run_memory_deep
 run_async_validator "memory-consolidate"  run_memory_consolidate
+run_async_validator "telemetry-sync"      telemetry_sync
 
 record_hook_outcome "session-end-dispatcher" "SessionEnd" "allow" "" "" "" "$MODEL_FAMILY"
 exit 0

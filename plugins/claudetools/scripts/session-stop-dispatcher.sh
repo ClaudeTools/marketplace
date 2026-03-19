@@ -23,6 +23,8 @@ run_validator() {
   local func="$2"
   local output
   local rc=0
+  local _t_start
+  _t_start=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)}
   output=$("$func" 2>&1) || rc=$?
   if [ "$rc" -gt 0 ] && [ -n "$output" ]; then
     ALL_FINDINGS="${ALL_FINDINGS}${output}\n"
@@ -31,6 +33,10 @@ run_validator() {
   else
     record_hook_outcome "$name" "Stop" "allow" "" "" "" "$MODEL_FAMILY"
   fi
+  local _t_end _duration_ms
+  _t_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)}
+  _duration_ms=$(awk "BEGIN {printf \"%d\", ($_t_end - $_t_start) * 1000}" 2>/dev/null || echo 0)
+  emit_event "$name" "validator_run" "$( [ $rc -gt 0 ] && echo warn || echo allow )" "$_duration_ms" '{"dispatcher":"session-stop-dispatcher"}' 2>/dev/null || true
 }
 
 run_validator "task-quality" validate_task_quality
