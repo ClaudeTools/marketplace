@@ -7,6 +7,7 @@ set -euo pipefail
 
 source "$(dirname "$0")/hook-log.sh"
 source "$(dirname "$0")/lib/ensure-db.sh"
+source "$(dirname "$0")/lib/telemetry.sh" 2>/dev/null || true
 
 INPUT=$(cat 2>/dev/null || true)
 
@@ -129,4 +130,5 @@ sqlite3 "$METRICS_DB" "INSERT INTO memories (id, content, type, name, descriptio
 }
 
 hook_log "memory-index: indexed $MEM_NAME (type=$MEM_TYPE, id=$MEM_ID)"
+emit_event "memory" "memory_indexed" "allow" "0" "$(printf '{"name":"%s","type":"%s","file":"%s"}' "$MEM_NAME" "$MEM_TYPE" "$BASENAME")" 2>/dev/null || true
 exit 0
