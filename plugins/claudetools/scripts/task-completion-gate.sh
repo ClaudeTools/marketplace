@@ -14,6 +14,7 @@ source "$SCRIPT_DIR/validators/task-quality.sh"
 source "$SCRIPT_DIR/validators/task-done.sh"
 source "$SCRIPT_DIR/validators/git-commits.sh"
 source "$SCRIPT_DIR/validators/ran-checks.sh"
+source "$SCRIPT_DIR/validators/no-deferred-actions.sh"
 
 # Phase 3: Run validators, aggregate results
 # TaskCompleted protocol: findings on stderr, exit MAX_EXIT (block on 2)
@@ -45,6 +46,7 @@ run_validator "task-quality" validate_task_quality
 run_validator "task-done"    validate_task_done
 run_validator "git-commits"  validate_git_commits
 run_validator "ran-checks"   validate_ran_checks
+run_validator "no-deferred-actions" validate_no_deferred_actions
 
 # Phase 4: Emit aggregated findings
 if [ -n "$ALL_FINDINGS" ]; then
