@@ -47,14 +47,18 @@ LINE_COUNT=$(wc -l < "$FILE_PATH" 2>/dev/null || echo "0")
 LINE_COUNT=${LINE_COUNT// /}
 BASENAME=$(basename "$FILE_PATH")
 
-# Thresholds
-WARN_THRESHOLD=500
-BLOCK_THRESHOLD=2000
+# Adaptive thresholds (tunable via /tune-thresholds)
+WARN_THRESHOLD=$(get_threshold "read_warn_lines" "$MODEL_FAMILY")
+WARN_THRESHOLD=${WARN_THRESHOLD%.*}
+BLOCK_THRESHOLD=$(get_threshold "read_block_lines" "$MODEL_FAMILY")
+BLOCK_THRESHOLD=${BLOCK_THRESHOLD%.*}
 
 if [ "$LINE_COUNT" -gt "$BLOCK_THRESHOLD" ]; then
-  BLOCKED="File '${BASENAME}' has ${LINE_COUNT} lines. Reading the entire file wastes context tokens. Use offset and limit parameters to read the section you need, or use Grep to find the specific lines first."
+  BLOCKED="File '${BASENAME}' is ${LINE_COUNT} lines — too large to read in full.
+To read a specific section: Read with offset=100 limit=50 (reads lines 100-150).
+To find what you need: use Grep to locate the relevant lines first, then Read that range."
   HOOK_DECISION="block" HOOK_REASON="large file read without offset/limit (${LINE_COUNT} lines)"
-  record_hook_outcome "enforce-read-efficiency" "PreToolUse" "block" "Read" "" "" "$MODEL_FAMILY"
+  record_hook_outcome "enforce-read-efficiency" "PreToolUse" "block" "Read" "read_block_lines" "$BLOCK_THRESHOLD" "$MODEL_FAMILY"
   emit_event "enforce-read-efficiency" "large_read_blocked" "block" "0" "{\"lines\":${LINE_COUNT}}" 2>/dev/null || true
   jq -n --arg reason "$BLOCKED" \
     '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"block","permissionDecisionReason":$reason}}'
@@ -62,10 +66,9 @@ if [ "$LINE_COUNT" -gt "$BLOCK_THRESHOLD" ]; then
 fi
 
 if [ "$LINE_COUNT" -gt "$WARN_THRESHOLD" ]; then
-  # Warn but don't block — medium files
-  echo "{\"systemMessage\":\"File '${BASENAME}' has ${LINE_COUNT} lines. Consider using offset/limit parameters to read only the section you need — saves context tokens.\"}"
+  echo "{\"systemMessage\":\"File '${BASENAME}' is ${LINE_COUNT} lines. Read a targeted section with offset and limit parameters instead of the full file.\"}"
   HOOK_DECISION="warn" HOOK_REASON="medium file read without offset/limit (${LINE_COUNT} lines)"
-  record_hook_outcome "enforce-read-efficiency" "PreToolUse" "warn" "Read" "" "" "$MODEL_FAMILY"
+  record_hook_outcome "enforce-read-efficiency" "PreToolUse" "warn" "Read" "read_warn_lines" "$WARN_THRESHOLD" "$MODEL_FAMILY"
   emit_event "enforce-read-efficiency" "medium_read_warned" "warn" "0" "{\"lines\":${LINE_COUNT}}" 2>/dev/null || true
   exit 0
 fi
