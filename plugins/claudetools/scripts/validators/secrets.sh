@@ -1,0 +1,142 @@
+#!/bin/bash
+# Validator: hardcoded secret/credential detection
+# Sourced by the dispatcher after hook_init() has been called.
+# Globals used: FILE_PATH, BASENAME
+# Calls: hook_get_content (lazy NEW_STRING extraction)
+# Returns: 0 = clean, 1 = secrets found (warning)
+# Output: findings written to stdout
+
+validate_secrets() {
+  # --- Allowlist: files where secrets/keys are expected ---
+  case "$FILE_PATH" in
+    *.env|*.env.*|.env.example|.env.local|.env.template)
+      # .env files ARE the correct place for secrets
+      return 0
+      ;;
+    *.test.*|*.spec.*|*__tests__*|*__mocks__*|*fixtures*|*__fixtures__*)
+      # Test files may have fake keys for testing
+      return 0
+      ;;
+    *.md|*.txt|*.rst|*.adoc)
+      # Documentation may reference key formats
+      return 0
+      ;;
+    *.lock|*.sum|*.svg|*.png|*.jpg|*.gif|*.ico|*.woff*|*.ttf|*.eot)
+      # Binary/generated files
+      return 0
+      ;;
+    *secret*template*|*secret*example*|*credential*example*)
+      # Template files showing the expected format
+      return 0
+      ;;
+  esac
+
+  # Extract the content being written
+  local NEW_STRING
+  NEW_STRING=$(hook_get_content)
+
+  if [ -z "$NEW_STRING" ]; then
+    return 0
+  fi
+
+  local ISSUES=""
+  local add_issue
+  add_issue() { ISSUES="${ISSUES}  - $1\n"; }
+
+  local SQ="'"  # single-quote variable for safe embedding in patterns
+
+  # --- Pattern 1: AWS Access Keys (AKIA...) ---
+  if echo "$NEW_STRING" | grep -qE 'AKIA[0-9A-Z]{16}'; then
+    add_issue "AWS Access Key ID detected (AKIA...)"
+  fi
+
+  # --- Pattern 2: AWS Secret Keys (40-char base64 near aws/secret/key context) ---
+  if echo "$NEW_STRING" | grep -qE "[${SQ}\"][A-Za-z0-9/+=]{40}[${SQ}\"]" && \
+     echo "$NEW_STRING" | grep -qiE '(aws|secret|key)'; then
+    add_issue "Possible AWS Secret Access Key (40-char string near aws/secret/key context)"
+  fi
+
+  # --- Pattern 3: Generic API key assignments ---
+  # Matches: api_key = "...", apiKey: "...", API_KEY = "sk-..." etc.
+  if echo "$NEW_STRING" | grep -qiE "(api[_-]?key|apikey|api[_-]?secret)[[:space:]]*[:=][[:space:]]*[\"${SQ}][A-Za-z0-9_.+=/-]{8,}[\"${SQ}]"; then
+    add_issue "Hardcoded API key assignment detected"
+  fi
+
+  # --- Pattern 4: Generic password/secret assignments ---
+  if echo "$NEW_STRING" | grep -qiE "(password|passwd|pwd|secret|token|credential)[[:space:]]*[:=][[:space:]]*[\"${SQ}][^[:space:]\"${SQ}]{8,}[\"${SQ}]"; then
+    # Exclude common false positives: placeholder values, env var references, type annotations
+    local MATCH
+    MATCH=$(echo "$NEW_STRING" | grep -iE "(password|passwd|pwd|secret|token|credential)[[:space:]]*[:=][[:space:]]*[\"${SQ}][^[:space:]\"${SQ}]{8,}[\"${SQ}]" | head -1)
+    # Allow: process.env.*, os.environ.*, env("..."), ${...}, ENV["..."], placeholder patterns
+    if ! echo "$MATCH" | grep -qE '(process\.env|os\.environ|env\(|getenv|\$\{|ENV\[|placeholder|example|changeme|your[_-]|<[^>]+>|\*{3,})'; then
+      add_issue "Hardcoded password/secret/token assignment detected"
+    fi
+  fi
+
+  # --- Pattern 5: Private keys ---
+  if echo "$NEW_STRING" | grep -qE 'BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY'; then
+    add_issue "Private key material detected"
+  fi
+
+  # --- Pattern 6: GitHub tokens ---
+  if echo "$NEW_STRING" | grep -qE '(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}'; then
+    add_issue "GitHub personal access token detected"
+  fi
+
+  # --- Pattern 7: Slack tokens ---
+  if echo "$NEW_STRING" | grep -qE 'xox[baprs]-[A-Za-z0-9-]{10,}'; then
+    add_issue "Slack token detected"
+  fi
+
+  # --- Pattern 8: Stripe keys ---
+  if echo "$NEW_STRING" | grep -qE '(sk|pk|rk)_(live|test)_[A-Za-z0-9]{20,}'; then
+    add_issue "Stripe API key detected"
+  fi
+
+  # --- Pattern 9: OpenAI / Anthropic keys ---
+  if echo "$NEW_STRING" | grep -qE 'sk-[A-Za-z0-9]{20,}'; then
+    # Exclude if it looks like a variable reference or env var
+    local MATCH
+    MATCH=$(echo "$NEW_STRING" | grep -E 'sk-[A-Za-z0-9]{20,}' | head -1)
+    if ! echo "$MATCH" | grep -qE '(process\.env|os\.environ|env\(|getenv|\$\{|ENV\[)'; then
+      add_issue "OpenAI/Anthropic-style API key detected (sk-...)"
+    fi
+  fi
+
+  # --- Pattern 10: Generic bearer tokens ---
+  if echo "$NEW_STRING" | grep -qE 'Bearer[[:space:]]+[A-Za-z0-9_.+=/:-]{20,}'; then
+    local MATCH
+    MATCH=$(echo "$NEW_STRING" | grep -E 'Bearer[[:space:]]+[A-Za-z0-9_.+=/:-]{20,}' | head -1)
+    if ! echo "$MATCH" | grep -qE '(\$\{|process\.env|os\.environ|getenv|ENV\[|<[^>]+>|\{[^}]+\})'; then
+      add_issue "Hardcoded Bearer token detected"
+    fi
+  fi
+
+  # --- Pattern 11: Connection strings with embedded passwords ---
+  if echo "$NEW_STRING" | grep -qE '(mysql|postgres|mongodb|redis|amqp)://[^:]+:[^@]{8,}@'; then
+    local MATCH
+    MATCH=$(echo "$NEW_STRING" | grep -E '(mysql|postgres|mongodb|redis|amqp)://[^:]+:[^@]{8,}@' | head -1)
+    if ! echo "$MATCH" | grep -qE '(\$\{|process\.env|os\.environ|getenv|ENV\[|<[^>]+>|\{[^}]+\}|placeholder|example|changeme)'; then
+      add_issue "Database connection string with embedded password detected"
+    fi
+  fi
+
+  # --- Pattern 12: Google/GCP/Firebase keys ---
+  if echo "$NEW_STRING" | grep -qE 'AIza[0-9A-Za-z_-]{35}'; then
+    add_issue "Google API key detected (AIza...)"
+  fi
+
+  # --- Emit warning if any issues found ---
+  if [ -n "$ISSUES" ]; then
+    echo "HARDCODED SECRET WARNING in ${BASENAME}"
+    echo ""
+    echo "Secrets and credentials must never be hardcoded in source files."
+    echo "Detected patterns:"
+    echo -e "$ISSUES"
+    echo "Use environment variables (process.env.*, os.environ[*]) or a config"
+    echo "system (.env files, vault, SSM) instead of embedding credentials in code."
+    return 1
+  fi
+
+  return 0
+}

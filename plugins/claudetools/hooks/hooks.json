@@ -6,15 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/block-dangerous-bash.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/ai-safety-check.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/block-unasked-restructure.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/pre-bash-gate.sh"
           }
         ]
       },
@@ -32,24 +24,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/require-active-task.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-task-scope.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/research-backing-gate.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/detect-bulk-edit.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/pre-edit-gate.sh"
           }
         ]
       },
@@ -88,23 +63,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/verify-no-stubs.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/validate-content.sh"
           },
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/edit-frequency-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-mock-in-prod.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/detect-hardcoded-secrets.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/detect-localhost-in-config.sh"
           },
           {
             "type": "command",
@@ -123,11 +86,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-deploy-then-verify.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/detect-unasked-deps.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/post-bash-gate.sh"
           }
         ]
       },
@@ -136,11 +95,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/audit-agent-output.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/semantic-audit-agent.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/post-agent-gate.sh"
           }
         ]
       },
@@ -159,19 +114,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-task-quality.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/verify-task-done.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-git-commits.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/verify-ran-checks.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/task-completion-gate.sh"
           }
         ]
       }
@@ -205,11 +148,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-task-quality.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-stop-gate.sh",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-stop-dispatcher.sh",
             "timeout": 60
           }
         ]
@@ -280,49 +219,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-wrap-up.sh",
-            "async": true,
-            "timeout": 30
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/aggregate-session.sh",
-            "timeout": 30,
-            "async": true
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/doc-index-generator.sh",
-            "async": true,
-            "timeout": 15
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/memory-extract-deep.sh",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-end-dispatcher.sh",
             "async": true,
             "timeout": 60
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/memory-consolidate.sh",
-            "async": true,
-            "timeout": 30
           }
         ]
       }
