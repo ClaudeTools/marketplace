@@ -56,26 +56,57 @@ if [ -z "$TRANSCRIPT" ] || [ ! -f "$TRANSCRIPT" ]; then
   exit 0
 fi
 
-# Extract full session context — all user messages + assistant key decisions
-# The transcript is JSONL with role fields. Pull user messages (the richest signal)
-# and assistant messages that contain decisions/corrections.
-SESSION_CONTEXT=$(jq -r '
+# === PRE-FILTER PIPELINE (deterministic, reduces noise before Sonnet) ===
+
+# Step 1: Extract only USER messages from transcript (highest signal for memories)
+RAW_USER_MSGS=$(jq -r '
   if .role == "human" or .role == "user" then
-    "USER: " + (
-      if (.content | type) == "array" then
-        [.content[] | select(type == "string" or .type == "text") |
-         if type == "string" then . else .text end] | join(" ")
-      else (.content // "") end
-    ) | .[0:500]
-  elif .role == "assistant" then
-    "ASSISTANT: " + (
-      if (.content | type) == "array" then
-        [.content[] | select(.type == "text") | .text] | join(" ")
-      else (.content // "") end
-    ) | .[0:300]
+    if (.content | type) == "array" then
+      [.content[] | select(type == "string" or .type == "text") |
+       if type == "string" then . else .text end] | join(" ")
+    else (.content // "") end
   else empty end
-' "$TRANSCRIPT" 2>/dev/null | head -c 30000 || true)
+' "$TRANSCRIPT" 2>/dev/null || true)
+[ -z "$RAW_USER_MSGS" ] && exit 0
+
+# Step 2: Filter out noise — short messages and routine confirmations
+FILTERED_MSGS=$(echo "$RAW_USER_MSGS" | while IFS= read -r msg; do
+  # Skip empty or very short messages (<15 chars = "ok", "yes", "done", etc.)
+  [ ${#msg} -lt 15 ] && continue
+  # Skip routine commands and confirmations
+  echo "$msg" | grep -qiE '^(ok|yes|no|done|continue|thanks|publish|stop|y|n|sure|go ahead|looks good|lgtm)\s*$' && continue
+  # Skip hook feedback messages (system-generated)
+  echo "$msg" | grep -qiE '^Stop hook feedback' && continue
+  echo "$msg"
+done)
+[ -z "$FILTERED_MSGS" ] && exit 0
+
+# Step 3: Score and prioritize — messages with correction/decision signal go first
+HIGH_SIGNAL=$(echo "$FILTERED_MSGS" | grep -iE "don.t|stop|always|never|wrong|instead|prefer|should|must|change|fix|broken|issue|problem|remember|forget|important|actually|wait|no,|nope" || true)
+LOW_SIGNAL=$(echo "$FILTERED_MSGS" | grep -viE "don.t|stop|always|never|wrong|instead|prefer|should|must|change|fix|broken|issue|problem|remember|forget|important|actually|wait|no,|nope" || true)
+
+# Step 4: Build context — high-signal first, then low-signal, capped at 8KB
+SESSION_CONTEXT=""
+if [ -n "$HIGH_SIGNAL" ]; then
+  SESSION_CONTEXT=$(echo "$HIGH_SIGNAL" | head -c 5000 | sed 's/^/[SIGNAL] /')
+fi
+if [ -n "$LOW_SIGNAL" ]; then
+  REMAINING=$((8000 - ${#SESSION_CONTEXT}))
+  [ "$REMAINING" -gt 500 ] && SESSION_CONTEXT="${SESSION_CONTEXT}
+$(echo "$LOW_SIGNAL" | head -c "$REMAINING")"
+fi
 [ -z "$SESSION_CONTEXT" ] && exit 0
+
+# Step 5: Count signal density — skip Sonnet call if too little signal
+SIGNAL_LINES=$(echo "$HIGH_SIGNAL" | grep -c . 2>/dev/null || echo 0)
+TOTAL_LINES=$(echo "$FILTERED_MSGS" | grep -c . 2>/dev/null || echo 0)
+if [ "$SIGNAL_LINES" -eq 0 ] && [ "$TOTAL_LINES" -lt 5 ]; then
+  hook_log "memory-reflect: low signal density ($SIGNAL_LINES signal, $TOTAL_LINES total), skipping"
+  emit_event "memory-reflect" "low_signal" "allow" "0" "{\"signal\":${SIGNAL_LINES},\"total\":${TOTAL_LINES}}" 2>/dev/null || true
+  exit 0
+fi
+
+hook_log "memory-reflect: ${SIGNAL_LINES} high-signal, ${TOTAL_LINES} total user messages (${#SESSION_CONTEXT} bytes to Sonnet)"
 
 # Existing memories (so we don't duplicate)
 EXISTING=""
