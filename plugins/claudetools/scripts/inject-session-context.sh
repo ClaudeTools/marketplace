@@ -8,6 +8,7 @@ set -euo pipefail
 source "$(dirname "$0")/hook-log.sh"
 source "$(dirname "$0")/lib/ensure-db.sh"
 source "$(dirname "$0")/lib/adaptive-weights.sh"
+source "$(dirname "$0")/lib/telemetry.sh" 2>/dev/null || true
 
 # Read session_id and create timestamp marker for task counting
 INPUT=$(cat 2>/dev/null || true)
@@ -16,6 +17,9 @@ _session_id=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)
 if [ -n "$_session_id" ]; then
   touch "/tmp/.claude-session-start-${_session_id}"
 fi
+
+# Emit session start telemetry (environment snapshot)
+emit_session_start 2>/dev/null || true
 
 # --- Dependency health check: warn if critical tools are missing ---
 MISSING_DEPS=""

@@ -36,6 +36,12 @@ source "$(dirname "$0")/lib/ensure-db.sh"
 ensure_metrics_db 2>/dev/null || true
 source "$(dirname "$0")/lib/adaptive-weights.sh"
 MODEL_FAMILY=$(detect_model_family)
+source "$(dirname "$0")/lib/telemetry.sh" 2>/dev/null || true
+
+# Emit error telemetry for every failure
+local _error_class
+_error_class=$(echo "$ERROR_KEY" | tr ' ' '_' | head -c 40)
+emit_error "$TOOL_NAME" "$_error_class" "failure-pattern-detector" "false" 2>/dev/null || true
 
 # Read adaptive threshold (model-aware)
 FAILURE_LIMIT=$(get_threshold "failure_loop_limit" "$MODEL_FAMILY")

@@ -107,3 +107,121 @@ emit_event() {
     "$extra" \
     >> "$_TELEMETRY_EVENTS_FILE" 2>/dev/null || true
 }
+
+# emit_session_start — Rich environment snapshot emitted once at SessionStart
+# Collects: Claude Code version, other plugins, total hook count, shell, node version,
+#           team mode, project languages, memory file count
+emit_session_start() {
+  _telemetry_ensure_init 2>/dev/null || return 0
+
+  local claude_version node_version shell_name total_hooks team_mode
+  local plugin_list memory_count project_langs
+
+  # Claude Code version
+  claude_version=$(claude --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "unknown")
+
+  # Node version
+  node_version=$(node --version 2>/dev/null | tr -d 'v' || echo "unknown")
+
+  # Shell
+  shell_name=$(basename "${SHELL:-unknown}" 2>/dev/null || echo "unknown")
+
+  # Other installed plugins (names only — from plugins cache or .claude/plugins)
+  plugin_list="[]"
+  if [ -d "$HOME/.claude/plugins" ]; then
+    plugin_list=$(ls "$HOME/.claude/plugins/" 2>/dev/null | head -20 | jq -R . 2>/dev/null | jq -sc . 2>/dev/null || echo "[]")
+  fi
+
+  # Total hook count across all plugins (from settings + plugin hooks)
+  total_hooks=$(grep -r '"command"' "$HOME/.claude/settings.json" "$HOME/.claude/settings.local.json" "$HOME/.claude/projects/"*/settings.json "$HOME/.claude/projects/"*/settings.local.json "${CLAUDE_PLUGIN_ROOT:-}/hooks/hooks.json" 2>/dev/null | wc -l | tr -d ' ' || echo "0")
+
+  # Team session detection
+  team_mode="solo"
+  [ "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-}" = "1" ] && team_mode="teams"
+
+  # Project language breakdown from codebase-pilot index
+  project_langs="{}"
+  local db_path="${CLAUDE_PLUGIN_ROOT:-}/data/codeindex.db"
+  if [ -f "$db_path" ] && command -v sqlite3 &>/dev/null; then
+    project_langs=$(sqlite3 "$db_path" "SELECT json_group_object(language, cnt) FROM (SELECT language, COUNT(*) as cnt FROM files WHERE language IS NOT NULL GROUP BY language ORDER BY cnt DESC LIMIT 10);" 2>/dev/null || echo "{}")
+    [ -z "$project_langs" ] && project_langs="{}"
+  fi
+
+  # Memory file count
+  local memory_dir="$HOME/.claude/projects/$(pwd | sed 's|^/|-|' | tr '/' '-')/memory"
+  memory_count=0
+  if [ -d "$memory_dir" ]; then
+    memory_count=$(find "$memory_dir" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ' || echo "0")
+  fi
+
+  emit_event "session" "session_start" "allow" "0" \
+    "$(printf '{"claude_version":"%s","node_version":"%s","shell":"%s","total_hooks":%s,"team_mode":"%s","plugins":%s,"project_languages":%s,"memory_count":%s}' \
+      "$claude_version" "$node_version" "$shell_name" "$total_hooks" \
+      "$team_mode" "$plugin_list" "$project_langs" "$memory_count")"
+}
+
+# emit_session_end — Session summary emitted once at SessionEnd
+# Collects: session metrics (tool calls, edits, failures, churn, tasks, duration),
+#           hook decision totals, dispatcher fire counts
+emit_session_end() {
+  _telemetry_ensure_init 2>/dev/null || return 0
+
+  local session_id="${1:-unknown}"
+  local total_calls=0 total_failures=0 total_edits=0 churn_rate=0
+  local tasks_completed=0 duration_min=0
+  local hook_blocks=0 hook_warns=0 hook_allows=0
+
+  # Session metrics from metrics.db
+  if command -v sqlite3 &>/dev/null && [ -f "${METRICS_DB:-}" ]; then
+    local row
+    row=$(sqlite3 "$METRICS_DB" \
+      "SELECT total_tool_calls, total_failures, total_edits, edit_churn_rate, tasks_completed, duration_minutes
+       FROM session_metrics WHERE session_id='$session_id' LIMIT 1;" 2>/dev/null || true)
+    if [ -n "$row" ]; then
+      total_calls=$(echo "$row" | cut -d'|' -f1)
+      total_failures=$(echo "$row" | cut -d'|' -f2)
+      total_edits=$(echo "$row" | cut -d'|' -f3)
+      churn_rate=$(echo "$row" | cut -d'|' -f4)
+      tasks_completed=$(echo "$row" | cut -d'|' -f5)
+      duration_min=$(echo "$row" | cut -d'|' -f6)
+    fi
+
+    # Hook decision totals for this session
+    hook_blocks=$(sqlite3 "$METRICS_DB" \
+      "SELECT COUNT(*) FROM hook_outcomes WHERE session_id='$session_id' AND decision='block';" 2>/dev/null || echo "0")
+    hook_warns=$(sqlite3 "$METRICS_DB" \
+      "SELECT COUNT(*) FROM hook_outcomes WHERE session_id='$session_id' AND decision='warn';" 2>/dev/null || echo "0")
+    hook_allows=$(sqlite3 "$METRICS_DB" \
+      "SELECT COUNT(*) FROM hook_outcomes WHERE session_id='$session_id' AND decision='allow';" 2>/dev/null || echo "0")
+  fi
+
+  # Dispatcher fire counts from events.jsonl (current session)
+  local dispatcher_counts="{}"
+  if [ -f "${_TELEMETRY_EVENTS_FILE:-}" ]; then
+    dispatcher_counts=$(grep '"event":"validator_run"' "$_TELEMETRY_EVENTS_FILE" 2>/dev/null \
+      | grep -o '"component":"[^"]*"' \
+      | sort | uniq -c | sort -rn | head -20 \
+      | awk '{gsub(/"component":"/,"",$2); gsub(/"/,"",$2); printf "%s\"%s\":%s", (NR>1?",":""), $2, $1}' \
+      | awk '{print "{"$0"}"}' 2>/dev/null || echo "{}")
+    [ -z "$dispatcher_counts" ] && dispatcher_counts="{}"
+  fi
+
+  emit_event "session" "session_end" "allow" "0" \
+    "$(printf '{"session_id":"%s","total_tool_calls":%s,"total_failures":%s,"total_edits":%s,"edit_churn_rate":%s,"tasks_completed":%s,"duration_minutes":%s,"hook_blocks":%s,"hook_warns":%s,"hook_allows":%s,"dispatcher_fires":%s}' \
+      "$session_id" "${total_calls:-0}" "${total_failures:-0}" "${total_edits:-0}" \
+      "${churn_rate:-0}" "${tasks_completed:-0}" "${duration_min:-0}" \
+      "${hook_blocks:-0}" "${hook_warns:-0}" "${hook_allows:-0}" "$dispatcher_counts")"
+}
+
+# emit_error — Error event emitted on tool/hook failures
+# Collects: tool name, error class, catching hook, whether user retried
+emit_error() {
+  local tool_name="${1:-unknown}"
+  local error_class="${2:-unknown}"
+  local catching_hook="${3:-none}"
+  local retried="${4:-false}"
+
+  emit_event "error" "tool_failure" "error" "0" \
+    "$(printf '{"tool":"%s","error_class":"%s","catching_hook":"%s","retried":%s}' \
+      "$tool_name" "$error_class" "$catching_hook" "$retried")"
+}
