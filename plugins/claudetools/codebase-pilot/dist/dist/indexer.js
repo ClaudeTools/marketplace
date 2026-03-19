@@ -25,6 +25,7 @@ const FILE_PATTERNS = [
     "**/*.jsx",
     "**/*.mjs",
     "**/*.cjs",
+    "**/*.py",
 ];
 export function indexProject(projectRoot) {
     const startTime = Date.now();

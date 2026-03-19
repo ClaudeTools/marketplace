@@ -8,11 +8,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PILOT_DIR="$(dirname "$SCRIPT_DIR")"
 CLI="$PILOT_DIR/dist/cli.js"
 
-# Source shared logging if available
+# Source shared logging and telemetry
 PLUGIN_ROOT="$(dirname "$PILOT_DIR")"
 LOG_SCRIPT="$PLUGIN_ROOT/scripts/hook-log.sh"
 if [[ -f "$LOG_SCRIPT" ]]; then
+  INPUT=$(cat 2>/dev/null || true)
   source "$LOG_SCRIPT"
+fi
+TELEM_SCRIPT="$PLUGIN_ROOT/scripts/lib/telemetry.sh"
+if [[ -f "$TELEM_SCRIPT" ]]; then
+  source "$TELEM_SCRIPT" 2>/dev/null || true
 fi
 
 # Determine project root from CWD (Claude Code sets this to the project)
@@ -21,29 +26,49 @@ PROJECT_ROOT="${CODEBASE_PILOT_PROJECT_ROOT:-$(pwd)}"
 # Auto-install dependencies if missing (one-time setup)
 if [[ ! -d "$PILOT_DIR/node_modules" ]]; then
   if command -v npm &>/dev/null; then
-    (cd "$PILOT_DIR" && npm install --production --no-audit --no-fund 2>/dev/null) || true
+    hook_log "codebase-pilot: npm install (first run)" 2>/dev/null || true
+    if ! (cd "$PILOT_DIR" && npm install --production --no-audit --no-fund 2>/dev/null); then
+      hook_log "codebase-pilot: npm install FAILED" 2>/dev/null || true
+      emit_event "codebase-pilot" "npm_install_failed" "error" 2>/dev/null || true
+    fi
+  else
+    hook_log "codebase-pilot: npm not available, cannot install deps" 2>/dev/null || true
+    emit_event "codebase-pilot" "npm_not_found" "error" 2>/dev/null || true
   fi
 fi
 
 # Skip if CLI not built
 if [[ ! -f "$CLI" ]]; then
+  hook_log "codebase-pilot: CLI not built at $CLI, skipping" 2>/dev/null || true
+  emit_event "codebase-pilot" "cli_not_built" "error" 2>/dev/null || true
   exit 0
 fi
 
-# Skip if no source files exist in project
-SOURCE_COUNT=$(find "$PROJECT_ROOT" -maxdepth 3 \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null | head -5 | wc -l)
+# Skip if no source files exist in project (now includes .py)
+SOURCE_COUNT=$(find "$PROJECT_ROOT" -maxdepth 3 \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" \) -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/__pycache__/*" -not -path "*/.venv/*" 2>/dev/null | head -5 | wc -l)
 if [[ "$SOURCE_COUNT" -eq 0 ]]; then
-  if [[ "$(type -t log_hook 2>/dev/null)" == "function" ]]; then
-    log_hook "codebase-pilot" "skip" "No source files found in $PROJECT_ROOT"
-  fi
+  hook_log "codebase-pilot: no source files in $PROJECT_ROOT, skipping" 2>/dev/null || true
+  emit_event "codebase-pilot" "no_source_files" "allow" 2>/dev/null || true
   exit 0
 fi
 
 # Run the indexer (output goes to stderr)
-node "$CLI" index "$PROJECT_ROOT" 2>/dev/null || true
+local _idx_start=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)} 2>/dev/null || true
+if ! node "$CLI" index "$PROJECT_ROOT" 2>/dev/null; then
+  hook_log "codebase-pilot: indexing FAILED for $PROJECT_ROOT" 2>/dev/null || true
+  emit_event "codebase-pilot" "index_failed" "error" 2>/dev/null || true
+else
+  local _idx_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)} 2>/dev/null || true
+  local _idx_ms=$(awk "BEGIN {printf \"%d\", ($_idx_end - $_idx_start) * 1000}" 2>/dev/null || echo 0)
+  emit_event "codebase-pilot" "index_success" "allow" "$_idx_ms" 2>/dev/null || true
+fi
 
 # Output the project map to stdout (injected as context for the agent)
 MAP_OUTPUT=$(node "$CLI" map "$PROJECT_ROOT" 2>/dev/null) || true
+if [[ -z "$MAP_OUTPUT" ]]; then
+  hook_log "codebase-pilot: map generation returned empty for $PROJECT_ROOT" 2>/dev/null || true
+  emit_event "codebase-pilot" "map_empty" "warn" 2>/dev/null || true
+fi
 
 if [[ -n "$MAP_OUTPUT" ]]; then
   echo "--- Codebase Index (auto-generated) ---"

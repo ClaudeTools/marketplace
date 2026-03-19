@@ -7,8 +7,27 @@ import {
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
+import { appendFileSync, mkdirSync } from "node:fs";
 import { getDbPath } from "./db.js";
 import { generateProjectMap } from "./project-map.js";
+
+// --- Structured logging for MCP server ---
+const LOG_DIR = path.resolve(
+  process.env.CLAUDE_PLUGIN_ROOT ?? path.join(__dirname, "../.."),
+  "logs"
+);
+const MCP_LOG = path.join(LOG_DIR, "mcp.log");
+
+function mcpLog(event: string, detail: string, durationMs?: number): void {
+  try {
+    mkdirSync(LOG_DIR, { recursive: true });
+    const ts = new Date().toISOString();
+    const dur = durationMs !== undefined ? ` duration=${durationMs}ms` : "";
+    appendFileSync(MCP_LOG, `${ts} | codebase-pilot | ${event} | ${detail}${dur}\n`);
+  } catch {
+    // Never let logging break the server
+  }
+}
 
 export interface SymbolRow {
   name: string;
@@ -105,6 +124,7 @@ function getDatabase(): Database.Database | null {
     return cachedDb;
   } catch (err) {
     process.stderr.write(`codebase-pilot: failed to open database: ${err}\n`);
+    mcpLog("db_error", `failed to open database: ${err}`);
     return null;
   }
 }
@@ -498,6 +518,7 @@ export async function startMcpServer(): Promise<void> {
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
+    const callStart = Date.now();
 
     try {
       let result: string;
@@ -521,11 +542,13 @@ export async function startMcpServer(): Promise<void> {
           result = `Unknown tool: ${name}`;
       }
 
+      mcpLog("tool_call", `tool=${name} status=ok`, Date.now() - callStart);
       return {
         content: [{ type: "text", text: result }],
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      mcpLog("tool_error", `tool=${name} error=${message.slice(0, 200)}`, Date.now() - callStart);
       return {
         content: [{ type: "text", text: `Error: ${message}` }],
         isError: true,
@@ -535,9 +558,11 @@ export async function startMcpServer(): Promise<void> {
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
+  mcpLog("startup", `project=${getProjectRoot()} pid=${process.pid}`);
 
   // Detect client disconnect via stdin EOF
   process.stdin.on("end", () => {
+    mcpLog("shutdown", "stdin EOF (client disconnected)");
     closeDatabase();
     process.exit(0);
   });

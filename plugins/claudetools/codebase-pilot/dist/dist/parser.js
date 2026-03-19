@@ -1,6 +1,7 @@
 import Parser from "tree-sitter";
 import TypeScriptLang from "tree-sitter-typescript";
 import JavaScriptLang from "tree-sitter-javascript";
+import PythonLang from "tree-sitter-python";
 const { typescript: TSLang, tsx: TSXLang } = TypeScriptLang;
 const parsers = new Map();
 function getParser(language) {
@@ -19,6 +20,9 @@ function getParser(language) {
         case "jsx":
             parser.setLanguage(JavaScriptLang);
             break;
+        case "python":
+            parser.setLanguage(PythonLang);
+            break;
     }
     parsers.set(language, parser);
     return parser;
@@ -32,12 +36,17 @@ export function detectLanguage(filePath) {
         return "javascript";
     if (filePath.endsWith(".jsx"))
         return "jsx";
+    if (filePath.endsWith(".py"))
+        return "python";
     return null;
 }
 export function parseFile(source, language) {
     const parser = getParser(language);
     const tree = parser.parse(source);
     const root = tree.rootNode;
+    if (language === "python") {
+        return parsePythonFile(root);
+    }
     const symbols = [];
     const imports = [];
     for (let i = 0; i < root.childCount; i++) {
@@ -365,6 +374,192 @@ function extractReexport(node, sourceNode) {
                     if (name)
                         symbols.push(name.text);
                 }
+            }
+        }
+    }
+    return { source, symbols };
+}
+// ── Python parsing ──────────────────────────────────────────────────
+function parsePythonFile(root) {
+    const symbols = [];
+    const imports = [];
+    for (let i = 0; i < root.childCount; i++) {
+        const node = root.child(i);
+        if (!node)
+            continue;
+        switch (node.type) {
+            case "function_definition":
+                symbols.push(extractPythonFunction(node));
+                break;
+            case "class_definition":
+                symbols.push(extractPythonClass(node));
+                break;
+            case "import_statement":
+                imports.push(extractPythonImport(node));
+                break;
+            case "import_from_statement":
+                imports.push(extractPythonFromImport(node));
+                break;
+            case "decorated_definition": {
+                const inner = node.namedChildren.find((c) => c.type === "function_definition" || c.type === "class_definition");
+                if (inner?.type === "function_definition") {
+                    symbols.push(extractPythonFunction(inner));
+                }
+                else if (inner?.type === "class_definition") {
+                    symbols.push(extractPythonClass(inner));
+                }
+                break;
+            }
+            case "expression_statement": {
+                const expr = node.namedChildren[0];
+                if (expr?.type === "assignment") {
+                    const left = expr.childForFieldName("left");
+                    if (left?.type === "identifier") {
+                        symbols.push({
+                            name: left.text,
+                            kind: "variable",
+                            line: node.startPosition.row + 1,
+                            endLine: node.endPosition.row + 1,
+                            signature: node.text.replace(/\n/g, " ").slice(0, 120),
+                            exported: true,
+                            children: [],
+                        });
+                    }
+                }
+                break;
+            }
+        }
+    }
+    return { symbols, imports };
+}
+function extractPythonFunction(node) {
+    const nameNode = node.childForFieldName("name");
+    const params = node.childForFieldName("parameters");
+    const returnType = node.childForFieldName("return_type");
+    let sig = nameNode.text;
+    if (params)
+        sig += params.text;
+    if (returnType)
+        sig += " -> " + returnType.text;
+    return {
+        name: nameNode.text,
+        kind: "function",
+        line: node.startPosition.row + 1,
+        endLine: node.endPosition.row + 1,
+        signature: sig,
+        exported: !nameNode.text.startsWith("_"),
+        children: [],
+    };
+}
+function extractPythonClass(node) {
+    const nameNode = node.childForFieldName("name");
+    const children = [];
+    const body = node.childForFieldName("body");
+    if (body) {
+        for (let i = 0; i < body.namedChildCount; i++) {
+            const member = body.namedChild(i);
+            if (!member)
+                continue;
+            if (member.type === "function_definition") {
+                const methodName = member.childForFieldName("name");
+                if (methodName) {
+                    const mParams = member.childForFieldName("parameters");
+                    const mReturn = member.childForFieldName("return_type");
+                    let mSig = methodName.text;
+                    if (mParams)
+                        mSig += mParams.text;
+                    if (mReturn)
+                        mSig += " -> " + mReturn.text;
+                    children.push({
+                        name: methodName.text,
+                        kind: "method",
+                        line: member.startPosition.row + 1,
+                        endLine: member.endPosition.row + 1,
+                        signature: mSig,
+                        exported: false,
+                        children: [],
+                    });
+                }
+            }
+            else if (member.type === "decorated_definition") {
+                const inner = member.namedChildren.find((c) => c.type === "function_definition");
+                if (inner) {
+                    const methodName = inner.childForFieldName("name");
+                    if (methodName) {
+                        const mParams = inner.childForFieldName("parameters");
+                        const mReturn = inner.childForFieldName("return_type");
+                        let mSig = methodName.text;
+                        if (mParams)
+                            mSig += mParams.text;
+                        if (mReturn)
+                            mSig += " -> " + mReturn.text;
+                        children.push({
+                            name: methodName.text,
+                            kind: "method",
+                            line: inner.startPosition.row + 1,
+                            endLine: inner.endPosition.row + 1,
+                            signature: mSig,
+                            exported: false,
+                            children: [],
+                        });
+                    }
+                }
+            }
+        }
+    }
+    const superclasses = node.childForFieldName("superclasses");
+    let sig = nameNode.text;
+    if (superclasses)
+        sig += superclasses.text;
+    return {
+        name: nameNode.text,
+        kind: "class",
+        line: node.startPosition.row + 1,
+        endLine: node.endPosition.row + 1,
+        signature: sig,
+        exported: !nameNode.text.startsWith("_"),
+        children,
+    };
+}
+function extractPythonImport(node) {
+    const symbols = [];
+    for (let i = 0; i < node.namedChildCount; i++) {
+        const child = node.namedChild(i);
+        if (child?.type === "dotted_name") {
+            symbols.push(child.text);
+        }
+        else if (child?.type === "aliased_import") {
+            const name = child.childForFieldName("name");
+            if (name)
+                symbols.push(name.text);
+        }
+    }
+    return { source: symbols[0] ?? "", symbols };
+}
+function extractPythonFromImport(node) {
+    const moduleNode = node.childForFieldName("module_name");
+    const source = moduleNode?.text ?? "";
+    const symbols = [];
+    for (let i = 0; i < node.namedChildCount; i++) {
+        const child = node.namedChild(i);
+        if (child === moduleNode)
+            continue;
+        if (child?.type === "aliased_import") {
+            const name = child.childForFieldName("name");
+            if (name)
+                symbols.push(name.text);
+        }
+        else if (child?.type === "dotted_name") {
+            symbols.push(child.text);
+        }
+    }
+    if (symbols.length === 0) {
+        const match = node.text.match(/import\s+(.+)$/);
+        if (match) {
+            for (const name of match[1].split(",")) {
+                const trimmed = name.trim().split(/\s+as\s+/)[0].trim();
+                if (trimmed && trimmed !== "*")
+                    symbols.push(trimmed);
             }
         }
     }

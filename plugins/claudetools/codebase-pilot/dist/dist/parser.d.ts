@@ -16,7 +16,7 @@ export interface ParseResult {
     imports: ExtractedImport[];
 }
 export type SymbolKind = "function" | "class" | "interface" | "type" | "enum" | "variable" | "method" | "property";
-type SupportedLanguage = "typescript" | "tsx" | "javascript" | "jsx";
+type SupportedLanguage = "typescript" | "tsx" | "javascript" | "jsx" | "python";
 export declare function detectLanguage(filePath: string): SupportedLanguage | null;
 export declare function parseFile(source: string, language: SupportedLanguage): ParseResult;
 export {};
