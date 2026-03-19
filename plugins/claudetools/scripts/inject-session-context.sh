@@ -18,8 +18,11 @@ if [ -n "$_session_id" ]; then
   touch "/tmp/.claude-session-start-${_session_id}"
 fi
 
-# Emit session start telemetry (environment snapshot)
-emit_session_start 2>/dev/null || true
+# Emit session start telemetry (environment snapshot) — main session only, not subagents
+_agent_type=$(echo "$INPUT" | jq -r '.agent_type // "main"' 2>/dev/null || echo "main")
+if [ "$_agent_type" = "main" ]; then
+  emit_session_start 2>/dev/null || true
+fi
 
 # --- Dependency health check: warn if critical tools are missing ---
 MISSING_DEPS=""

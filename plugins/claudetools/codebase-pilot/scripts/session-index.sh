@@ -27,7 +27,7 @@ PROJECT_ROOT="${CODEBASE_PILOT_PROJECT_ROOT:-$(pwd)}"
 if [[ ! -d "$PILOT_DIR/node_modules" ]]; then
   if command -v npm &>/dev/null; then
     hook_log "codebase-pilot: npm install (first run)" 2>/dev/null || true
-    if ! (cd "$PILOT_DIR" && npm install --production --no-audit --no-fund 2>/dev/null); then
+    if ! (cd "$PILOT_DIR" && npm install --production --no-audit --no-fund --legacy-peer-deps 2>/dev/null); then
       hook_log "codebase-pilot: npm install FAILED" 2>/dev/null || true
       emit_event "codebase-pilot" "npm_install_failed" "error" 2>/dev/null || true
     fi

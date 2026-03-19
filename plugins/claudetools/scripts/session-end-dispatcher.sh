@@ -40,9 +40,10 @@ run_async_validator() {
   emit_event "$name" "validator_run" "$( [ $rc -gt 0 ] && echo warn || echo allow )" "$_duration_ms" '{"dispatcher":"session-end-dispatcher"}' 2>/dev/null || true
 }
 
-# Emit session end telemetry (session summary)
-local _sid
+# Emit session end telemetry — include subagents (they have distinct metrics)
+local _sid _agent_type
 _sid=$(hook_get_field '.session_id' 2>/dev/null || echo "unknown")
+_agent_type=$(hook_get_field '.agent_type' 2>/dev/null || echo "main")
 emit_session_end "$_sid" 2>/dev/null || true
 
 run_async_validator "session-wrap"        run_session_wrap

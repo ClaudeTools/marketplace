@@ -126,45 +126,18 @@ validate_agent_output() {
     fi
   done <<< "$CHANGED_FILES"
 
-  # --- Independent typecheck (never trust agent's self-reported result) ---
-  local TYPECHECK_FAIL=""
-  if [ -f "$CWD/package.json" ]; then
-    if grep -q '"typecheck"' "$CWD/package.json" 2>/dev/null; then
-      local TC_OUT TC_EXIT
-      TC_OUT=$(cd "$CWD" && npm run typecheck 2>&1 | tail -20) || true
-      TC_EXIT=$?
-      if [ "$TC_EXIT" -ne 0 ]; then
-        TYPECHECK_FAIL="TypeScript typecheck failed (fresh run):\n$(echo "$TC_OUT" | grep -E 'error TS|Error:' | head -10)"
-      fi
-    elif [ -f "$CWD/tsconfig.json" ]; then
-      local TC_OUT TC_EXIT
-      TC_OUT=$(cd "$CWD" && npx tsc --noEmit 2>&1 | tail -20) || true
-      TC_EXIT=$?
-      if [ "$TC_EXIT" -ne 0 ]; then
-        TYPECHECK_FAIL="TypeScript typecheck failed (fresh run):\n$(echo "$TC_OUT" | grep -E 'error TS|Error:' | head -10)"
-      fi
-    fi
-  fi
+  # Typecheck removed — task-completion-gate already runs typecheck at TaskCompleted.
+  # Running it here too added ~870ms avg latency to every agent call for duplicate work.
 
-  if [ -n "$ISSUES" ] || [ -n "$TYPECHECK_FAIL" ] || [ -n "$SCOPE_WARNINGS" ]; then
+  if [ -n "$ISSUES" ] || [ -n "$SCOPE_WARNINGS" ]; then
     echo "Post-agent review: ${FILES_WITH_ISSUES}/${FILES_CHECKED} files checked (${FILE_COUNT} total changed)"
     if [ -n "$SCOPE_WARNINGS" ]; then
-      echo ""
-      echo "Scope warnings:"
       echo -e "$SCOPE_WARNINGS"
     fi
     if [ -n "$ISSUES" ]; then
-      echo ""
-      echo "Pattern violations found:"
       echo -e "$ISSUES"
     fi
-    if [ -n "$TYPECHECK_FAIL" ]; then
-      echo ""
-      echo -e "$TYPECHECK_FAIL"
-    fi
-    echo ""
-    echo "These results come from a fresh check of the current file state."
-    echo "Fix all issues and re-run typecheck before proceeding."
+    echo "Fix issues before proceeding. Typecheck runs at task completion."
     return 1
   fi
 
