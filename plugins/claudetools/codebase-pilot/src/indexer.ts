@@ -33,6 +33,7 @@ const FILE_PATTERNS = [
   "**/*.jsx",
   "**/*.mjs",
   "**/*.cjs",
+  "**/*.py",
 ];
 
 export interface IndexStats {
