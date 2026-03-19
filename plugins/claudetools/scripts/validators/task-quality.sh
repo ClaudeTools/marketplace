@@ -76,6 +76,14 @@ validate_task_quality() {
           VIOLATIONS="${VIOLATIONS}\n$(basename "$file"): ${ANY} uses of 'any' type"
           VIOLATION_COUNT=$((VIOLATION_COUNT + ANY))
         fi
+
+        # Circumvention: 'as unknown as Type' bypasses type safety same as 'as any'
+        local UNKNOWN_AS
+        UNKNOWN_AS=$(grep -co 'as unknown as\b' "$file" 2>/dev/null || true)
+        UNKNOWN_AS=${UNKNOWN_AS:-0}
+        if [ "$UNKNOWN_AS" -gt 2 ]; then
+          WARNINGS="${WARNINGS}\n$(basename "$file"): ${UNKNOWN_AS} uses of 'as unknown as' — often used to bypass type checking. Use a type guard or fix the types."
+        fi
         ;;
     esac
 

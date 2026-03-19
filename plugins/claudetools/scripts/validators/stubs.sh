@@ -43,6 +43,11 @@ validate_stubs() {
       add_line < <(grep -n -E \
         '=>\s*(\(\s*)?(null|undefined|\{\}|\[\])(\s*\))?\s*[;,]' \
         "$FILE_PATH" 2>/dev/null || true)
+
+      # Circumvention: returning placeholder strings instead of null
+      add_line < <(grep -n -iE \
+        'return\s+["\x27](placeholder|not.?implemented|todo|fixme|stub|coming.?soon|tbd|wip)["\x27]' \
+        "$FILE_PATH" 2>/dev/null || true)
       ;;
 
     *.py)

@@ -31,8 +31,18 @@ fi
 OFFSET=$(echo "$INPUT" | jq -r '.tool_input.offset // empty' 2>/dev/null || true)
 LIMIT=$(echo "$INPUT" | jq -r '.tool_input.limit // empty' 2>/dev/null || true)
 
-# If offset or limit is set, the agent is already being targeted — allow
-if [ -n "$OFFSET" ] || [ -n "$LIMIT" ]; then
+# If offset or limit is set, check for sanity — limit > 1000 is likely circumvention
+if [ -n "$LIMIT" ]; then
+  LIMIT_NUM=${LIMIT%.*}
+  if [ -n "$LIMIT_NUM" ] && [ "$LIMIT_NUM" -gt 1000 ] 2>/dev/null; then
+    echo "{\"systemMessage\":\"Read limit of ${LIMIT_NUM} is very large. Use Grep to find the section you need, then Read a targeted range.\"}"
+    HOOK_DECISION="warn" HOOK_REASON="excessive limit (${LIMIT_NUM} lines)"
+    record_hook_outcome "enforce-read-efficiency" "PreToolUse" "warn" "Read" "" "" "$MODEL_FAMILY"
+    emit_event "enforce-read-efficiency" "excessive_limit" "warn" "0" "{\"limit\":${LIMIT_NUM}}" 2>/dev/null || true
+  fi
+  exit 0
+fi
+if [ -n "$OFFSET" ]; then
   exit 0
 fi
 

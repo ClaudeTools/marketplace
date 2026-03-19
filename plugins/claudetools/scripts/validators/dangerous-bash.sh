@@ -201,6 +201,16 @@ validate_dangerous_bash() {
     BLOCKED="Blocked: git credential extraction — this can expose authentication tokens."
   fi
 
+  # --- Encoded command execution (circumvention of pattern matching) ---
+  if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE 'base64\s+(-d|--decode)\s*\|\s*(ba)?sh'; then
+    BLOCKED="Blocked: base64-encoded command piped to shell — this bypasses command pattern detection."
+  fi
+
+  # --- eval with dynamic content (circumvention risk) ---
+  if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE '\beval\s+"?\$(\(|[A-Z_])'; then
+    BLOCKED="Blocked: eval with dynamic content — construct commands explicitly instead of using eval."
+  fi
+
   if [ -n "$BLOCKED" ]; then
     record_hook_outcome "block-dangerous-bash" "PreToolUse" "block" "Bash" "" "" "$MODEL_FAMILY"
     echo "$BLOCKED"
