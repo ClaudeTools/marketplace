@@ -44,7 +44,7 @@ run_validator() {
   local _t_end _duration_ms
   _t_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)}
   _duration_ms=$(awk "BEGIN {printf \"%d\", ($_t_end - $_t_start) * 1000}" 2>/dev/null || echo 0)
-  emit_event "$name" "validator_run" "$( [ $rc -gt 0 ] && echo warn || echo allow )" "$_duration_ms" '{"dispatcher":"validate-content"}' 2>/dev/null || true
+  emit_validator_event "validate-content" "$name" "$( [ $rc -gt 0 ] && echo warn || echo allow )" "$_duration_ms" "$output" 2>/dev/null || true
 }
 
 run_validator "verify-no-stubs" validate_stubs

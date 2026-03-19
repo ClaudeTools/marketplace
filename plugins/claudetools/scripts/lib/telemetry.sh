@@ -108,6 +108,20 @@ emit_event() {
     >> "$_TELEMETRY_EVENTS_FILE" 2>/dev/null || true
 }
 
+# emit_validator_event — enriched event for dispatcher validator runs
+# Includes validator name and truncated reason in the extra field
+emit_validator_event() {
+  local dispatcher="${1:-unknown}"
+  local validator="${2:-unknown}"
+  local decision="${3:-allow}"
+  local duration_ms="${4:-0}"
+  local reason="${5:-}"
+  # Truncate reason to 80 chars, escape quotes for JSON safety
+  reason=$(printf '%s' "$reason" | head -c 80 | tr '"' "'")
+  emit_event "$validator" "validator_run" "$decision" "$duration_ms" \
+    "$(printf '{"dispatcher":"%s","validator":"%s","reason":"%s"}' "$dispatcher" "$validator" "$reason")"
+}
+
 # emit_session_start — Rich environment snapshot emitted once at SessionStart
 # Collects: Claude Code version, other plugins, total hook count, shell, node version,
 #           team mode, project languages, memory file count

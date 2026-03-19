@@ -36,7 +36,7 @@ run_pretool_validator() {
     local _t_end _duration_ms
     _t_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)}
     _duration_ms=$(awk "BEGIN {printf \"%d\", ($_t_end - $_t_start) * 1000}" 2>/dev/null || echo 0)
-    emit_event "$name" "validator_run" "warn" "$_duration_ms" '{"dispatcher":"pre-edit-gate"}' 2>/dev/null || true
+    emit_validator_event "pre-edit-gate" "$name" "block" "$_duration_ms" "$output" 2>/dev/null || true
     exit 0
   elif [ "$rc" -eq 1 ] && [ -n "$output" ]; then
     # Warning — emit as systemMessage
@@ -48,7 +48,7 @@ run_pretool_validator() {
   local _t_end _duration_ms
   _t_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)}
   _duration_ms=$(awk "BEGIN {printf \"%d\", ($_t_end - $_t_start) * 1000}" 2>/dev/null || echo 0)
-  emit_event "$name" "validator_run" "$( [ $rc -gt 0 ] && echo warn || echo allow )" "$_duration_ms" '{"dispatcher":"pre-edit-gate"}' 2>/dev/null || true
+  emit_validator_event "pre-edit-gate" "$name" "$( [ $rc -gt 0 ] && echo warn || echo allow )" "$_duration_ms" "$output" 2>/dev/null || true
 }
 
 run_pretool_validator "require-active-task"      validate_active_task
