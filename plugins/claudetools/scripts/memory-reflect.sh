@@ -56,8 +56,25 @@ if [ -z "$TRANSCRIPT" ] || [ ! -f "$TRANSCRIPT" ]; then
   exit 0
 fi
 
-# Build condensed session context (last 300 lines, ~user messages + tool results)
-SESSION_CONTEXT=$(tail -300 "$TRANSCRIPT" 2>/dev/null | head -c 15000 || true)
+# Extract full session context — all user messages + assistant key decisions
+# The transcript is JSONL with role fields. Pull user messages (the richest signal)
+# and assistant messages that contain decisions/corrections.
+SESSION_CONTEXT=$(jq -r '
+  if .role == "human" or .role == "user" then
+    "USER: " + (
+      if (.content | type) == "array" then
+        [.content[] | select(type == "string" or .type == "text") |
+         if type == "string" then . else .text end] | join(" ")
+      else (.content // "") end
+    ) | .[0:500]
+  elif .role == "assistant" then
+    "ASSISTANT: " + (
+      if (.content | type) == "array" then
+        [.content[] | select(.type == "text") | .text] | join(" ")
+      else (.content // "") end
+    ) | .[0:300]
+  else empty end
+' "$TRANSCRIPT" 2>/dev/null | head -c 30000 || true)
 [ -z "$SESSION_CONTEXT" ] && exit 0
 
 # Existing memories (so we don't duplicate)
