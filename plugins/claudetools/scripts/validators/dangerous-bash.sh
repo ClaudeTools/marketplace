@@ -173,6 +173,34 @@ validate_dangerous_bash() {
     BLOCKED="Warning: pip package name looks hallucinated — verify it exists on PyPI"
   fi
 
+  # --- AI tool safety bypass flags (Nx/Clinejection attack pattern, Feb 2026) ---
+  # Attackers use npm lifecycle scripts to invoke AI tools with permission-bypass flags
+  if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE -- '--dangerously-skip-permissions|--yolo|--trust-all-tools|--no-safety|--disable-guardrails'; then
+    BLOCKED="Blocked: AI tool safety bypass flag detected. This pattern was used in the Nx supply chain attack (Feb 2026) to turn AI assistants into exfiltration tools. Never run AI tools with permission-bypass flags."
+  fi
+
+  # --- MCP server injection ---
+  # Malware injects rogue MCP servers into AI tool configs
+  if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE '(echo|cat|printf|tee).*mcp.*server.*>>?\s*(settings|config|\.claude|\.cursor|\.continue)'; then
+    BLOCKED="Blocked: Potential MCP server injection into AI tool config. Verify the MCP server source before adding it."
+  fi
+
+  # --- npm lifecycle script abuse ---
+  # Malicious postinstall/preinstall scripts that invoke AI tools or exfiltrate data
+  if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE 'npm\s+set\s+.*script.*=.*claude|npm\s+pkg\s+set\s+.*postinstall|npm\s+pkg\s+set\s+.*preinstall'; then
+    BLOCKED="Blocked: npm lifecycle script modification — malicious lifecycle scripts are a primary supply chain attack vector."
+  fi
+
+  # --- Token/credential exfiltration via curl/wget ---
+  if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE '(curl|wget)\s+.*(-d|--data|--data-raw)\s+.*(\$[A-Z_]*(TOKEN|SECRET|KEY|PASSWORD)|gh\s+auth\s+token)'; then
+    BLOCKED="Blocked: credential exfiltration attempt — sending tokens/secrets to an external endpoint."
+  fi
+
+  # --- Git credential theft ---
+  if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE 'git\s+credential\s+fill|git\s+credential.*get|gh\s+auth\s+token.*\|'; then
+    BLOCKED="Blocked: git credential extraction — this can expose authentication tokens."
+  fi
+
   if [ -n "$BLOCKED" ]; then
     record_hook_outcome "block-dangerous-bash" "PreToolUse" "block" "Bash" "" "" "$MODEL_FAMILY"
     echo "$BLOCKED"

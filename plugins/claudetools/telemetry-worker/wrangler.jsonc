@@ -2,6 +2,7 @@
   "name": "claudetools-telemetry",
   "main": "src/index.js",
   "compatibility_date": "2025-01-01",
+  "workers_dev": true,
   "routes": [
     { "pattern": "telemetry.claudetools.com/*", "zone_name": "claudetools.com" }
   ],
@@ -9,7 +10,7 @@
     {
       "binding": "TELEMETRY_DB",
       "database_name": "claudetools-telemetry",
-      "database_id": "TO_BE_CREATED"
+      "database_id": "a756d2cb-6f1b-4694-901a-4072c19a99a2"
     }
   ]
 }
