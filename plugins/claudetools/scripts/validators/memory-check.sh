@@ -51,23 +51,36 @@ Before stopping, reflect on what you learned this session (${SESSION_AGE_MIN} mi
 
 Think through each category and save anything worth remembering:
 
-1. FEEDBACK: Did the user correct your approach? ("don't do X", "always do Y", "that's wrong")
-   → Save as type: feedback with Why: and How to apply: lines
+1. FEEDBACK: Did the user correct your approach? ("don't do X", "always do Y")
+   → Save as type: feedback — include Why: and How to apply: lines
 
-2. PROJECT: Were any architectural decisions, constraints, or deadlines discussed?
-   → Save as type: project with Why: and How to apply: lines
+2. PROJECT: Were architectural decisions, constraints, or deadlines discussed?
+   → Save as type: project — include Why: and How to apply: lines
 
-3. REFERENCE: Did you encounter external systems, URLs, configs, or tools to remember?
+3. REFERENCE: Did you encounter external systems, URLs, configs, or tools?
    → Save as type: reference
 
-4. USER: Did you learn about the user's role, preferences, or expertise level?
+4. USER: Did you learn about the user's role, preferences, or expertise?
    → Save as type: user
 
-Write memory files to: ${MEMORY_DIR}/
-Format: markdown with YAML frontmatter (name, description, type).
-Then update MEMORY.md index with a link to each new file.
+HOW TO SAVE (two steps — both required):
 
-If genuinely nothing new was learned, write a brief session summary instead.
+Step 1: Write the memory file using the Write tool:
+  Path: ${MEMORY_DIR}/<type>_<short_name>.md
+  Content:
+    ---
+    name: Human-readable title
+    description: One-line summary used for relevance matching
+    type: feedback|project|reference|user
+    ---
+    Body content. For feedback/project types, structure as:
+    rule/fact, then **Why:** and **How to apply:** lines.
+
+Step 2: Add a link to MEMORY.md index using the Edit tool:
+  Path: ${MEMORY_DIR}/MEMORY.md
+  Add line: - [<filename>.md](<filename>.md) — <one-line description>
+
+If genuinely nothing new was learned, write an auto_session_summary.md instead.
 REFLECT
 
   emit_event "memory-check" "reflection_forced" "block" "0" "{\"session_min\":${SESSION_AGE_MIN}}" 2>/dev/null || true
