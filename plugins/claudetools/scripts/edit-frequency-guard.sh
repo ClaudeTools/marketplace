@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# PostToolUse:Edit|Write hook — tracks per-file edit frequency and warns on repeated edits
-# After 3+ edits to the same file, warns the agent to stop guessing and add diagnostics.
+# PostToolUse:Edit|Write hook — tracks per-file edit frequency with progressive disclosure
+# Uses 3 escalation tiers to give increasingly specific guidance as edit count grows:
+#   Tier 1 (threshold):    Brief nudge — mention the count, suggest diagnostics
+#   Tier 2 (threshold+2):  Detailed — explain the churn pattern, suggest rewrite
+#   Tier 3 (threshold+4):  Full escalation — concrete recovery steps
 # Exit 1 for warning (soft), exit 0 for normal edits.
 
 set -euo pipefail
@@ -62,13 +65,31 @@ hook_log "file=$FILE_PATH edit_count=$NEW_COUNT"
 EDIT_THRESHOLD=$(get_threshold "edit_frequency_limit" "$MODEL_FAMILY")
 EDIT_THRESHOLD=${EDIT_THRESHOLD%.*}
 
-# Warn after threshold edits to the same file
+# --- Progressive disclosure: escalating warnings based on edit count ---
+# Tier 1 (threshold):    Brief nudge — mention the count, suggest diagnostics
+# Tier 2 (threshold+2):  Detailed — explain the churn pattern, suggest rewrite
+# Tier 3 (threshold+4):  Full escalation — concrete recovery steps
+TIER2_THRESHOLD=$((EDIT_THRESHOLD + 2))
+TIER3_THRESHOLD=$((EDIT_THRESHOLD + 4))
+
 if [ "$NEW_COUNT" -ge "$EDIT_THRESHOLD" ]; then
   FILENAME=$(basename "$FILE_PATH")
-  echo "THREE-STRIKE WARNING: You've edited '${FILENAME}' ${NEW_COUNT} times this session." >&2
-  echo "Stop guessing. Add diagnostic logging, read the output, get evidence, THEN make your next edit." >&2
-  echo "If this is the 4th+ edit, consider whether a focused rewrite would be more effective than incremental patches." >&2
-  HOOK_DECISION="warn"; HOOK_REASON="file ${FILENAME} edited ${NEW_COUNT} times"
+  HOOK_DECISION="warn"; HOOK_REASON="file ${FILENAME} edited ${NEW_COUNT} times (tier $([ "$NEW_COUNT" -ge "$TIER3_THRESHOLD" ] && echo 3 || ([ "$NEW_COUNT" -ge "$TIER2_THRESHOLD" ] && echo 2 || echo 1)))"
+
+  if [ "$NEW_COUNT" -ge "$TIER3_THRESHOLD" ]; then
+    # Tier 3: Full escalation with concrete recovery steps
+    echo "EDIT CHURN CRITICAL: '${FILENAME}' edited ${NEW_COUNT} times this session." >&2
+    echo "Repeated edits to the same file indicate a fix-by-guessing loop. Each guess costs time and may introduce new bugs." >&2
+    echo "Recovery steps: (1) Read the file from scratch with the Read tool. (2) Run the code and capture actual output. (3) Diff the output against expected behavior. (4) Fix the root cause in one targeted edit, or rewrite the function entirely." >&2
+  elif [ "$NEW_COUNT" -ge "$TIER2_THRESHOLD" ]; then
+    # Tier 2: Explain the pattern, suggest rewrite
+    echo "EDIT CHURN WARNING: '${FILENAME}' edited ${NEW_COUNT} times this session." >&2
+    echo "This pattern usually means incremental patches are not converging. Add diagnostic logging or print statements, read the actual output, then make one informed edit. If the function is tangled, a focused rewrite is faster than more patches." >&2
+  else
+    # Tier 1: Brief nudge
+    echo "Edit frequency notice: '${FILENAME}' edited ${NEW_COUNT} times this session. Pause and add diagnostics before the next edit." >&2
+  fi
+
   record_hook_outcome "edit-frequency-guard" "PostToolUse" "warn" "Edit" "edit_frequency_limit" "$EDIT_THRESHOLD" "$MODEL_FAMILY"
   exit 1
 fi

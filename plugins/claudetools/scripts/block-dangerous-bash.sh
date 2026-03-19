@@ -141,6 +141,32 @@ if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE '(systemctl\s+(stop|disable|mask)
   BLOCKED="Blocked: system service disruption command"
 fi
 
+# --- Uncommitted work destruction ---
+# git checkout . / git restore . (discards all uncommitted changes)
+if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE 'git\s+(checkout|restore)\s+\.\s*$'; then
+  BLOCKED="Blocked: git ${BASH_REMATCH[1]:-checkout/restore} . discards ALL uncommitted changes. Uncommitted work may belong to other agents or manual edits. Stage and commit changes first, or target specific files instead."
+fi
+
+# --- Fork bombs ---
+if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE ':\(\)\s*\{.*\|.*&\s*\}\s*;|\./(.*)\s*\|\s*\./\1\s*&'; then
+  BLOCKED="Blocked: fork bomb pattern detected (will crash the system)"
+fi
+
+# --- Crontab persistence ---
+if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE 'crontab\s+(-r|-e)|echo\s+.*>>\s*/etc/cron|echo\s+.*\|\s*crontab'; then
+  BLOCKED="Blocked: crontab modification (persistence mechanism). Verify this is intentional."
+fi
+
+# --- SSH key manipulation ---
+if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE 'echo\s+.*>>\s*.*authorized_keys|cp\s+.*authorized_keys|cat\s+.*id_rsa\b'; then
+  BLOCKED="Blocked: SSH key manipulation detected (potential unauthorized access)"
+fi
+
+# --- History/log wiping ---
+if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE 'history\s+-c|>\s*~/\.bash_history|>\s*~/\.(zsh_history|histfile)|unset\s+HISTFILE|shred\s+.*history'; then
+  BLOCKED="Blocked: shell history wiping (anti-forensics pattern)"
+fi
+
 # --- Hallucinated package detection ---
 # Flag packages with 5+ hyphenated segments (likely hallucinated)
 if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE '(npm|pnpm|yarn)\s+(install|add)\s+(@[a-z0-9-]+/)?[a-z]+-[a-z]+-[a-z]+-[a-z]+-[a-z]+'; then

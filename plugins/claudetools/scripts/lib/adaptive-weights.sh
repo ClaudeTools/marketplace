@@ -189,7 +189,7 @@ reset_threshold() {
 get_hook_category() {
   local hook_name="$1"
   case "$hook_name" in
-    block-dangerous-bash|guard-sensitive-files|ai-safety-check)
+    block-dangerous-bash|guard-sensitive-files|ai-safety-check|detect-hardcoded-secrets)
       echo "safety" ;;
     verify-no-stubs|edit-frequency-guard|failure-pattern-detector|check-mock-in-prod|block-stub-writes)
       echo "quality" ;;

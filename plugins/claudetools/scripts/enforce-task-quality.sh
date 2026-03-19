@@ -54,7 +54,7 @@ while IFS= read -r file; do
 
   # Skip non-code
   case "$file" in
-    *.test.*|*.spec.*|*__tests__*|*__mocks__*) continue ;;
+    *.test.*|*.spec.*|*.bats|*__tests__*|*__mocks__*) continue ;;
     *.md|*.json|*.yaml|*.yml|*.toml|*.lock|*.sh|*.css|*.svg|*.png|*.log|*.jsonl) continue ;;
   esac
 

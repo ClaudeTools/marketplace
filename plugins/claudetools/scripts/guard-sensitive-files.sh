@@ -35,43 +35,43 @@ if echo "$BASENAME" | grep -qE '^\.env($|\..*)'; then
   if [ "$TOOL_NAME" = "Read" ]; then
     exit 0  # Reading .env for debugging is safe
   fi
-  BLOCKED="Blocked: .env file write/edit blocked for $FILE_PATH — use Read to inspect"
+  BLOCKED="Cannot write to .env file '${BASENAME}'. Environment files contain secrets (API keys, database passwords) that must be edited manually by the user. To inspect its contents, use the Read tool instead."
 fi
 
 # TLS/SSL private keys: *.pem, *.key, *.p12, *.pfx
 if [ -z "$BLOCKED" ]; then
   case "$BASENAME_LOWER" in
     *.pem|*.key|*.p12|*.pfx)
-      BLOCKED="Blocked: private key file matched for $FILE_PATH" ;;
+      BLOCKED="Cannot access private key file '${BASENAME}'. TLS/SSL private keys (.pem, .key, .p12, .pfx) contain cryptographic material that should never be read or modified by automated tools. Manage certificates manually or through a secrets manager." ;;
   esac
 fi
 
 # SSH keys: id_rsa, id_ed25519, id_ecdsa (and .pub variants)
 if [ -z "$BLOCKED" ] && echo "$FILE_PATH" | grep -qE '\.ssh/(id_rsa|id_ed25519|id_ecdsa)(\.pub)?$'; then
-  BLOCKED="Blocked: SSH key file matched for $FILE_PATH"
+  BLOCKED="Cannot access SSH key file '${BASENAME}'. SSH keys are authentication credentials — modifying them could lock you out of remote systems. Manage SSH keys manually with ssh-keygen."
 fi
 
 # Basenames containing: credentials, secret, token (case-insensitive)
 if [ -z "$BLOCKED" ] && echo "$BASENAME_LOWER" | grep -qE '(credentials|secret|token)'; then
-  BLOCKED="Blocked: sensitive filename pattern matched for $FILE_PATH"
+  BLOCKED="Cannot access '${BASENAME}' — the filename contains 'credentials', 'secret', or 'token', indicating it holds sensitive data. If this file is safe to access (e.g., a type definition or config schema), rename it to avoid these keywords."
 fi
 
 # Wallet files: wallet.dat, *.keystore
 if [ -z "$BLOCKED" ]; then
   case "$BASENAME_LOWER" in
     wallet.dat|*.keystore)
-      BLOCKED="Blocked: wallet/keystore file matched for $FILE_PATH" ;;
+      BLOCKED="Cannot access wallet/keystore file '${BASENAME}'. These files contain cryptographic keys for wallets or app signing. Manage them manually or through your platform's key management." ;;
   esac
 fi
 
 # AWS credentials path
 if [ -z "$BLOCKED" ] && echo "$FILE_PATH" | grep -qE '\.aws/credentials$'; then
-  BLOCKED="Blocked: AWS credentials file matched for $FILE_PATH"
+  BLOCKED="Cannot access AWS credentials file (~/.aws/credentials). This file contains your AWS access keys. Configure AWS credentials manually with 'aws configure' or use environment variables."
 fi
 
 # GCloud credentials path
 if [ -z "$BLOCKED" ] && echo "$FILE_PATH" | grep -qE '\.config/gcloud/credentials\.db$'; then
-  BLOCKED="Blocked: GCloud credentials file matched for $FILE_PATH"
+  BLOCKED="Cannot access GCloud credentials database. This file stores your Google Cloud authentication tokens. Use 'gcloud auth login' to manage credentials."
 fi
 
 # Output blocking JSON if matched
