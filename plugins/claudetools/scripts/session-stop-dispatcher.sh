@@ -12,7 +12,6 @@ hook_init
 # Phase 2: Source validators
 source "$SCRIPT_DIR/validators/task-quality.sh"
 source "$SCRIPT_DIR/validators/stop-gate.sh"
-source "$SCRIPT_DIR/validators/memory-check.sh"
 
 # Phase 3: Run validators, aggregate results
 # Stop protocol: findings on stderr, exit MAX_EXIT (block on 2)
@@ -42,7 +41,6 @@ run_validator() {
 
 run_validator "task-quality"  validate_task_quality
 run_validator "stop-gate"     validate_stop_gate
-run_validator "memory-check"  validate_memory_check
 
 # Phase 4: Emit aggregated findings
 if [ -n "$ALL_FINDINGS" ]; then
