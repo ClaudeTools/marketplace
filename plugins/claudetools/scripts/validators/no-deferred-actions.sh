@@ -46,10 +46,25 @@ validate_no_deferred_actions() {
   P4=$(echo "$TEXT" | grep -ciE '^\s*(Next steps?|Manual steps?|Remaining steps?|TODO|Action items?):' 2>/dev/null || echo 0)
   DEFERRED_COUNT=$((DEFERRED_COUNT + P4))
 
+  # Pattern 5: "Go to the X dashboard/console/UI" — deferring to a GUI when CLI exists
+  local P5
+  P5=$(echo "$TEXT" | grep -ciE '(Go to|Visit|Open|Navigate to)\s+(the )?(Cloudflare|AWS|GCP|Azure|Vercel|Netlify|GitHub|Supabase|Firebase|Stripe)\s+(dashboard|console|UI|portal|settings|panel)' 2>/dev/null || echo 0)
+  DEFERRED_COUNT=$((DEFERRED_COUNT + P5))
+
+  # Pattern 6: "Add/Create/Update/Set X in Y" — deferring config/infra changes
+  local P6
+  P6=$(echo "$TEXT" | grep -ciE '^\s*(Add|Create|Update|Set|Configure|Enable|Modify)\s+(a |the )?(DNS|CNAME|A record|TXT record|environment variable|env var|secret|API key|database|migration|bucket|queue|worker|function)' 2>/dev/null || echo 0)
+  DEFERRED_COUNT=$((DEFERRED_COUNT + P6))
+
+  # Pattern 7: "Apply/Run the migration" — deferring database operations
+  local P7
+  P7=$(echo "$TEXT" | grep -ciE '^\s*(Apply|Run)\s+(the )?(migration|schema|seed|database)' 2>/dev/null || echo 0)
+  DEFERRED_COUNT=$((DEFERRED_COUNT + P7))
+
   # Threshold: 2+ patterns = likely deferring real work (1 might be documentation)
   if [ "$DEFERRED_COUNT" -ge 2 ]; then
     # Grab examples for the block message
-    DEFERRED_EXAMPLES=$(echo "$TEXT" | grep -iE '^\s*(Run|Execute|You (can|should|need)|To (verify|test|deploy)|Next steps?:)' 2>/dev/null | head -3 | sed 's/^/  /')
+    DEFERRED_EXAMPLES=$(echo "$TEXT" | grep -iE '^\s*(Run|Execute|You (can|should|need)|To (verify|test|deploy)|Next steps?:|Go to|Visit|Add |Create |Update |Set |Apply )' 2>/dev/null | head -3 | sed 's/^/  /')
 
     echo "You listed $DEFERRED_COUNT step(s) for the user instead of executing them yourself." >&2
     if [ -n "$DEFERRED_EXAMPLES" ]; then
