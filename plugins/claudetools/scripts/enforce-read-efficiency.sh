@@ -57,14 +57,11 @@ LINE_COUNT=$(wc -l < "$FILE_PATH" 2>/dev/null || echo "0")
 LINE_COUNT=${LINE_COUNT// /}
 BASENAME=$(basename "$FILE_PATH")
 
-# Adaptive thresholds (tunable via /tune-thresholds)
-WARN_THRESHOLD=$(get_threshold "read_warn_lines" "$MODEL_FAMILY")
-WARN_THRESHOLD=${WARN_THRESHOLD%.*}
-BLOCK_THRESHOLD=$(get_threshold "read_block_lines" "$MODEL_FAMILY")
-BLOCK_THRESHOLD=${BLOCK_THRESHOLD%.*}
-# Guard: empty/zero thresholds mean get_threshold failed — use safe defaults
-[ -z "$WARN_THRESHOLD" ] || [ "$WARN_THRESHOLD" -eq 0 ] 2>/dev/null && WARN_THRESHOLD=500
-[ -z "$BLOCK_THRESHOLD" ] || [ "$BLOCK_THRESHOLD" -eq 0 ] 2>/dev/null && BLOCK_THRESHOLD=2000
+# Thresholds — hardcoded to prevent DB/threshold lookup failures
+# Previous versions had bugs where get_threshold returned empty/wrong values
+# causing 4-line files to be blocked. Hardcode for reliability.
+WARN_THRESHOLD=1000
+BLOCK_THRESHOLD=5000
 
 if [ "$LINE_COUNT" -gt "$BLOCK_THRESHOLD" ]; then
   BLOCKED="File '${BASENAME}' is ${LINE_COUNT} lines — too large to read in full.
