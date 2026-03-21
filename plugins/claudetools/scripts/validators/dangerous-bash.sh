@@ -106,11 +106,22 @@ validate_dangerous_bash() {
   fi
 
   # --- Deploy without typecheck gate ---
-  # Block deploy commands that aren't preceded by typecheck in the same chain
+  # Block deploy commands unless typecheck was run recently (same chain OR recent session history)
   if [ -z "$BLOCKED" ] && echo "$CMD" | grep -qE '(npm\s+run\s+deploy|wrangler\s+deploy|vercel\s+deploy|netlify\s+deploy)'; then
-    # Allow if typecheck is in the same command chain (&&)
-    if ! echo "$CMD" | grep -qE '(tsc|typecheck|type-check).*&&.*(deploy)'; then
-      BLOCKED="Blocked: deploy without typecheck. Run typecheck first: npm run typecheck && npm run deploy"
+    local TYPECHECK_OK=0
+    # Check 1: typecheck in the same command chain (&&)
+    echo "$CMD" | grep -qE '(tsc|typecheck|type-check).*&&.*(deploy)' && TYPECHECK_OK=1
+    # Check 2: recent typecheck in session hook logs (last 30 entries, ~last few minutes)
+    if [ "$TYPECHECK_OK" -eq 0 ]; then
+      local LOG_FILE="${CLAUDE_PLUGIN_ROOT:-}/logs/hooks.log"
+      if [ -f "$LOG_FILE" ]; then
+        local RECENT_TC
+        RECENT_TC=$(tail -30 "$LOG_FILE" 2>/dev/null | grep -ciE 'tsc|typecheck|type-check|npx tsc' || echo 0)
+        [ "$RECENT_TC" -gt 0 ] && TYPECHECK_OK=1
+      fi
+    fi
+    if [ "$TYPECHECK_OK" -eq 0 ]; then
+      BLOCKED="Blocked: deploy without typecheck. Run typecheck first, then deploy."
     fi
   fi
 
