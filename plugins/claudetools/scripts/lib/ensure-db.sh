@@ -376,6 +376,10 @@ SQL
     ('outcome_retention_days', 90, 90, 30, 365, 'aggregate-session: days to keep tool_outcomes'),
     ('memory_retrieval_limit', 3, 3, 1, 5, 'active-memory: max memories injected per prompt'),
     ('memory_fts_min_rank', -5, -5, -20, -1, 'active-memory: FTS5 rank threshold (more negative = looser)'),
-    ('read_warn_lines', 500, 500, 200, 1000, 'enforce-read-efficiency: warn when reading files above this line count'),
-    ('read_block_lines', 2000, 2000, 500, 5000, 'enforce-read-efficiency: block full reads above this line count');" 2>/dev/null || true
+    ('read_warn_lines', 1000, 1000, 500, 3000, 'enforce-read-efficiency: warn when reading files above this line count'),
+    ('read_block_lines', 5000, 5000, 2000, 10000, 'enforce-read-efficiency: block full reads above this line count');" 2>/dev/null || true
+
+  # Migration: raise read-efficiency thresholds from overly aggressive 500/2000 to 1000/5000
+  sqlite3 "$METRICS_DB" "UPDATE threshold_overrides SET current_value = 1000, default_value = 1000, min_bound = 500, max_bound = 3000 WHERE metric_name = 'read_warn_lines' AND current_value <= 500;" 2>/dev/null || true
+  sqlite3 "$METRICS_DB" "UPDATE threshold_overrides SET current_value = 5000, default_value = 5000, min_bound = 2000, max_bound = 10000 WHERE metric_name = 'read_block_lines' AND current_value <= 2000;" 2>/dev/null || true
 }

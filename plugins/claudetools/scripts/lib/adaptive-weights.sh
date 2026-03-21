@@ -30,8 +30,8 @@ get_threshold() {
       stub_sensitivity) echo "1.0" ;;
       memory_retrieval_limit) echo "3" ;;
       memory_fts_min_rank) echo "-5" ;;
-      read_warn_lines) echo "500" ;;
-      read_block_lines) echo "2000" ;;
+      read_warn_lines) echo "1000" ;;
+      read_block_lines) echo "5000" ;;
       *) echo "3" ;; # safe default
     esac
     return
