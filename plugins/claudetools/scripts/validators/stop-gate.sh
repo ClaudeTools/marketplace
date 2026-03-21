@@ -157,7 +157,11 @@ validate_stop_gate() {
   if [ -n "$WEASEL_HITS" ]; then
     local WEASEL_COUNT
     WEASEL_COUNT=$(echo "$WEASEL_HITS" | wc -l | tr -d ' ')
-    TIER2_WARNINGS+=("$WEASEL_COUNT uncertain phrase(s) detected — verify claims with tests, not confidence")
+    # Threshold: 3+ weasel phrases = pattern of unverified confidence
+    # A single "should work" is normal language, not a red flag
+    if [ "$WEASEL_COUNT" -ge 3 ]; then
+      TIER2_WARNINGS+=("$WEASEL_COUNT uncertain phrases detected — verify claims with tests, not confidence")
+    fi
   fi
 
   # --- 2b. Scope check on recent commit ---
