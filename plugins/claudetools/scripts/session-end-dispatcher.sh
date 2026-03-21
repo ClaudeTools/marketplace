@@ -28,16 +28,17 @@ run_async_validator() {
   local _t_start
   _t_start=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)}
   output=$("$func" 2>&1) || rc=$?
+  local decision="allow"
+  [ "$rc" -ge 2 ] && decision="block"
+  [ "$rc" -eq 1 ] && decision="warn"
   if [ "$rc" -ne 0 ]; then
     hook_log "session-end: $name failed (rc=$rc): $output"
-    record_hook_outcome "$name" "SessionEnd" "warn" "" "" "" "$MODEL_FAMILY"
-  else
-    record_hook_outcome "$name" "SessionEnd" "allow" "" "" "" "$MODEL_FAMILY"
   fi
+  record_hook_outcome "$name" "SessionEnd" "$decision" "" "" "" "$MODEL_FAMILY"
   local _t_end _duration_ms
   _t_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)}
   _duration_ms=$(awk "BEGIN {printf \"%d\", ($_t_end - $_t_start) * 1000}" 2>/dev/null || echo 0)
-  emit_validator_event "session-end-dispatcher" "$name" "$( [ $rc -gt 0 ] && echo warn || echo allow )" "$_duration_ms" "$output" 2>/dev/null || true
+  emit_validator_event "session-end-dispatcher" "$name" "$decision" "$_duration_ms" "$output" 2>/dev/null || true
 }
 
 # Emit session end telemetry — include subagents (they have distinct metrics)

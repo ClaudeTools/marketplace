@@ -34,17 +34,18 @@ run_validator() {
   local _t_start
   _t_start=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)}
   output=$("$func" 2>&1) || rc=$?
+  local decision="allow"
+  [ "$rc" -ge 2 ] && decision="block"
+  [ "$rc" -eq 1 ] && decision="warn"
   if [ "$rc" -gt 0 ] && [ -n "$output" ]; then
     ALL_FINDINGS="${ALL_FINDINGS}${output}\n"
     [ "$rc" -gt "$MAX_EXIT" ] && MAX_EXIT=$rc
-    record_hook_outcome "$name" "PostToolUse" "warn" "" "" "" "$MODEL_FAMILY"
-  else
-    record_hook_outcome "$name" "PostToolUse" "allow" "" "" "" "$MODEL_FAMILY"
   fi
+  record_hook_outcome "$name" "PostToolUse" "$decision" "" "" "" "$MODEL_FAMILY"
   local _t_end _duration_ms
   _t_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)}
   _duration_ms=$(awk "BEGIN {printf \"%d\", ($_t_end - $_t_start) * 1000}" 2>/dev/null || echo 0)
-  emit_validator_event "validate-content" "$name" "$( [ $rc -gt 0 ] && echo warn || echo allow )" "$_duration_ms" "$output" 2>/dev/null || true
+  emit_validator_event "validate-content" "$name" "$decision" "$_duration_ms" "$output" 2>/dev/null || true
 }
 
 run_validator "verify-no-stubs" validate_stubs
