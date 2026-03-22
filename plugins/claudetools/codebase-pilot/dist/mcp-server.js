@@ -4,9 +4,13 @@ import { CallToolRequestSchema, ListToolsRequestSchema, } from "@modelcontextpro
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { appendFileSync, mkdirSync } from "node:fs";
 import { getDbPath } from "./db.js";
 import { generateProjectMap } from "./project-map.js";
+// ESM __dirname polyfill
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // --- Structured logging for MCP server ---
 const LOG_DIR = path.resolve(process.env.CLAUDE_PLUGIN_ROOT ?? path.join(__dirname, "../.."), "logs");
 const MCP_LOG = path.join(LOG_DIR, "mcp.log");
