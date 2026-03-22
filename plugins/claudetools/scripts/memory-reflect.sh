@@ -142,7 +142,8 @@ Rules:
 - Only extract genuinely NEW information not already in existing memories
 - Skip generic observations — only save specific, actionable learnings
 - If nothing new was learned, output exactly: NONE
-- Maximum 3 memories per session" --no-input --model sonnet 2>/dev/null || echo "NONE")
+- Maximum 3 memories per session
+- Base each memory on a DIRECT QUOTE from the transcript. Include the quote in the memory body. If you cannot find a supporting quote, do not create that memory." --no-input --model sonnet 2>/dev/null || echo "NONE")
 
 if [ -z "$RESULT" ] || echo "$RESULT" | grep -q "^NONE$"; then
   hook_log "memory-reflect: no new memories to extract"

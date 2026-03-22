@@ -103,6 +103,7 @@ RULES:
 - If the changes look like a different task entirely: NOT_DONE
 - If only config/docs changed for an implementation task: NOT_DONE
 - Be strict. The agent claims this is done. Verify it.
+- Only base your assessment on evidence in the transcript. If the transcript doesn't contain enough information to verify completion, respond with DONE — do not guess INCOMPLETE.
 
 Answer ONLY: DONE or NOT_DONE followed by a one-sentence reason."
 

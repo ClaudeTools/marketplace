@@ -44,6 +44,8 @@ Respond with EXACTLY one word on the first line:
 - SAFE — if the command is reasonable and targeted (e.g., rm of a specific temp file, git checkout of a single file)
 - UNSAFE — if the command is broadly destructive, irreversible, or affects critical data without a clear safe target
 
+If you cannot determine safety with confidence, respond SAFE — do not guess UNSAFE.
+
 Then on the second line, a brief reason (10 words max)."
 
   local RESULT
