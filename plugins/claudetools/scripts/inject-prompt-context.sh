@@ -159,7 +159,8 @@ if command -v sqlite3 &>/dev/null; then
 fi
 
 # Anti-hallucination reinforcement — injected on every prompt, survives context compaction
-echo "[accuracy] Verify before asserting. Use tools to check — don't assume. Cite file:line for claims."
+# Per prompting playbook: ALWAYS/NEVER emphasis, specific failure names, not abstract principles
+echo "[accuracy] ALWAYS read files before claiming their contents. NEVER report test/build results without running the command. NEVER assume — use Read, Grep, Bash to verify. Cite file:line for every code claim."
 
 hook_log "inject-prompt-context complete"
 exit 0
