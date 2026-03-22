@@ -4,8 +4,23 @@ import { CallToolRequestSchema, ListToolsRequestSchema, } from "@modelcontextpro
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
+import { appendFileSync, mkdirSync } from "node:fs";
 import { getDbPath } from "./db.js";
 import { generateProjectMap } from "./project-map.js";
+// --- Structured logging for MCP server ---
+const LOG_DIR = path.resolve(process.env.CLAUDE_PLUGIN_ROOT ?? path.join(__dirname, "../.."), "logs");
+const MCP_LOG = path.join(LOG_DIR, "mcp.log");
+function mcpLog(event, detail, durationMs) {
+    try {
+        mkdirSync(LOG_DIR, { recursive: true });
+        const ts = new Date().toISOString();
+        const dur = durationMs !== undefined ? ` duration=${durationMs}ms` : "";
+        appendFileSync(MCP_LOG, `${ts} | codebase-pilot | ${event} | ${detail}${dur}\n`);
+    }
+    catch {
+        // Never let logging break the server
+    }
+}
 export function escapeLike(input) {
     return input.replace(/[%_\\]/g, "\\$&");
 }
@@ -15,6 +30,26 @@ function getProjectRoot() {
 // Lazy singleton database connection — avoids per-call open/close race conditions
 let cachedDb = null;
 let cachedDbPath = null;
+// Simple LRU cache for query results (1-minute TTL, max 50 entries)
+const queryCache = new Map();
+const CACHE_TTL_MS = 60_000;
+const CACHE_MAX_SIZE = 50;
+function cachedQuery(key, fn) {
+    const now = Date.now();
+    const cached = queryCache.get(key);
+    if (cached && cached.expires > now) {
+        return cached.result;
+    }
+    const result = fn();
+    // Evict oldest entries if at capacity
+    if (queryCache.size >= CACHE_MAX_SIZE) {
+        const firstKey = queryCache.keys().next().value;
+        if (firstKey !== undefined)
+            queryCache.delete(firstKey);
+    }
+    queryCache.set(key, { result, expires: now + CACHE_TTL_MS });
+    return result;
+}
 function getDatabase() {
     const projectRoot = getProjectRoot();
     const dbPath = getDbPath(projectRoot);
@@ -46,6 +81,7 @@ function getDatabase() {
     }
     catch (err) {
         process.stderr.write(`codebase-pilot: failed to open database: ${err}\n`);
+        mcpLog("db_error", `failed to open database: ${err}`);
         return null;
     }
 }
@@ -155,6 +191,10 @@ export function handleProjectMap() {
     return generateProjectMap(projectRoot, db);
 }
 export function handleFindSymbol(args) {
+    const cacheKey = `find_symbol:${args.name}:${args.kind ?? ""}`;
+    return cachedQuery(cacheKey, () => handleFindSymbolUncached(args));
+}
+function handleFindSymbolUncached(args) {
     const db = getDatabase();
     if (!db)
         return dbErrorMessage();
@@ -206,6 +246,10 @@ export function handleFindSymbol(args) {
     return lines.join("\n");
 }
 export function handleFindUsages(args) {
+    const cacheKey = `find_usages:${args.name}`;
+    return cachedQuery(cacheKey, () => handleFindUsagesUncached(args));
+}
+function handleFindUsagesUncached(args) {
     const db = getDatabase();
     if (!db)
         return dbErrorMessage();
@@ -274,6 +318,10 @@ export function handleFileOverview(args) {
     return lines.join("\n");
 }
 export function handleRelatedFiles(args) {
+    const cacheKey = `related_files:${args.path}`;
+    return cachedQuery(cacheKey, () => handleRelatedFilesUncached(args));
+}
+function handleRelatedFilesUncached(args) {
     const db = getDatabase();
     if (!db)
         return dbErrorMessage();
@@ -365,6 +413,7 @@ export async function startMcpServer() {
     }));
     server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { name, arguments: args } = request.params;
+        const callStart = Date.now();
         try {
             let result;
             switch (name) {
@@ -386,12 +435,14 @@ export async function startMcpServer() {
                 default:
                     result = `Unknown tool: ${name}`;
             }
+            mcpLog("tool_call", `tool=${name} status=ok`, Date.now() - callStart);
             return {
                 content: [{ type: "text", text: result }],
             };
         }
         catch (error) {
             const message = error instanceof Error ? error.message : String(error);
+            mcpLog("tool_error", `tool=${name} error=${message.slice(0, 200)}`, Date.now() - callStart);
             return {
                 content: [{ type: "text", text: `Error: ${message}` }],
                 isError: true,
@@ -400,8 +451,10 @@ export async function startMcpServer() {
     });
     const transport = new StdioServerTransport();
     await server.connect(transport);
+    mcpLog("startup", `project=${getProjectRoot()} pid=${process.pid}`);
     // Detect client disconnect via stdin EOF
     process.stdin.on("end", () => {
+        mcpLog("shutdown", "stdin EOF (client disconnected)");
         closeDatabase();
         process.exit(0);
     });

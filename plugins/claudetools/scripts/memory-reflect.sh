@@ -119,9 +119,13 @@ hook_log "memory-reflect: invoking Sonnet for memory extraction"
 # Call Sonnet via claude CLI with a focused extraction prompt
 RESULT=$(echo "$SESSION_CONTEXT" | timeout 45 claude -p "You are a memory extraction agent. Review this session transcript and identify NEW learnings worth saving for future sessions.
 
-EXISTING MEMORIES (do not duplicate these):
+<existing_memories>
 ${EXISTING}
+</existing_memories>
 
+ALWAYS check existing memories before creating new ones. NEVER duplicate an existing memory — update it instead.
+
+<output_format>
 For each new learning, output EXACTLY this format (one per learning, separated by blank lines):
 
 FILE: type_short_name.md
@@ -132,6 +136,11 @@ BODY:
 Content here. For feedback/project types include **Why:** and **How to apply:** lines.
 END
 
+WRONG: FILE: general_notes.md with vague content like 'Be careful with deployments'
+CORRECT: FILE: feedback_no_force_push.md with specific actionable rule like 'Never use git push --force on shared branches — use --force-with-lease instead'
+</output_format>
+
+<extraction_rules>
 Categories:
 - feedback: User corrections, preferences, behavioral rules
 - project: Architectural decisions, constraints, deadlines
@@ -143,7 +152,9 @@ Rules:
 - Skip generic observations — only save specific, actionable learnings
 - If nothing new was learned, output exactly: NONE
 - Maximum 3 memories per session
-- Base each memory on a DIRECT QUOTE from the transcript. Include the quote in the memory body. If you cannot find a supporting quote, do not create that memory." --no-input --model sonnet 2>/dev/null || echo "NONE")
+
+CRITICAL: Every memory MUST be grounded in a direct quote from the transcript. Include the quote in the memory body. If you cannot find a supporting quote, do NOT create that memory. Ungrounded memories pollute the memory system.
+</extraction_rules>" --no-input --model sonnet 2>/dev/null || echo "NONE")
 
 if [ -z "$RESULT" ] || echo "$RESULT" | grep -q "^NONE$"; then
   hook_log "memory-reflect: no new memories to extract"

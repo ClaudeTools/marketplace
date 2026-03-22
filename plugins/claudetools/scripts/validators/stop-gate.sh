@@ -198,17 +198,35 @@ validate_stop_gate() {
 
       local AI_PROMPT="You are a session-end quality auditor. An agent is about to stop working. Review the diff from the last commit for completeness and quality issues.
 
-Focus ONLY on:
-1. INCOMPLETE WORK: Functions that are declared but have stub/placeholder bodies. Endpoints with no real logic.
-2. CLAIMED-BUT-NOT-DONE: Comments saying 'implemented X' but the code doesn't actually do X.
-3. MISSING ERROR HANDLING: New API endpoints or async operations with no error handling at all.
-4. HARDCODED VALUES: Values that should clearly be configurable or come from config/env but are inline constants.
+<audit_categories>
+1. INCOMPLETE: Functions declared but have stub/placeholder bodies. Endpoints with no real logic.
+   WRONG: \"Some functions might be incomplete\"
+   CORRECT: \"- [INCOMPLETE] src/api.ts:42: fetchUsers() has empty body\"
 
-Changed files:
+2. CLAIMED-NOT-DONE: Comments saying 'implemented X' but the code doesn't actually do X.
+   WRONG: \"Code looks like it might not match comments\"
+   CORRECT: \"- [CLAIMED-NOT-DONE] lib/auth.ts:15: comment says 'validates JWT' but function returns true unconditionally\"
+
+3. MISSING_ERROR_HANDLING: New API endpoints or async operations with no error handling at all.
+   WRONG: \"Error handling could be improved\"
+   CORRECT: \"- [MISSING_ERROR_HANDLING] routes/users.ts:28: async db.query() with no try/catch\"
+
+4. HARDCODED: Values that should clearly be configurable or come from config/env but are inline constants.
+   WRONG: \"Some values might be hardcoded\"
+   CORRECT: \"- [HARDCODED] config.ts:5: API URL 'http://localhost:3000' should come from env\"
+</audit_categories>
+
+NEVER speculate about what 'might' be an issue. ALWAYS cite a specific file:line.
+
+<changed_files>
 ${RECENT_FILE_LIST}
+</changed_files>
 
-Respond with ONLY a bulleted list of findings, or 'CLEAN' if no issues found.
-Keep response under 8 lines. No preamble. No praise."
+<output_rules>
+Format each finding as: - [CATEGORY] file:line: description
+If no issues found, respond with exactly: CLEAN
+Keep response under 8 lines. No preamble. No praise.
+</output_rules>"
 
       hook_log "Tier 3: invoking AI audit on ${DIFF_LINES}-line diff"
 

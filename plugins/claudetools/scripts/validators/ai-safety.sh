@@ -31,22 +31,38 @@ validate_ai_safety() {
     return 0
   fi
 
-  local PROMPT="You are a command safety evaluator. Evaluate this bash command for safety.
+  local PROMPT="You are a command safety evaluator.
 
-Command: ${CMD}
+<command_to_evaluate>
+${CMD}
+</command_to_evaluate>
 
-Safety principles:
-1. Prefer safer alternatives (git stash over git checkout ., trash over rm -rf)
+<safety_rules>
+1. Prefer safer alternatives:
+   - git checkout . → use git stash instead
+   - rm -rf → rebuild from source instead
 2. Investigate before deleting (ls/find before rm, git log before reset)
 3. When in doubt, ask the user rather than allowing a destructive operation
+</safety_rules>
 
+<examples>
+Command: rm /tmp/build.log → SAFE (targeted temp file removal)
+Command: rm -rf ~/projects → UNSAFE (destroys entire projects directory)
+Command: git checkout src/main.ts → SAFE (restores a single specific file)
+Command: git checkout . → UNSAFE (discards all uncommitted changes across entire repo)
+</examples>
+
+CRITICAL: False UNSAFE blocks waste developer time and break flow. Only flag UNSAFE when destructive scope is clearly visible in the command.
+
+<output_format>
 Respond with EXACTLY one word on the first line:
 - SAFE — if the command is reasonable and targeted (e.g., rm of a specific temp file, git checkout of a single file)
 - UNSAFE — if the command is broadly destructive, irreversible, or affects critical data without a clear safe target
 
 If you cannot determine safety with confidence, respond SAFE — do not guess UNSAFE.
 
-Then on the second line, a brief reason (10 words max)."
+Then on the second line, a brief reason (10 words max).
+</output_format>"
 
   local RESULT
   RESULT=$(echo "$PROMPT" | timeout 10 claude -p --no-input --model haiku 2>/dev/null || echo "TIMEOUT")

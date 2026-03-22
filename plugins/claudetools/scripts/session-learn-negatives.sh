@@ -109,12 +109,16 @@ RESPONSE=$(echo "$CONTEXT" | timeout 45 claude -p --model claude-sonnet-4-6 \
 
 Your job is to identify things that went WRONG or were CORRECTED so future sessions avoid repeating them.
 
-Look for:
+The session data is provided via stdin in <session_data> format.
+
+<detection_categories>
 1. USER CORRECTIONS: User explicitly told the agent to stop, change approach, or do something differently
 2. FAILED APPROACHES: Tool calls that failed, required multiple retries, or had to be abandoned
 3. ANTI-PATTERNS: Approaches that wasted time, created unnecessary complexity, or violated project conventions
 4. WRONG ASSUMPTIONS: Things the agent assumed that turned out to be incorrect
+</detection_categories>
 
+<output_format>
 For each finding, output EXACTLY this format (one per line, no other text):
 TYPE|SLUG|DESCRIPTION|WHY|HOW_TO_APPLY
 
@@ -125,14 +129,21 @@ Where:
 - WHY: why this happened or why it matters
 - HOW_TO_APPLY: what to do differently next time
 
-Rules:
+WRONG: feedback|general-improvement|Should be more careful|Seems like issues occurred|Be more careful
+CORRECT: feedback|avoid-force-push|Never use git push --force on shared branches|User said \"don't force push, you'll overwrite my changes\"|Check if branch has upstream before pushing; use --force-with-lease instead
+
+If nothing significant went wrong, output exactly: NONE
+Output ONLY the findings or NONE. No explanations, no commentary.
+</output_format>
+
+<extraction_rules>
+- Base findings ONLY on evidence visible in the session data. NEVER infer problems that aren't explicitly shown.
+- Every finding MUST reference a specific user message, error, or hook block from the session data.
 - Only output HIGH-CONFIDENCE findings (things clearly wrong, not ambiguous)
 - Maximum 3 findings per session
 - Skip trivial issues (typos, minor style preferences)
 - Skip things already captured in CLAUDE.md or existing memory files
-- If nothing significant went wrong, output exactly: NONE
-
-Output ONLY the findings or NONE. No explanations, no commentary." 2>/dev/null || true)
+</extraction_rules>" 2>/dev/null || true)
 
 if [[ -z "$RESPONSE" || "$RESPONSE" == "NONE" ]]; then
   hook_log "session-learn-negatives: no negative patterns found"

@@ -63,11 +63,11 @@ validate_no_deferred_actions() {
     # Grab examples for the block message
     DEFERRED_EXAMPLES=$(echo "$TEXT" | grep -iE '^\s*(Run |Execute |You (can|should|need)|To (verify|test|deploy)|Next steps?:|Go to |Visit |Navigate to )' 2>/dev/null | head -3 | sed 's/^/  /')
 
-    echo "You listed $DEFERRED_COUNT step(s) for the user instead of executing them yourself." >&2
+    echo "You listed $DEFERRED_COUNT step(s) for the user instead of executing them yourself — this breaks the autonomous workflow and forces manual intervention." >&2
     if [ -n "$DEFERRED_EXAMPLES" ]; then
       echo "$DEFERRED_EXAMPLES" >&2
     fi
-    echo "You have Bash, Read, Edit, Write, and all other tools available. Run the commands yourself, verify the results, then report completion." >&2
+    echo "You have Bash (commands), Read/Grep (investigation), Edit/Write (files), and all other tools available. Execute the steps yourself, verify the results, then report completion." >&2
     record_hook_outcome "no-deferred-actions" "TaskCompleted" "block" "" "" "" "${MODEL_FAMILY:-unknown}"
     return 2
   fi

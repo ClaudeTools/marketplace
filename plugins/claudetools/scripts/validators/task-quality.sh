@@ -127,7 +127,7 @@ validate_task_quality() {
     if [ "$TOTAL_VIOLATIONS" -gt 3 ]; then
       echo "  ... and $((TOTAL_VIOLATIONS - 3)) more. Fix these first, then re-check." >&2
     fi
-    echo "Replace stubs with real implementations and fix 'any' types. Then mark the task complete." >&2
+    echo "Replace stubs with real implementations and fix 'any' types — shipping stubs means the next developer inherits broken code. Fix these, verify the fix compiles, then mark the task complete." >&2
     return 2
   fi
 
@@ -137,8 +137,8 @@ validate_task_quality() {
     HAS_VISUAL_CHECK=$(echo "$INPUT" | grep -ciE 'chrome|screenshot|verified in browser|visual.?verif|browser.?test|checked in browser|rendered.?correct' 2>/dev/null || true)
     HAS_VISUAL_CHECK=${HAS_VISUAL_CHECK:-0}
     if [ "$HAS_VISUAL_CHECK" -eq 0 ]; then
-      echo "${UI_FILES_CHANGED} UI file(s) changed without visual verification." >&2
-      echo "Open the changed pages in Chrome and confirm they render correctly before completing." >&2
+      echo "${UI_FILES_CHANGED} UI file(s) changed without visual verification — code that compiles can still render broken in the browser." >&2
+      echo "Open the changed pages in Chrome, confirm they render correctly, then mark the task complete." >&2
       return 2
     fi
   fi
@@ -150,7 +150,7 @@ validate_task_quality() {
       local TC_OUTPUT
       TC_OUTPUT=$(cd "$CWD" && npm run typecheck 2>&1) || TC_EXIT=$?
       if [ "$TC_EXIT" -ne 0 ] || echo "$TC_OUTPUT" | grep -qE 'error TS|Type error'; then
-        echo "Typecheck failed. Run 'npm run typecheck', fix the errors, then complete." >&2
+        echo "Typecheck failed — type errors caught here prevent runtime crashes in production. Run 'npm run typecheck', fix the errors, then mark the task complete." >&2
         echo "$TC_OUTPUT" | grep -E 'error TS|Type error' | head -3 >&2
         return 2
       fi
@@ -182,7 +182,7 @@ validate_task_quality() {
       local TEST_OUT
       TEST_OUT=$(cd "$tdir" && npm test 2>&1 | tail -10) || true
       if echo "$TEST_OUT" | grep -qE 'FAIL|failed' && ! echo "$TEST_OUT" | grep -qE 'pre-existing|0 failed'; then
-        echo "Tests failing in $PKG_NAME. Fix them before completing." >&2
+        echo "Tests failing in $PKG_NAME — the next developer inherits broken tests and can't trust the suite. Fix them, re-run the suite, then mark the task complete." >&2
         echo "$TEST_OUT" | grep -E 'FAIL|failed' | head -3 >&2
         return 2
       fi
@@ -199,7 +199,7 @@ validate_task_quality() {
     local EVIDENCE
     EVIDENCE=$(echo "$INPUT" | grep -ciE 'error:|stack.?trace|reproduced|observed|caused by|root cause|logs show|exception|traceback|reproduction' 2>/dev/null || echo 0)
     if [ "$EVIDENCE" -eq 0 ]; then
-      echo "Bug fix without diagnostic evidence. Reproduce the error first, read logs, then fix based on what you observe — not guesswork." >&2
+      echo "Bug fix without diagnostic evidence — guesswork fixes mask the real problem and often introduce new bugs. Reproduce the error first, read logs/traces, then fix based on what you observe." >&2
       return 2
     fi
   fi
@@ -208,7 +208,7 @@ validate_task_quality() {
   local CURRENT_BRANCH
   CURRENT_BRANCH=$(git -C "$CWD" rev-parse --abbrev-ref HEAD 2>/dev/null || true)
   if [ "$CURRENT_BRANCH" = "main" ] || [ "$CURRENT_BRANCH" = "master" ]; then
-    echo "On $CURRENT_BRANCH branch — create a feature branch first: git checkout -b feat/<description>" >&2
+    echo "On $CURRENT_BRANCH branch — committing directly to main bypasses code review and risks breaking the build. Create a feature branch first: git checkout -b feat/<description>" >&2
     return 2
   fi
 
