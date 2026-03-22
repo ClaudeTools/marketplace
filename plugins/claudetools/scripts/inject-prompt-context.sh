@@ -158,5 +158,8 @@ if command -v sqlite3 &>/dev/null; then
   fi
 fi
 
+# Anti-hallucination reinforcement — injected on every prompt, survives context compaction
+echo "[accuracy] Verify before asserting. Use tools to check — don't assume. Cite file:line for claims."
+
 hook_log "inject-prompt-context complete"
 exit 0

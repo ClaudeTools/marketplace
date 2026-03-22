@@ -40,6 +40,8 @@ Do NOT re-report those. Focus ONLY on what grep cannot detect:
 Changed files:
 ${CHANGED_FILES}
 
+Only base your analysis on what you can see in the diff. Do not assume patterns or issues from general knowledge — if it's not visible in the diff, don't flag it.
+If you cannot confidently identify a semantic issue, respond CLEAN — do not guess.
 Respond with ONLY a bulleted list of findings, or 'CLEAN' if no semantic issues found.
 Keep response under 10 lines. No preamble."
 
