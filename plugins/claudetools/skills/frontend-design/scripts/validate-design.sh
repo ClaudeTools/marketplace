@@ -234,6 +234,34 @@ else
   check PASS "Motion accessibility" ""
 fi
 
+# Check 16: font-display in @font-face (FOIT/CLS prevention)
+FONTFACE_COUNT=$(grep -rn '@font-face' "$PROJECT_DIR" --include="*.css" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next --exclude-dir=build --exclude-dir=out 2>/dev/null | wc -l | tr -d '[:space:]')
+FONTFACE_COUNT=${FONTFACE_COUNT:-0}
+FONT_DISPLAY_COUNT=$(grep -rn 'font-display' "$PROJECT_DIR" --include="*.css" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next --exclude-dir=build --exclude-dir=out 2>/dev/null | wc -l | tr -d '[:space:]')
+FONT_DISPLAY_COUNT=${FONT_DISPLAY_COUNT:-0}
+if [ "$FONTFACE_COUNT" -gt 0 ] && [ "$FONT_DISPLAY_COUNT" -eq 0 ] 2>/dev/null; then
+  check WARN "Font display" "$FONTFACE_COUNT @font-face without font-display: swap — causes Flash of Invisible Text"
+elif [ "$FONTFACE_COUNT" -gt 0 ]; then
+  check PASS "Font display" ""
+fi
+
+# Check 17: Icon-only links without accessible name (WCAG 2.4.4)
+# Detect <a> or <Link> wrapping only an icon/svg/img without aria-label or sr-only text
+ICON_LINKS=0
+while IFS= read -r -d '' f; do
+  count=$(grep -cE '<(a|Link)\b[^>]*>[[:space:]]*<(svg|img|Icon|[A-Z][a-zA-Z]*Icon)\b' "$f" 2>/dev/null || true)
+  if [ "${count:-0}" -gt 0 ]; then
+    # Check if these have aria-label
+    no_label=$(grep -E '<(a|Link)\b[^>]*>[[:space:]]*<(svg|img|Icon|[A-Z][a-zA-Z]*Icon)\b' "$f" 2>/dev/null | grep -vc 'aria-label\|sr-only\|visually-hidden\|<span' || true)
+    ICON_LINKS=$((ICON_LINKS + ${no_label:-0}))
+  fi
+done < <(find "$PROJECT_DIR" \( -name "*.tsx" -o -name "*.jsx" -o -name "*.vue" -o -name "*.svelte" \) -not -path "*/node_modules/*" -not -path "*/.next/*" -not -path "*/dist/*" -print0 2>/dev/null)
+if [ "$ICON_LINKS" -gt 0 ] 2>/dev/null; then
+  check WARN "Link accessibility" "$ICON_LINKS icon-only link(s) without aria-label or screen reader text (WCAG 2.4.4)"
+else
+  check PASS "Link accessibility" ""
+fi
+
 echo ""
 echo "Summary: $PASS passed, $WARN warnings, $FAIL failures"
 exit 0

@@ -609,6 +609,73 @@ def audit_zindex(project_dir):
     else:
         print(f"  Z-index usage looks manageable")
 
+def audit_unused_tokens(project_dir, globals_path):
+    """Find CSS custom properties defined in globals.css but never referenced in components."""
+    print("\nUnused Token Audit:")
+
+    if not globals_path or not os.path.exists(globals_path):
+        print("  No globals.css — skipping")
+        return
+
+    try:
+        with open(globals_path) as f:
+            content = f.read()
+    except (IOError, UnicodeDecodeError):
+        print("  Could not read globals.css")
+        return
+
+    # Extract all token names defined in globals.css
+    defined_tokens = set(re.findall(r'--([\w-]+)\s*:', content))
+    if not defined_tokens:
+        print("  No tokens defined")
+        return
+
+    # Scan all component and CSS files for token references
+    extensions = ["*.tsx", "*.jsx", "*.ts", "*.js", "*.vue", "*.svelte", "*.astro", "*.css"]
+    files = []
+    for ext in extensions:
+        files.extend(globmod.glob(os.path.join(project_dir, "**", ext), recursive=True))
+    files = [f for f in files if not _is_build_path(f)]
+
+    # Collect all referenced tokens across the project
+    referenced_tokens = set()
+    token_ref_re = re.compile(r'var\(--([a-z][\w-]*)')
+    hsl_ref_re = re.compile(r'hsl\(var\(--([a-z][\w-]*)')
+    # Also catch Tailwind/shadcn patterns like bg-[hsl(var(--primary))]
+    tw_ref_re = re.compile(r'--([a-z][\w-]*)')
+
+    for filepath in files:
+        if os.path.abspath(filepath) == os.path.abspath(globals_path):
+            continue  # Skip the definition file itself
+        try:
+            with open(filepath) as f:
+                file_content = f.read()
+                for match in token_ref_re.finditer(file_content):
+                    referenced_tokens.add(match.group(1))
+                for match in hsl_ref_re.finditer(file_content):
+                    referenced_tokens.add(match.group(1))
+        except (IOError, UnicodeDecodeError):
+            continue
+
+    # Also check references within globals.css itself (tokens referencing other tokens)
+    for match in token_ref_re.finditer(content):
+        referenced_tokens.add(match.group(1))
+
+    unused = defined_tokens - referenced_tokens
+    # Filter out common internal/system tokens that are expected to be defined but referenced indirectly
+    system_tokens = {"radius", "ring", "chart-1", "chart-2", "chart-3", "chart-4", "chart-5", "sidebar-ring"}
+    unused = {t for t in unused if not any(t.startswith(p) for p in ("chart-",)) and t not in system_tokens}
+
+    print(f"  {len(defined_tokens)} defined, {len(referenced_tokens)} referenced, {len(unused)} unused")
+    if unused:
+        for token in sorted(unused)[:15]:
+            print(f"    --{token}")
+        if len(unused) > 15:
+            print(f"    ... and {len(unused) - 15} more")
+        print(f"  Consider removing unused tokens or adding references")
+    else:
+        print("  All tokens are referenced — clean token system!")
+
 def main():
     parser = argparse.ArgumentParser(description="Audit design system quality")
     parser.add_argument("--dir", default=".", help="Project directory")
@@ -643,6 +710,7 @@ def main():
     audit_dark_mode(globals_path)
     audit_class_conflicts(args.dir)
     audit_zindex(args.dir)
+    audit_unused_tokens(args.dir, globals_path)
 
 if __name__ == "__main__":
     main()
