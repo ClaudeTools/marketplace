@@ -12,6 +12,7 @@ hook_init
 # Phase 2: Source validators
 source "$SCRIPT_DIR/validators/deploy-then-verify.sh"
 source "$SCRIPT_DIR/validators/unasked-deps.sh"
+source "$SCRIPT_DIR/validators/deploy-loop-detector.sh"
 
 # Phase 3: Run validators, aggregate results
 # PostToolUse protocol: findings on stderr, exit MAX_EXIT
@@ -42,6 +43,7 @@ run_validator() {
 
 run_validator "enforce-deploy-then-verify" validate_deploy_then_verify
 run_validator "detect-unasked-deps"        validate_unasked_deps
+run_validator "deploy-loop-detector"      validate_deploy_loop
 
 # Phase 4: Emit aggregated findings
 if [ -n "$ALL_FINDINGS" ]; then
