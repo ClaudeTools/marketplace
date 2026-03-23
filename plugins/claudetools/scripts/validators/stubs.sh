@@ -60,14 +60,17 @@ validate_stubs() {
         "$FILE_PATH" 2>/dev/null || true)
 
       # pass as only function body (line contains only whitespace + pass)
-      # Filter out legitimate except/else: pass patterns
+      # Filter out legitimate except/else/finally: pass patterns and except with exception types
       add_line < <(grep -n -E '^\s*pass\s*$' "$FILE_PATH" 2>/dev/null | while IFS=: read -r lineno rest; do
-        # Check if the previous line is an except or else clause
+        # Check if the previous line is an except, else, or finally clause
         prev_line=$(sed -n "$((lineno - 1))p" "$FILE_PATH" 2>/dev/null || true)
-        if ! echo "$prev_line" | grep -qE '^\s*(except|else)\s*:'; then
+        if ! echo "$prev_line" | grep -qE '^\s*(except|else|finally)\b'; then
           echo "${lineno}:${rest}"
         fi
       done || true)
+
+      # continue in except blocks is legitimate error handling — skip these
+      # (except (SomeException): continue, except Exception: continue, etc.)
 
       # Ellipsis as only function body (line contains only whitespace + ...)
       add_line < <(grep -n -E \

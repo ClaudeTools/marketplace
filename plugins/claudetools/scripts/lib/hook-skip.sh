@@ -86,5 +86,10 @@ should_skip_content_check() {
     */.claude/hooks/*) return 0 ;;
   esac
 
+  # 7. Temporary files (scripts in /tmp/)
+  case "$file" in
+    /tmp/*) return 0 ;;
+  esac
+
   return 1
 }

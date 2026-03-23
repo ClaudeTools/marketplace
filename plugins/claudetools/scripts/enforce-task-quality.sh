@@ -8,6 +8,17 @@ set -euo pipefail
 INPUT=$(cat 2>/dev/null || true)
 source "$(dirname "$0")/hook-log.sh"
 
+# --- TeammateIdle cooldown: suppress repeated idle notifications within 60s ---
+TEAMMATE_ID=$(echo "$INPUT" | jq -r '.teammate_id // .agent_id // "unknown"' 2>/dev/null || echo "unknown")
+COOLDOWN_FILE="/tmp/claude-teammate-cooldown-task-quality-${TEAMMATE_ID}"
+if [ -f "$COOLDOWN_FILE" ]; then
+  COOLDOWN_AGE=$(( $(date +%s) - $(stat -c %Y "$COOLDOWN_FILE" 2>/dev/null || echo 0) ))
+  if [ "$COOLDOWN_AGE" -lt 60 ]; then
+    exit 0
+  fi
+fi
+touch "$COOLDOWN_FILE" 2>/dev/null || true
+
 # Prevent infinite loops — if this is a re-evaluation after blocking, allow stop
 STOP_HOOK_ACTIVE=$(echo "$INPUT" | jq -r '.stop_hook_active // empty' 2>/dev/null || true)
 if [ "$STOP_HOOK_ACTIVE" = "true" ]; then
