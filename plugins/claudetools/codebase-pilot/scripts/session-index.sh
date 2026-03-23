@@ -227,6 +227,6 @@ elif [[ -f "$SUBAGENT_CONTEXT" ]]; then
 fi
 
 echo ""
-echo "Use MCP tools project_map, find_symbol, find_usages, file_overview, related_files for detailed navigation."
+echo "Use codebase-pilot tools: find_symbol, find_usages, file_overview, related_files, navigate for code navigation."
 
 exit 0
