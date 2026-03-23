@@ -1,9 +1,25 @@
 {
-  "name": "prompt-improver",
+  "name": "claudetools",
   "version": "6.2.0",
-  "description": "Transforms vague prompts into best-in-class XML-structured prompts optimised for Claude Code execution",
+  "description": "Universal guardrail and quality system for Claude Code -- adaptive hooks, self-learning metrics, skills for code, research, writing, and data analysis. Zero config.",
   "author": {
-    "name": "Owen Innes",
-    "email": "me@oweninnes.com"
+    "name": "owenob1"
+  },
+  "license": "MIT",
+  "keywords": [
+    "guardrails",
+    "hooks",
+    "quality",
+    "safety",
+    "prompt-engineering",
+    "enforcement"
+  ],
+  "mcpServers": {
+    "task-system": {
+      "command": "bash",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/task-system/start.sh"
+      ]
+    }
   }
 }

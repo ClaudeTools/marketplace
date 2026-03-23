@@ -1,0 +1,188 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ========================================
+     * Background Hierarchy
+     * Level 0 (base) → Level 3 (emphasis)
+     * Each level slightly darker than the previous
+     * ======================================== */
+    --background: 0 0% 100%;           /* Base canvas */
+    --background-subtle: 0 0% 97%;     /* Cards, panels */
+    --background-muted: 0 0% 95%;      /* Hover states, zebra rows */
+    --background-emphasis: 0 0% 92%;   /* Active states, selected items */
+
+    /* ========================================
+     * Foreground Hierarchy (Text)
+     * Primary → Muted (decreasing contrast)
+     * ======================================== */
+    --foreground: 0 0% 4%;             /* Primary text, headings */
+    --foreground-secondary: 0 0% 25%;  /* Supporting text, descriptions */
+    --foreground-tertiary: 0 0% 45%;   /* Metadata, timestamps */
+    --foreground-muted: 0 0% 65%;      /* Disabled, placeholder */
+
+    /* ========================================
+     * Border Hierarchy
+     * Subtle → Stronger (increasing visibility)
+     * Use rgba-style low opacity for borders
+     * ======================================== */
+    --border: 0 0% 90%;               /* Standard separation */
+    --border-subtle: 0 0% 94%;        /* Soft separation */
+    --border-strong: 0 0% 82%;        /* Emphasis, hover */
+    --border-stronger: 0 0% 70%;      /* Maximum emphasis, focus rings */
+
+    /* ========================================
+     * Brand & Accent
+     * ======================================== */
+    --brand: 221 83% 53%;             /* Primary brand color */
+    --brand-foreground: 0 0% 100%;    /* Text on brand */
+    --brand-muted: 221 83% 95%;       /* Brand tint for backgrounds */
+
+    --accent: 221 83% 53%;            /* Interactive accent */
+    --accent-foreground: 0 0% 100%;   /* Text on accent */
+
+    /* ========================================
+     * Semantic Colors
+     * ======================================== */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 4%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    /* ========================================
+     * Form Controls
+     * Separate from surfaces for independent tuning
+     * ======================================== */
+    --control-bg: 0 0% 98%;           /* Input backgrounds (slightly inset) */
+    --control-border: 0 0% 86%;       /* Input borders */
+    --control-focus: 221 83% 53%;     /* Focus ring color */
+
+    /* ========================================
+     * Radius Scale
+     * ======================================== */
+    --radius-sm: 0.375rem;
+    --radius: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+  }
+
+  .dark {
+    --background: 0 0% 4%;
+    --background-subtle: 0 0% 7%;
+    --background-muted: 0 0% 10%;
+    --background-emphasis: 0 0% 14%;
+
+    --foreground: 0 0% 96%;
+    --foreground-secondary: 0 0% 75%;
+    --foreground-tertiary: 0 0% 55%;
+    --foreground-muted: 0 0% 35%;
+
+    --border: 0 0% 14%;
+    --border-subtle: 0 0% 10%;
+    --border-strong: 0 0% 22%;
+    --border-stronger: 0 0% 32%;
+
+    --brand-muted: 221 83% 12%;
+
+    --control-bg: 0 0% 6%;
+    --control-border: 0 0% 18%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+}
+
+/* ========================================
+ * Base Styles — Global defaults
+ * ======================================== */
+@layer base {
+  /* Selection */
+  ::selection {
+    background-color: hsl(var(--brand) / 0.2);
+    color: hsl(var(--foreground));
+  }
+
+  /* Focus rings */
+  :focus-visible {
+    outline: 2px solid hsl(var(--control-focus));
+    outline-offset: 2px;
+  }
+
+  /* Form controls */
+  input,
+  textarea,
+  select {
+    background-color: hsl(var(--control-bg));
+    border-color: hsl(var(--control-border));
+    font-size: 1rem; /* Prevents iOS auto-zoom */
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Scrollbar styling (Webkit) */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background-subtle));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border-strong));
+    border-radius: var(--radius);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--border-stronger));
+  }
+}
+
+/* ========================================
+ * Debug: Baseline Grid Overlay
+ * Add class="show-baseline-grid" to html/body to visualize the grid.
+ * Remove in production.
+ * ======================================== */
+.show-baseline-grid {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.03) 1px,
+    transparent 1px
+  );
+  background-size: 100% 4px;
+}
+
+.show-baseline-grid-8 {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.03) 1px,
+    transparent 1px
+  );
+  background-size: 100% 8px;
+}

@@ -1,24 +1,24 @@
 {
-  "name": "sequential-thinking",
+  "name": "claudetools",
   "version": "1.1.0",
-  "description": "Sequential thinking MCP server for structured problem-solving. Breaks down complex problems into numbered thought steps with revision, branching, and hypothesis verification.",
+  "description": "Universal guardrail and quality system for Claude Code -- adaptive hooks, self-learning metrics, skills for code, research, writing, and data analysis. Zero config.",
   "author": {
-    "name": "Anthropic"
+    "name": "owenob1"
   },
   "license": "MIT",
   "keywords": [
-    "thinking",
-    "reasoning",
-    "problem-solving",
-    "mcp",
-    "chain-of-thought"
+    "guardrails",
+    "hooks",
+    "quality",
+    "safety",
+    "prompt-engineering",
+    "enforcement"
   ],
   "mcpServers": {
-    "sequential-thinking": {
-      "command": "npx",
+    "task-system": {
+      "command": "bash",
       "args": [
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
+        "${CLAUDE_PLUGIN_ROOT}/task-system/start.sh"
       ]
     }
   }
