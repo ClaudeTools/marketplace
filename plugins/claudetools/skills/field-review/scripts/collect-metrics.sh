@@ -5,17 +5,19 @@
 
 set -euo pipefail
 
-_plugin_root="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../" && pwd)}"
+_versioned_root="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../" && pwd)}"
+_plugin_root="$_versioned_root"
 
-# Versioned install path — use parent directory for stable data dir
+# Versioned install path — use parent directory for stable data/logs dirs
+# but keep the versioned path for plugin.json and hooks.json which live inside the version
 if [[ "$_plugin_root" =~ /plugins/cache/.*/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   _plugin_root="$(dirname "$_plugin_root")"
 fi
 
 METRICS_DB="${_plugin_root}/data/metrics.db"
 EVENTS_FILE="${_plugin_root}/logs/events.jsonl"
-HOOKS_JSON="${_plugin_root}/hooks/hooks.json"
-PLUGIN_JSON="${_plugin_root}/.claude-plugin/plugin.json"
+HOOKS_JSON="${_versioned_root}/hooks/hooks.json"
+PLUGIN_JSON="${_versioned_root}/.claude-plugin/plugin.json"
 
 # ── Plugin metadata ──────────────────────────────────────────────────
 echo "=== PLUGIN INFO ==="
@@ -28,7 +30,16 @@ fi
 
 # OS and environment
 echo "os: $(uname -s 2>/dev/null | tr '[:upper:]' '[:lower:]' || echo unknown)"
-echo "model_family: ${MODEL_FAMILY:-unknown}"
+
+# Detect model family from CLAUDE_MODEL env var
+_model="${CLAUDE_MODEL:-unknown}"
+case "$_model" in
+  *opus*)   _model_family="opus" ;;
+  *sonnet*) _model_family="sonnet" ;;
+  *haiku*)  _model_family="haiku" ;;
+  *)        _model_family="$_model" ;;
+esac
+echo "model_family: $_model_family"
 
 # ── Hook inventory ───────────────────────────────────────────────────
 echo ""
