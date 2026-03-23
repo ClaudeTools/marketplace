@@ -1,12 +1,13 @@
 ---
 name: frontend-design
-description: Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, or applications. Generates creative, polished code that avoids generic AI aesthetics.
+description: Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build a website, landing page, dashboard, web app, UI component, page layout, or any visual web interface. Also use when asked to redesign, restyle, make something look better, add dark mode, or create a design system. Covers React, Next.js, Vite, Astro, SvelteKit, Tailwind CSS, and plain HTML/CSS projects.
+argument-hint: [description of what to build]
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch, TaskCreate, TaskUpdate
 metadata:
   author: Owen Innes
-  version: 1.0.0
+  version: 1.1.0
   category: frontend
-  tags: [design, ui, frontend, tailwind, components]
+  tags: [design, ui, frontend, tailwind, components, dashboard, landing-page, web-app]
 ---
 
 # Frontend Design
@@ -15,9 +16,9 @@ Build distinctive, production-grade interfaces with craft and intent.
 
 ## Scope
 
-**Use for:** Landing pages, dashboards, SaaS apps, marketing sites, web components, interactive pages, full-stack web applications, data visualizations.
+**Use for:** Landing pages, dashboards, SaaS apps, marketing sites, web components, interactive pages, full-stack web applications, data visualizations, design systems, responsive layouts, dark mode implementation.
 
-**Not for:** Pure backend services, CLI tools, mobile native apps, API-only projects. For applying Refactoring UI principles to existing code, use `/refactoring-ui` instead.
+**Not for:** Pure backend services, CLI tools, mobile native apps, API-only projects, email templates. For applying Refactoring UI principles to existing code, use `/refactoring-ui` instead. For quick CSS fixes or single-property changes, just edit directly — this skill is for design-level work.
 
 ## Scripts
 
@@ -195,41 +196,17 @@ For deeper guidance: `Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/referenc
 
 ## Coding Standards
 
-For deeper guidance: `Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/references/coding-standards.md`
+Before writing components, load the full coding standards reference:
+```
+Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/references/coding-standards.md
+```
 
-### Framework Defaults
+Key rules that survive context compaction (repeated here because they cause the most failures):
 
-- Default to the detected framework. For new projects, recommend Next.js App Router with TypeScript.
-- Use the project's package manager. Recommend pnpm for new projects.
-- When using shadcn/ui, prefer `FieldGroup` + `Field` for forms, `Empty` for empty states, `Spinner` for loading, `ButtonGroup` for grouped actions.
-- For data visualization, use the project's existing charting library, or Recharts if starting fresh.
-
-### Component Architecture
-
-- ALWAYS split code into multiple components — monolithic page files are unreadable, untestable, and unmaintainable past 200 lines.
-- Use semantic HTML (`main`, `header`, `nav`, `section`) with correct ARIA roles — screen readers depend on these landmarks for navigation.
-- Use the `sr-only` class for screen-reader-only text, and add alt text for non-decorative images.
-- ALWAYS handle all data states: loading (skeleton/spinner), empty (Empty component or message), error (error boundary or inline message), and populated — missing states make the app feel broken.
-- ALWAYS add transitions to interactive elements: `transition-colors duration-150` for hover states, `transition-all duration-200 ease-out` for appearing elements — untransitioned state changes feel jarring. Avoid bounce/spring easing in professional interfaces.
-- NEVER fetch data inside useEffect — it causes waterfalls, race conditions, and no caching. Use SWR, TanStack Query, RSC, or loader functions.
-
-### Data and Security
-
-- NEVER use localStorage for data persistence unless explicitly requested — data vanishes on clear, has no querying, and creates sync nightmares. Use a real database.
-- Don't implement mock or client-side-only authentication — it teaches wrong patterns and ships insecure code.
-- CRITICAL: ALWAYS hash passwords with bcrypt for custom auth. NEVER store plaintext — a single breach exposes every user.
-- CRITICAL: ALWAYS use HTTP-only cookies for sessions. NEVER expose tokens to JavaScript — XSS can steal them instantly.
-- CRITICAL: ALWAYS use parameterized queries. NEVER concatenate user input into SQL — this is the #1 web vulnerability.
-- Validate and sanitize all inputs — unvalidated input is the root of injection, XSS, and data corruption.
-
-### Next.js Specifics
-
-**When using Next.js:**
-
-- `params`, `searchParams`, `headers`, `cookies` in Server Components MUST be awaited.
-- Update layout.tsx metadata (title, description) and viewport (theme-color) for SEO.
-- Set `crossOrigin="anonymous"` on `new Image()` when rendering to canvas.
-- Escape special characters in JSX: `{'1 + 1 < 3'}` not `1 + 1 < 3`.
+- ALWAYS split into multiple components — no monolithic page files past 200 lines.
+- ALWAYS handle all data states: loading, empty, error, populated.
+- NEVER fetch data inside `useEffect` — use SWR, TanStack Query, RSC, or loader functions.
+- NEVER use localStorage for persistence unless explicitly requested — use a real database.
 
 ---
 
@@ -284,15 +261,15 @@ If you cannot explain WHY for each choice, you are defaulting. Stop and think.
 
 ---
 
-## Known Failure Modes
+## Gotchas
 
-**Generic palette:** Claude defaults to blue primary + gray neutrals. WHY: training data bias. FIX: domain exploration forces product-specific colors.
+These are concrete mistakes you WILL make without this section. Not general advice — specific corrections.
 
-**Same layout every time:** Sidebar + card grid + metric boxes with icon-left-number-big-label-small. WHY: most common dashboard pattern. FIX: signature element + "sameness is failure" principle.
-
-**Missing states:** Components only handle the populated state. WHY: generating loading/empty/error adds complexity. FIX: handle all data states rule + state-patterns.md reference.
-
-**Raw values in code:** `bg-white text-gray-800` instead of tokens. WHY: Tailwind defaults are raw colors. FIX: validate-design.sh catches these + semantic token rule.
+- **Blue + gray default.** You will reach for `blue-600` primary and `gray-*` neutrals because training data is saturated with this palette. The domain exploration step exists to prevent this. If your palette could belong to any SaaS app, you defaulted.
+- **Dashboard clone layout.** Sidebar + card grid + icon-left-number-big-label-small metric boxes. Every AI produces this. The signature element requirement forces differentiation.
+- **Populated-only components.** You will skip loading, empty, and error states because they add complexity. Users see these states more than you think — an empty dashboard with no guidance feels broken.
+- **Raw Tailwind values.** `bg-white text-gray-800` instead of `bg-background text-foreground`. validate-design.sh catches these, but you should never write them. Raw values break when themes change.
+- **Purple/violet accent.** The most overused AI-generated color choice. Avoid unless the user explicitly requests it.
 
 ---
 
