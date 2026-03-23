@@ -177,7 +177,37 @@ validate_stop_gate() {
     fi
   fi
 
-  # --- 2c. (Removed: project-specific task file checks) ---
+  # --- 2c. Multi-signal convergence check ---
+  if [ -f "$METRICS_DB" ] 2>/dev/null && command -v sqlite3 &>/dev/null; then
+    local SESSION_ID
+    SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)
+    if [ -n "$SESSION_ID" ]; then
+      local CONVERGENCE
+      CONVERGENCE=$(sqlite3 "$METRICS_DB" \
+        "SELECT tool_name, COUNT(DISTINCT hook_name) as signals
+         FROM hook_outcomes
+         WHERE session_id = '$SESSION_ID'
+           AND decision IN ('block', 'warn')
+           AND tool_name IS NOT NULL AND tool_name != ''
+         GROUP BY tool_name
+         HAVING signals >= 3
+         ORDER BY signals DESC
+         LIMIT 3;" 2>/dev/null || true)
+      if [ -n "$CONVERGENCE" ]; then
+        local HOTSPOTS=""
+        while IFS='|' read -r fname scount; do
+          [ -z "$fname" ] && continue
+          HOTSPOTS="${HOTSPOTS}  $(basename "$fname"): $scount independent signals\n"
+        done <<< "$CONVERGENCE"
+        if [ -n "$HOTSPOTS" ]; then
+          TIER2_WARNINGS+=("Convergence hotspot(s) — multiple guardrails flagged the same file(s):")
+          while IFS= read -r line; do
+            [ -n "$line" ] && TIER2_WARNINGS+=("$line")
+          done <<< "$(printf '%b' "$HOTSPOTS")"
+        fi
+      fi
+    fi
+  fi
 
   # ═══════════════════════════════════════════════════════════════
   # TIER 3: AI inference (optional, graceful degradation)

@@ -11,6 +11,7 @@ hook_init
 
 # Phase 2: Source validators
 source "$SCRIPT_DIR/validators/active-task.sh"
+source "$SCRIPT_DIR/validators/blind-edit.sh"
 source "$SCRIPT_DIR/validators/task-scope.sh"
 source "$SCRIPT_DIR/validators/research-backing.sh"
 source "$SCRIPT_DIR/validators/bulk-edit.sh"
@@ -52,6 +53,7 @@ run_pretool_validator() {
   emit_validator_event "pre-edit-gate" "$name" "$( [ $rc -gt 0 ] && echo warn || echo allow )" "$_duration_ms" "$output" 2>/dev/null || true
 }
 
+run_pretool_validator "blind-edit-guard"         validate_blind_edit
 run_pretool_validator "require-active-task"      validate_active_task
 run_pretool_validator "enforce-task-scope"       validate_task_scope
 run_pretool_validator "research-backing-gate"    validate_research_backing

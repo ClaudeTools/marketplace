@@ -56,88 +56,41 @@ EOF
     esac
   fi
 
-  # 2. Extract the original prompt from the transcript (first user message)
-  local ORIGINAL_PROMPT=""
-  if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
-    ORIGINAL_PROMPT=$(head -100 "$TRANSCRIPT_PATH" 2>/dev/null \
-      | grep '"role":"user"' 2>/dev/null \
-      | head -1 \
-      | python3 -c "
-import sys, json
-try:
-    line = sys.stdin.read().strip()
-    if line:
-        d = json.loads(line)
-        content = d.get('message',{}).get('content','')
-        if isinstance(content, list):
-            for c in content:
-                if isinstance(c, dict) and c.get('type') == 'text':
-                    print(c.get('text','')[:2000])
-                    break
-                elif isinstance(c, str):
-                    print(c[:2000])
-                    break
-        elif isinstance(content, str):
-            print(content[:2000])
-except: pass
-" 2>/dev/null || true)
-  fi
+  # 2. Deterministic verification — check file relevance without AI
+  local CODE_CHANGED ONLY_CONFIG HAS_TEST_FILES
+  CODE_CHANGED=$(echo "$CHANGED" | grep -cE '\.(ts|tsx|js|jsx|py|go|rs|rb|java|sh)$' 2>/dev/null || echo "0")
+  ONLY_CONFIG=$([ "$CODE_CHANGED" -eq 0 ] && echo "true" || echo "false")
+  HAS_TEST_FILES=$(echo "$CHANGED" | grep -cE '\.(test|spec)\.' 2>/dev/null || echo "0")
 
-  # 3. AI verification — compare task requirements against actual work
-  local REQUIREMENTS="${TASK_DESCRIPTION:-$TASK_SUBJECT}"
-  if [ -n "$ORIGINAL_PROMPT" ]; then
-    REQUIREMENTS="ORIGINAL PROMPT:\n${ORIGINAL_PROMPT}\n\nTASK:\n${TASK_DESCRIPTION:-$TASK_SUBJECT}"
-  fi
-
-  local VERIFY_PROMPT="You are a strict task completion verifier. Your job: determine if the work matches the requirements.
-
-REQUIREMENTS:
-${REQUIREMENTS}
-
-FILES CHANGED (${CHANGED_COUNT} files):
-$(echo "$CHANGED" | head -30)
-
-RULES:
-- If the requirements describe specific features/fixes and the changed files plausibly implement them: DONE
-- If zero relevant files changed: NOT_DONE
-- If the changes look like a different task entirely: NOT_DONE
-- If only config/docs changed for an implementation task: NOT_DONE
-- Be strict. The agent claims this is done. Verify it.
-- Only base your assessment on evidence in the transcript. If the transcript doesn't contain enough information to verify completion, respond with DONE — do not guess INCOMPLETE.
-
-Answer ONLY: DONE or NOT_DONE followed by a one-sentence reason."
-
-  local RESULT
-  RESULT=$(echo "$VERIFY_PROMPT" | timeout 20 claude -p --no-input --model haiku 2>/dev/null || echo "SKIP")
-
-  case "$RESULT" in
-    *SKIP*)
-      return 0
-      ;;
-    *NOT_DONE*)
-      local REASON
-      REASON=$(echo "$RESULT" | head -1)
-      cat >&2 <<EOF
-Work does not match the task requirements.
+  # Block: implementation task with only config/doc changes
+  case "$TASK_SUBJECT" in
+    *[Ii]mplement*|*[Aa]dd*|*[Ff]ix*|*[Bb]uild*|*[Cc]reate*|*[Rr]efactor*)
+      if [ "$ONLY_CONFIG" = "true" ]; then
+        cat >&2 <<EOF
+Task requires code changes but only config/doc files were modified.
 
 Task: ${TASK_SUBJECT}
-Verification: ${REASON}
+Files changed: ${CHANGED_COUNT} (0 code files)
 
-Original requirements:
-${TASK_DESCRIPTION:-$TASK_SUBJECT}
-
-Files changed: ${CHANGED_COUNT}
-$(echo "$CHANGED" | head -15)
-
-Re-read the requirements above. If something is missing, implement it before marking complete.
+Implement the feature in source code before marking complete.
 EOF
-      return 2
-      ;;
-    *DONE*)
-      return 0
-      ;;
-    *)
-      return 0
+        return 2
+      fi
       ;;
   esac
+
+  # 3. Check for staged but uncommitted work
+  if git -C "$CWD" diff --cached --name-only 2>/dev/null | grep -q .; then
+    cat >&2 <<EOF
+Staged but uncommitted files detected.
+
+Task: ${TASK_SUBJECT}
+
+Commit your staged changes before marking the task complete.
+EOF
+    return 2
+  fi
+
+  # 4. Passed deterministic checks — allow completion
+  return 0
 }
