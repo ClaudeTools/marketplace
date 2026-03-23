@@ -28,32 +28,32 @@ validate_no_deferred_actions() {
 
   # Pattern 1: "Run `command`" or "Execute `command`" at start of line
   local P1
-  P1=$(echo "$TEXT" | grep -ciE '^\s*(Run|Execute|Now run|Then run|Finally,? run|Next,? run)\s+`' 2>/dev/null || echo 0)
+  P1=$(echo "$TEXT" | grep -ciE '^\s*(Run|Execute|Now run|Then run|Finally,? run|Next,? run)\s+`' 2>/dev/null) || P1=0
   DEFERRED_COUNT=$((DEFERRED_COUNT + P1))
 
   # Pattern 2: "You can/should/need to run/execute/push/deploy"
   local P2
-  P2=$(echo "$TEXT" | grep -ciE '^\s*(You (can|should|need to|must|will need to)|Please)\s+(run|execute|push|deploy|merge|publish|start)' 2>/dev/null || echo 0)
+  P2=$(echo "$TEXT" | grep -ciE '^\s*(You (can|should|need to|must|will need to)|Please)\s+(run|execute|push|deploy|merge|publish|start)' 2>/dev/null) || P2=0
   DEFERRED_COUNT=$((DEFERRED_COUNT + P2))
 
   # Pattern 3: "To verify/test/deploy, run `command`"
   local P3
-  P3=$(echo "$TEXT" | grep -ciE '^\s*To (verify|test|deploy|publish|complete|finish|confirm),?\s+(run|execute|use)' 2>/dev/null || echo 0)
+  P3=$(echo "$TEXT" | grep -ciE '^\s*To (verify|test|deploy|publish|complete|finish|confirm),?\s+(run|execute|use)' 2>/dev/null) || P3=0
   DEFERRED_COUNT=$((DEFERRED_COUNT + P3))
 
   # Pattern 4: "Next step(s):" followed by commands — header detection
   local P4
-  P4=$(echo "$TEXT" | grep -ciE '^\s*(Next steps?|Manual steps?|Remaining steps?|TODO|Action items?):' 2>/dev/null || echo 0)
+  P4=$(echo "$TEXT" | grep -ciE '^\s*(Next steps?|Manual steps?|Remaining steps?|TODO|Action items?):' 2>/dev/null) || P4=0
   DEFERRED_COUNT=$((DEFERRED_COUNT + P4))
 
   # Pattern 5: "Go to/Visit/Open the X dashboard/console/UI" — deferring to any GUI
   local P5
-  P5=$(echo "$TEXT" | grep -ciE '(Go to|Visit|Open|Navigate to)\s+(the |your )?\w+\s+(dashboard|console|UI|portal|settings|panel|admin|control panel)' 2>/dev/null || echo 0)
+  P5=$(echo "$TEXT" | grep -ciE '(Go to|Visit|Open|Navigate to)\s+(the |your )?\w+\s+(dashboard|console|UI|portal|settings|panel|admin|control panel)' 2>/dev/null) || P5=0
   DEFERRED_COUNT=$((DEFERRED_COUNT + P5))
 
   # Pattern 6: Imperative infra verbs at line start without a tool call
   local P6
-  P6=$(echo "$TEXT" | grep -ciE '^\s*(Add|Create|Update|Set up|Configure|Enable|Apply|Migrate|Deploy|Provision)\s+(a |the |your )?\w' 2>/dev/null || echo 0)
+  P6=$(echo "$TEXT" | grep -ciE '^\s*(Add|Create|Update|Set up|Configure|Enable|Apply|Migrate|Deploy|Provision)\s+(a |the |your )?\w' 2>/dev/null) || P6=0
   # Only count if 3+ of these — a single "Add a comment" is normal
   [ "$P6" -lt 3 ] && P6=0
   DEFERRED_COUNT=$((DEFERRED_COUNT + P6))

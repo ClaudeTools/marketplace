@@ -42,7 +42,6 @@ run_async_validator() {
 }
 
 # Emit session end telemetry — include subagents (they have distinct metrics)
-local _sid _agent_type
 _sid=$(hook_get_field '.session_id' 2>/dev/null || echo "unknown")
 _agent_type=$(hook_get_field '.agent_type' 2>/dev/null || echo "main")
 emit_session_end "$_sid" 2>/dev/null || true
