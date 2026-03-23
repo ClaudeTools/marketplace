@@ -71,7 +71,7 @@ validate_stop_gate() {
     UNTRACKED=$(git -C "$CWD" ls-files --others --exclude-standard 2>/dev/null || true)
     ALL_CHANGED=$(printf '%s\n%s\n%s' "$STAGED" "$UNSTAGED" "$UNTRACKED" | sort -u | sed '/^$/d')
     # Filter out system/artifact files that aren't real code changes
-    CHANGED_FILES=$(echo "$ALL_CHANGED" | grep -vE '^\.(claude|DS_Store)|\.lock$|\.tsbuildinfo$|^node_modules/|^\.git/' | sed '/^$/d' || true)
+    CHANGED_FILES=$(echo "$ALL_CHANGED" | grep -vE '^\.(claude|DS_Store)|\.lock$|\.tsbuildinfo$|^node_modules/|^\.git/|/logs/|^\.tasks/' | sed '/^$/d' || true)
 
     if [ -n "$CHANGED_FILES" ]; then
       local FILE_COUNT
