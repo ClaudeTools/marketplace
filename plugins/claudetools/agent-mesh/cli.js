@@ -152,7 +152,7 @@ function cmdList(opts) {
   ensureDir(AGENTS_DIR);
   const files = fs.readdirSync(AGENTS_DIR).filter(f => f.endsWith('.json'));
   const agents = [];
-  const staleThreshold = 5 * 60 * 1000; // 5 minutes
+  const staleThreshold = 30 * 60 * 1000; // 30 minutes — hooks are ephemeral, so PID may not survive; rely on heartbeats
 
   for (const file of files) {
     const agent = readJSON(path.join(AGENTS_DIR, file));

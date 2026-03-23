@@ -165,7 +165,7 @@ fi
 MESH_CLI="$(dirname "$(dirname "$0")")/agent-mesh/cli.js"
 if [[ -f "$MESH_CLI" ]]; then
   _MESH_SID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)
-  [[ -z "$_MESH_SID" ]] && _MESH_SID="$$"
+  [[ -z "$_MESH_SID" ]] && _MESH_SID="$PPID"
   MESSAGES=$(node "$MESH_CLI" inbox --id "$_MESH_SID" --ack 2>/dev/null || true)
   if [[ -n "$MESSAGES" ]]; then
     echo "[agent-mesh] $MESSAGES"

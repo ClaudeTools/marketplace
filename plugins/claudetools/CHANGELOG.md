@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.4.2 (2026-03-23)
+## 3.4.1 (2026-03-23)
 
-- fix: action field review feedback for frontend-design skill (#16)
+- chore: sync plugin for publish — agent-mesh fix + validation scripts
 

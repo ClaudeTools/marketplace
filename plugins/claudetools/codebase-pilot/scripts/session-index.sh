@@ -254,11 +254,12 @@ if [[ -f "$MESH_CLI" ]]; then
     --name "$AGENT_NAME" \
     --worktree "$PROJECT_ROOT" \
     --branch "$BRANCH" \
-    --pid "$$" 2>/dev/null || true
+    --pid "$PPID" 2>/dev/null || true
 
-  # Deregister on Ctrl+C / SIGTERM (hooks don't fire on ungraceful exit)
-  _mesh_cleanup() { node "$MESH_CLI" deregister --id "$SESSION_ID" 2>/dev/null || true; }
-  trap _mesh_cleanup EXIT INT TERM
+  # NOTE: Deregistration is handled by session-end-dispatcher.sh (SessionEnd hook).
+  # Do NOT add an EXIT/INT/TERM trap here — this script runs as a short-lived hook
+  # process, so traps fire immediately when the script exits, not when the Claude
+  # session ends. That was the original bug that broke the entire mesh.
 
   OTHERS=$(node "$MESH_CLI" list --exclude "$SESSION_ID" --brief 2>/dev/null || true)
   if [[ -n "$OTHERS" ]]; then

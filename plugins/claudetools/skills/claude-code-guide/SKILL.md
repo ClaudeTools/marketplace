@@ -166,6 +166,25 @@ These span multiple extension types. Each type-specific guide has additional got
 
 ---
 
+## Validation Scripts
+
+Run the appropriate validator to check your work programmatically:
+
+```bash
+# Validate a skill directory
+bash ${CLAUDE_SKILL_DIR}/scripts/validate-skill.sh /path/to/skill-directory
+
+# Validate a hook script
+bash ${CLAUDE_SKILL_DIR}/scripts/validate-hook.sh /path/to/hook-script.sh
+
+# Validate an agent definition
+bash ${CLAUDE_SKILL_DIR}/scripts/validate-agent.sh /path/to/agent.md
+```
+
+Each validator checks structure, conventions, safety patterns, and outputs PASS/FAIL/WARN for every check.
+
+---
+
 ## Verification Checklist
 
 Run through this before considering any extension complete:
