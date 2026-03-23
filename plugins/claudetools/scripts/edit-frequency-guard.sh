@@ -63,7 +63,7 @@ NEW_COUNT=$(jq -r --arg file "$FILE_PATH" '.[$file] // 0' "$COUNTER_FILE" 2>/dev
 hook_log "file=$FILE_PATH edit_count=$NEW_COUNT"
 
 # Read adaptive threshold (model-aware)
-EDIT_THRESHOLD=$(get_threshold "edit_frequency_limit" "$MODEL_FAMILY")
+EDIT_THRESHOLD=$(get_threshold "edit_frequency_limit")
 EDIT_THRESHOLD=${EDIT_THRESHOLD%.*}
 
 # --- Progressive disclosure: escalating warnings based on edit count ---

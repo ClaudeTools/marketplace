@@ -36,7 +36,7 @@ run_validator() {
     ALL_FINDINGS="${ALL_FINDINGS}${output}\n"
     [ "$rc" -gt "$MAX_EXIT" ] && MAX_EXIT=$rc
   fi
-  record_hook_outcome "$name" "Stop" "$decision" "" "" "" "$MODEL_FAMILY"
+  record_hook_outcome "$name" "Stop" "$decision" "" "" ""
   local _t_end _duration_ms
   _t_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)}
   _duration_ms=$(awk "BEGIN {printf \"%d\", ($_t_end - $_t_start) * 1000}" 2>/dev/null || echo 0)
@@ -53,5 +53,5 @@ if [ -n "$ALL_FINDINGS" ]; then
   HOOK_REASON="stop blocked by quality gate"
 fi
 
-record_hook_outcome "session-stop-dispatcher" "Stop" "$( [ "$MAX_EXIT" -gt 0 ] && echo warn || echo allow )" "" "" "" "$MODEL_FAMILY"
+record_hook_outcome "session-stop-dispatcher" "Stop" "$( [ "$MAX_EXIT" -gt 0 ] && echo warn || echo allow )" "" "" ""
 exit $MAX_EXIT

@@ -74,7 +74,7 @@ sqlite3 "$METRICS_DB" \
 hook_log "session=${session_id} calls=${total_calls} failures=${total_failures} edits=${total_edits} files=${unique_files} churn=${churn_rate}"
 
 # Clean up old tool_outcomes
-RETENTION_DAYS=$(get_threshold "outcome_retention_days" "$MODEL_FAMILY")
+RETENTION_DAYS=$(get_threshold "outcome_retention_days")
 RETENTION_DAYS=${RETENTION_DAYS%.*}
 sqlite3 "$METRICS_DB" \
   "DELETE FROM tool_outcomes WHERE timestamp < datetime('now', '-${RETENTION_DAYS} days');" \

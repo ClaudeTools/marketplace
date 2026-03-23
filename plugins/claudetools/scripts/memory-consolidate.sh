@@ -97,8 +97,8 @@ sqlite3 "$METRICS_DB" "SELECT id, file_path FROM memories WHERE file_path IS NOT
 done
 
 # --- 3. Decay old memories ---
-MEM_DECAY_RATE=$(get_threshold "memory_decay_rate" "$MODEL_FAMILY")
-MEM_DECAY_DAYS=$(get_threshold "memory_decay_window_days" "$MODEL_FAMILY")
+MEM_DECAY_RATE=$(get_threshold "memory_decay_rate")
+MEM_DECAY_DAYS=$(get_threshold "memory_decay_window_days")
 MEM_DECAY_DAYS=${MEM_DECAY_DAYS%.*}
 
 sqlite3 "$METRICS_DB" \

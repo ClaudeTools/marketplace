@@ -332,7 +332,7 @@ add < <(awk '
 case "$FILE_PATH" in
   *.ts|*.tsx)
     # ': any' type abuse
-    TS_ANY_LIMIT=$(get_threshold "ts_any_limit" "$MODEL_FAMILY")
+    TS_ANY_LIMIT=$(get_threshold "ts_any_limit")
     TS_ANY_LIMIT=${TS_ANY_LIMIT%.*}
     ANY_COUNT=$({ grep -o ': any\b' "$FILE_PATH" 2>/dev/null || true; } | wc -l | tr -d ' ')
     if [ "$ANY_COUNT" -gt "$TS_ANY_LIMIT" ]; then
@@ -340,7 +340,7 @@ case "$FILE_PATH" in
     fi
 
     # 'as any' cast abuse
-    TS_AS_ANY_LIMIT=$(get_threshold "ts_as_any_limit" "$MODEL_FAMILY")
+    TS_AS_ANY_LIMIT=$(get_threshold "ts_as_any_limit")
     TS_AS_ANY_LIMIT=${TS_AS_ANY_LIMIT%.*}
     AS_ANY_COUNT=$({ grep -o 'as any\b' "$FILE_PATH" 2>/dev/null || true; } | wc -l | tr -d ' ')
     if [ "$AS_ANY_COUNT" -gt "$TS_AS_ANY_LIMIT" ]; then
@@ -348,7 +348,7 @@ case "$FILE_PATH" in
     fi
 
     # @ts-ignore / @ts-expect-error abuse
-    TS_IGNORE_LIMIT=$(get_threshold "ts_ignore_limit" "$MODEL_FAMILY")
+    TS_IGNORE_LIMIT=$(get_threshold "ts_ignore_limit")
     TS_IGNORE_LIMIT=${TS_IGNORE_LIMIT%.*}
     TS_SUPPRESS=$({ grep -oE '@ts-ignore|@ts-expect-error' "$FILE_PATH" 2>/dev/null || true; } | wc -l | tr -d ' ')
     if [ "$TS_SUPPRESS" -gt "$TS_IGNORE_LIMIT" ]; then

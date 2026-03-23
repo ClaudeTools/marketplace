@@ -53,7 +53,7 @@ fi
 # Check 2: Font count (distinct font families, not weight variants)
 FONT_FAMILIES=""
 # Extract distinct font-family values from CSS
-CSS_FAMILIES=$(grep -rh 'font-family' "$PROJECT_DIR" --include="*.css" 2>/dev/null | grep -v node_modules | sed -n "s/.*font-family:\s*['\"]\\?\([^;'\"]*\\).*/\\1/p" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | sort -u)
+CSS_FAMILIES=$(grep -rh 'font-family:' "$PROJECT_DIR" --include="*.css" 2>/dev/null | grep -v node_modules | grep -v '@font-face' | sed -n "s/.*font-family:\s*['\"]\\?\([^;'\"]*\\).*/\\1/p" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | sort -u)
 [ -n "$CSS_FAMILIES" ] && FONT_FAMILIES="$CSS_FAMILIES"
 # Extract distinct next/font constructor names (e.g., Inter, Playfair_Display)
 NEXT_FONTS=$(grep -roh "from ['\"]next/font/[^'\"]*['\"]" "$PROJECT_DIR" --include="*.tsx" --include="*.ts" --include="*.js" 2>/dev/null | grep -v node_modules | sed "s/.*next\/font\/[a-z]*['\"]//;s/['\"]//g" | sort -u)
@@ -106,7 +106,7 @@ fi
 LOCALSTORAGE=$(grep -rn 'localStorage' "$PROJECT_DIR" --include="*.tsx" --include="*.ts" --include="*.jsx" --include="*.js" --include="*.vue" --include="*.svelte" --include="*.astro" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next --exclude-dir=build --exclude-dir=out --exclude-dir=.svelte-kit 2>/dev/null | grep -vc '// *ignore\|\.test\.' || echo 0)
 LOCALSTORAGE=$(echo "$LOCALSTORAGE" | tr -d '[:space:]')
 if [ "$LOCALSTORAGE" -gt 0 ]; then
-  check FAIL "localStorage" "$LOCALSTORAGE uses of localStorage — use a database for persistence"
+  check WARN "localStorage" "$LOCALSTORAGE uses of localStorage — consider server-side persistence"
 else
   check PASS "No localStorage" ""
 fi

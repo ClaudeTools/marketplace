@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # dynamic-rules.sh — InstructionsLoaded hook: inject project-type-specific rules,
-# adaptive thresholds, and recent failure patterns.
+# and recent failure patterns.
 # Outputs to stdout (becomes part of Claude's instructions). Always exits 0.
 
 set -euo pipefail
@@ -61,24 +61,7 @@ case "$PROJECT_TYPE" in
     ;;
 esac
 
-# --- 2. Inject adaptive thresholds (if metrics.db exists) ---
-if command -v sqlite3 &>/dev/null; then
-  source "$(dirname "$0")/lib/ensure-db.sh"
-  if ensure_metrics_db 2>/dev/null; then
-    THRESHOLDS=$(sqlite3 "$METRICS_DB" \
-      "SELECT metric_name || '=' || CAST(current_value AS TEXT) FROM threshold_overrides;" \
-      2>/dev/null || true)
-    if [ -n "$THRESHOLDS" ]; then
-      echo ""
-      echo "[Active Thresholds]"
-      echo "$THRESHOLDS" | while IFS= read -r line; do
-        echo "  $line"
-      done
-    fi
-  fi
-fi
-
-# --- 3. Inject recent failure patterns (last 24h, top 3) ---
+# --- 2. Inject recent failure patterns (last 24h, top 3) ---
 if command -v sqlite3 &>/dev/null && [ -f "${METRICS_DB:-/dev/null}" ]; then
   FAILURES=$(sqlite3 "$METRICS_DB" \
     "SELECT tool_name || ' (' || COUNT(*) || ' failures)' FROM tool_outcomes

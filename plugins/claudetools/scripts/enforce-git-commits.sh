@@ -40,7 +40,7 @@ EOF
 fi
 
 # If modified tracked files — they forgot to stage and commit
-UNCOMMITTED_LIMIT=$(get_threshold "uncommitted_file_limit" "$MODEL_FAMILY")
+UNCOMMITTED_LIMIT=$(get_threshold "uncommitted_file_limit")
 UNCOMMITTED_LIMIT=${UNCOMMITTED_LIMIT%.*}
 if [ "$UNCOMMITTED" -gt "$UNCOMMITTED_LIMIT" ]; then
   HOOK_DECISION="reject" HOOK_REASON="${UNCOMMITTED} uncommitted modified files"

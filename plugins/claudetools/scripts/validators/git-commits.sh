@@ -35,7 +35,7 @@ EOF
 
   # If modified tracked files — they forgot to stage and commit
   local UNCOMMITTED_LIMIT
-  UNCOMMITTED_LIMIT=$(get_threshold "uncommitted_file_limit" "$MODEL_FAMILY")
+  UNCOMMITTED_LIMIT=$(get_threshold "uncommitted_file_limit")
   UNCOMMITTED_LIMIT=${UNCOMMITTED_LIMIT%.*}
   if [ "$UNCOMMITTED" -gt "$UNCOMMITTED_LIMIT" ]; then
     record_hook_outcome "enforce-git-commits" "TaskCompleted" "block" "" "uncommitted_file_limit" "$UNCOMMITTED_LIMIT" "$MODEL_FAMILY"

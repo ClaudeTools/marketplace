@@ -101,8 +101,8 @@ ${line}" || BODY="$line"
 
   # --- 3. Decay old memories ---
   local MEM_DECAY_RATE MEM_DECAY_DAYS
-  MEM_DECAY_RATE=$(get_threshold "memory_decay_rate" "$MODEL_FAMILY")
-  MEM_DECAY_DAYS=$(get_threshold "memory_decay_window_days" "$MODEL_FAMILY")
+  MEM_DECAY_RATE=$(get_threshold "memory_decay_rate")
+  MEM_DECAY_DAYS=$(get_threshold "memory_decay_window_days")
   MEM_DECAY_DAYS=${MEM_DECAY_DAYS%.*}
 
   sqlite3 "$METRICS_DB" \

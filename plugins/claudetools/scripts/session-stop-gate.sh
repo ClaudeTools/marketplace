@@ -179,7 +179,7 @@ if [ "$IS_GIT" -eq 1 ]; then
   RECENT_CHANGED=$(git -C "$CWD" diff --name-only HEAD~1 HEAD 2>/dev/null | wc -l | tr -d ' ' || true)
   RECENT_CHANGED=${RECENT_CHANGED:-0}
   [[ "$RECENT_CHANGED" =~ ^[0-9]+$ ]] || RECENT_CHANGED=0
-  LARGE_CHANGE=$(get_threshold "large_change_threshold" "$MODEL_FAMILY")
+  LARGE_CHANGE=$(get_threshold "large_change_threshold")
   LARGE_CHANGE=${LARGE_CHANGE%.*}
   if [ "$RECENT_CHANGED" -gt "$LARGE_CHANGE" ]; then
     TIER2_WARNINGS+=("Large change set: $RECENT_CHANGED files in last commit — verify scope matches the task")
@@ -197,7 +197,7 @@ if [ "$IS_GIT" -eq 1 ]; then
   DIFF=$(git -C "$CWD" diff HEAD~1 HEAD 2>/dev/null || true)
   DIFF_LINES=$(echo "$DIFF" | wc -l | tr -d ' ')
 
-  AI_AUDIT_LIMIT=$(get_threshold "ai_audit_diff_threshold" "$MODEL_FAMILY")
+  AI_AUDIT_LIMIT=$(get_threshold "ai_audit_diff_threshold")
   AI_AUDIT_LIMIT=${AI_AUDIT_LIMIT%.*}
   if [ "$DIFF_LINES" -gt "$AI_AUDIT_LIMIT" ]; then
     RECENT_FILE_LIST=$(git -C "$CWD" diff --name-only HEAD~1 HEAD 2>/dev/null | head -20 || true)

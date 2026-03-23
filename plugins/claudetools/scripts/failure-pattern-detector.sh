@@ -44,7 +44,7 @@ _error_class=$(echo "$ERROR_KEY" | tr ' ' '_' | head -c 40)
 emit_error "$TOOL_NAME" "$_error_class" "failure-pattern-detector" "false" 2>/dev/null || true
 
 # Read adaptive threshold (model-aware)
-FAILURE_LIMIT=$(get_threshold "failure_loop_limit" "$MODEL_FAMILY")
+FAILURE_LIMIT=$(get_threshold "failure_loop_limit")
 FAILURE_LIMIT=${FAILURE_LIMIT%.*}
 
 hook_log "tool=$TOOL_NAME pattern_count=$PATTERN_COUNT tool_total=$TOOL_TOTAL limit=$FAILURE_LIMIT error_key=$(echo "$ERROR_KEY" | head -c 40)"
@@ -59,7 +59,7 @@ if [ "$PATTERN_COUNT" -ge "$FAILURE_LIMIT" ]; then
 fi
 
 # Also warn (but don't block) if tool has many diverse failures
-DIVERSE_WARN=$(get_threshold "diverse_failure_total_warn" "$MODEL_FAMILY")
+DIVERSE_WARN=$(get_threshold "diverse_failure_total_warn")
 DIVERSE_WARN=${DIVERSE_WARN%.*}
 if [ "$TOOL_TOTAL" -ge "$DIVERSE_WARN" ]; then
   echo "WARNING: $TOOL_NAME has failed $TOOL_TOTAL times total this session (across different error types). Consider whether this tool is the right approach." >&2

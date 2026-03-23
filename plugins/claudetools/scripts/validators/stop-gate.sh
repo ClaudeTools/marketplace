@@ -52,11 +52,17 @@ validate_stop_gate() {
     local CURRENT_BRANCH
     CURRENT_BRANCH=$(git -C "$CWD" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
     if [ "$CURRENT_BRANCH" = "main" ] || [ "$CURRENT_BRANCH" = "master" ]; then
-      TIER1_FAIL+=("On $CURRENT_BRANCH — working directly on main skips code review. Create a feature branch first.")
-      HOOK_DECISION="reject"; HOOK_REASON="on main branch"
-      _stop_summary
-      record_hook_outcome "session-stop-gate" "Stop" "block" "" "" "" "$MODEL_FAMILY"
-      return 2
+      local HAS_CHANGES
+      HAS_CHANGES=$(git -C "$CWD" status --porcelain 2>/dev/null | grep -vE '^[?][?] [.](claude|DS_Store)|[.]lock$|[.]tsbuildinfo$|^node_modules/|/logs/|^[?][?] [.]tasks/' | head -1 || true)
+      if [ -n "$HAS_CHANGES" ]; then
+        TIER1_FAIL+=("On $CURRENT_BRANCH with uncommitted changes — create a feature branch first.")
+        HOOK_DECISION="reject"; HOOK_REASON="on main branch with changes"
+        _stop_summary
+        record_hook_outcome "session-stop-gate" "Stop" "block" "" "" ""
+        return 2
+      else
+        TIER2_WARNINGS+=("On $CURRENT_BRANCH — consider using a feature branch for code changes.")
+      fi
     else
       TIER1_PASS+=("Branch: $CURRENT_BRANCH (not main/master)")
     fi
@@ -79,7 +85,7 @@ validate_stop_gate() {
       TIER1_FAIL+=("$FILE_COUNT uncommitted file(s). Uncommitted work is lost when the session ends — commit or stash before stopping.")
       HOOK_DECISION="reject"; HOOK_REASON="uncommitted changes"
       _stop_summary
-      record_hook_outcome "session-stop-gate" "Stop" "block" "" "" "" "$MODEL_FAMILY"
+      record_hook_outcome "session-stop-gate" "Stop" "block" "" "" ""
       return 2
     else
       TIER1_PASS+=("No uncommitted changes")
@@ -90,7 +96,7 @@ validate_stop_gate() {
   if [ -z "$CHANGED_FILES" ] && [ "$IS_GIT" -eq 0 ]; then
     TIER1_PASS+=("Not a git repo — skipping file checks")
     _stop_summary
-    record_hook_outcome "session-stop-gate" "Stop" "allow" "" "" "" "$MODEL_FAMILY"
+    record_hook_outcome "session-stop-gate" "Stop" "allow" "" "" ""
     return 0
   fi
 
@@ -102,7 +108,7 @@ validate_stop_gate() {
       TIER1_FAIL+=("Sensitive files staged: $(echo "$SENSITIVE_STAGED" | tr '\n' ', ') — unstage these before committing to avoid leaking credentials.")
       HOOK_DECISION="reject"; HOOK_REASON="sensitive files staged"
       _stop_summary
-      record_hook_outcome "session-stop-gate" "Stop" "block" "" "" "" "$MODEL_FAMILY"
+      record_hook_outcome "session-stop-gate" "Stop" "block" "" "" ""
       return 2
     else
       TIER1_PASS+=("No sensitive files staged")
@@ -140,7 +146,7 @@ validate_stop_gate() {
     HOOK_DECISION="reject"; HOOK_REASON="stubs in changed files"
     _stop_summary
     printf '%b\n' "$STUB_VIOLATIONS" >&2
-    record_hook_outcome "session-stop-gate" "Stop" "block" "" "" "" "$MODEL_FAMILY"
+    record_hook_outcome "session-stop-gate" "Stop" "block" "" "" ""
     return 2
   else
     TIER1_PASS+=("No stub/TODO patterns in recent changes")
@@ -170,7 +176,7 @@ validate_stop_gate() {
     RECENT_CHANGED=$(git -C "$CWD" diff --name-only HEAD~1 HEAD 2>/dev/null | wc -l | tr -d ' ' || true)
     RECENT_CHANGED=${RECENT_CHANGED:-0}
     [[ "$RECENT_CHANGED" =~ ^[0-9]+$ ]] || RECENT_CHANGED=0
-    LARGE_CHANGE=$(get_threshold "large_change_threshold" "$MODEL_FAMILY")
+    LARGE_CHANGE=$(get_threshold "large_change_threshold")
     LARGE_CHANGE=${LARGE_CHANGE%.*}
     if [ "$RECENT_CHANGED" -gt "$LARGE_CHANGE" ]; then
       TIER2_WARNINGS+=("Large change set: $RECENT_CHANGED files in last commit — verify scope matches the task")
@@ -220,7 +226,7 @@ validate_stop_gate() {
     DIFF_LINES=$(echo "$DIFF" | wc -l | tr -d ' ')
 
     local AI_AUDIT_LIMIT
-    AI_AUDIT_LIMIT=$(get_threshold "ai_audit_diff_threshold" "$MODEL_FAMILY")
+    AI_AUDIT_LIMIT=$(get_threshold "ai_audit_diff_threshold")
     AI_AUDIT_LIMIT=${AI_AUDIT_LIMIT%.*}
     if [ "$DIFF_LINES" -gt "$AI_AUDIT_LIMIT" ]; then
       local RECENT_FILE_LIST
@@ -301,6 +307,6 @@ Keep response under 8 lines. No preamble. No praise.
   # All clear
   HOOK_DECISION="allow"; HOOK_REASON="all tiers passed"
   _stop_summary
-  record_hook_outcome "session-stop-gate" "Stop" "allow" "" "" "" "$MODEL_FAMILY"
+  record_hook_outcome "session-stop-gate" "Stop" "allow" "" "" ""
   return 0
 }

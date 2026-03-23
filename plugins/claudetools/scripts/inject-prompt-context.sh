@@ -94,7 +94,7 @@ if command -v sqlite3 &>/dev/null; then
           FTS_QUERY=$(echo "$TERMS" | tr '\n' ' ' | sed 's/ *$//' | sed 's/ / OR /g')
 
           MODEL_FAMILY=$(detect_model_family 2>/dev/null || echo "unknown")
-          MEM_LIMIT=$(get_threshold "memory_retrieval_limit" "$MODEL_FAMILY")
+          MEM_LIMIT=$(get_threshold "memory_retrieval_limit")
           MEM_LIMIT=${MEM_LIMIT%.*}
 
           # Composite ranking: FTS relevance + confidence + access + type + recency - verbosity penalty

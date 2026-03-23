@@ -118,14 +118,14 @@ if [ -n "$avg_churn" ] && [ "$avg_churn" != "0" ] && [ "$avg_churn" != "0.0" ] &
   echo "[Session History] Avg edit churn: ${avg_churn} | Recent failures: ${total_failures}"
 
   # High churn warning
-  CHURN_WARN=$(get_threshold "churn_warning" "$MODEL_FAMILY")
+  CHURN_WARN=$(get_threshold "churn_warning")
   if awk "BEGIN {exit !(${avg_churn} > ${CHURN_WARN})}" 2>/dev/null; then
     echo "Note: recent sessions show high edit churn. Focus on diagnostics before editing."
   fi
 fi
 
 # High failure warning
-FAILURE_WARN=$(get_threshold "failure_warning" "$MODEL_FAMILY")
+FAILURE_WARN=$(get_threshold "failure_warning")
 FAILURE_WARN=${FAILURE_WARN%.*}
 if [ "${total_failures:-0}" -gt "$FAILURE_WARN" ] 2>/dev/null; then
   echo "Note: elevated failure rate. Research before implementing."
@@ -133,7 +133,7 @@ fi
 
 # --- Inject high-confidence memories (from active memories table) ---
 if [ -f "$METRICS_DB" ]; then
-  MEM_CONFIDENCE=$(get_threshold "memory_confidence_inject" "$MODEL_FAMILY")
+  MEM_CONFIDENCE=$(get_threshold "memory_confidence_inject")
   # Query the active memories table (FTS5-backed) for high-confidence entries
   MEMORIES=$(sqlite3 "$METRICS_DB" \
     "SELECT type, description FROM memories
@@ -167,10 +167,10 @@ if [ -f "$METRICS_DB" ]; then
   fi
 
   # Decay old memories (active table)
-  MEM_DECAY_RATE=$(get_threshold "memory_decay_rate" "$MODEL_FAMILY")
-  MEM_DECAY_DAYS=$(get_threshold "memory_decay_window_days" "$MODEL_FAMILY")
+  MEM_DECAY_RATE=$(get_threshold "memory_decay_rate")
+  MEM_DECAY_DAYS=$(get_threshold "memory_decay_window_days")
   MEM_DECAY_DAYS=${MEM_DECAY_DAYS%.*}
-  MEM_PRUNE=$(get_threshold "memory_prune_threshold" "$MODEL_FAMILY")
+  MEM_PRUNE=$(get_threshold "memory_prune_threshold")
   sqlite3 "$METRICS_DB" \
     "UPDATE memories SET confidence = confidence * ${MEM_DECAY_RATE}
      WHERE COALESCE(last_accessed, created_at) < datetime('now', '-${MEM_DECAY_DAYS} days')

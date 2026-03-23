@@ -74,7 +74,7 @@ run_aggregate_session() {
 
   # Clean up old tool_outcomes
   local RETENTION_DAYS
-  RETENTION_DAYS=$(get_threshold "outcome_retention_days" "$MODEL_FAMILY")
+  RETENTION_DAYS=$(get_threshold "outcome_retention_days")
   RETENTION_DAYS=${RETENTION_DAYS%.*}
   sqlite3 "$METRICS_DB" \
     "DELETE FROM tool_outcomes WHERE timestamp < datetime('now', '-${RETENTION_DAYS} days');" \
