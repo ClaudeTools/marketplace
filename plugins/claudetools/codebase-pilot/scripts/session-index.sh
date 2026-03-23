@@ -26,16 +26,29 @@ fi
 PROJECT_ROOT="${CODEBASE_PILOT_PROJECT_ROOT:-$(pwd)}"
 
 # Auto-install dependencies if missing (one-time setup)
+# Skip entirely if dist/cli.js exists — deps may already be bundled or pre-installed
 if [[ ! -d "$PILOT_DIR/node_modules" ]]; then
-  if command -v npm &>/dev/null; then
-    hook_log "codebase-pilot: npm install (first run)" 2>/dev/null || true
-    if ! (cd "$PILOT_DIR" && npm install --production --no-audit --no-fund --legacy-peer-deps 2>/dev/null); then
-      hook_log "codebase-pilot: npm install FAILED" 2>/dev/null || true
-      emit_event "codebase-pilot" "npm_install_failed" "error" 2>/dev/null || true
+  if [[ -f "$CLI" ]]; then
+    # CLI is built; try running it to see if it works without node_modules
+    if node "$CLI" --help &>/dev/null 2>&1 || node -e "require('$PILOT_DIR/dist/cli.js')" &>/dev/null 2>&1; then
+      hook_log "codebase-pilot: node_modules missing but CLI works, skipping npm install" 2>/dev/null || true
+    else
+      # CLI exists but can't run — fall through to npm install
+      :
     fi
-  else
-    hook_log "codebase-pilot: npm not available, cannot install deps" 2>/dev/null || true
-    emit_event "codebase-pilot" "npm_not_found" "error" 2>/dev/null || true
+  fi
+  # Only attempt npm install if node_modules still doesn't exist (skip re-check allows the above block to be a no-op)
+  if [[ ! -d "$PILOT_DIR/node_modules" ]]; then
+    if command -v npm &>/dev/null; then
+      hook_log "codebase-pilot: npm install (first run)" 2>/dev/null || true
+      NPM_ERR=$(cd "$PILOT_DIR" && npm install --production --no-audit --no-fund --legacy-peer-deps 2>&1) || {
+        hook_log "codebase-pilot: npm install FAILED: ${NPM_ERR:0:200}" 2>/dev/null || true
+        emit_event "codebase-pilot" "npm_install_failed" "error" 2>/dev/null || true
+      }
+    else
+      hook_log "codebase-pilot: npm not available, cannot install deps" 2>/dev/null || true
+      emit_event "codebase-pilot" "npm_not_found" "error" 2>/dev/null || true
+    fi
   fi
 fi
 
@@ -47,10 +60,17 @@ if [[ ! -f "$CLI" ]]; then
 fi
 
 # Skip if no source files exist in project (now includes .py)
-SOURCE_COUNT=$(find "$PROJECT_ROOT" -maxdepth 3 \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" \) -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/__pycache__/*" -not -path "*/.venv/*" 2>/dev/null | head -5 | wc -l)
+# Also skip if project is too large (>10000 source files)
+MAX_FILES=10000
+SOURCE_COUNT=$(find "$PROJECT_ROOT" -maxdepth 5 \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" \) -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/__pycache__/*" -not -path "*/.venv/*" -not -path "*/dist/*" -not -path "*/build/*" -not -path "*/.next/*" 2>/dev/null | head -$((MAX_FILES + 1)) | wc -l)
 if [[ "$SOURCE_COUNT" -eq 0 ]]; then
   hook_log "codebase-pilot: no source files in $PROJECT_ROOT, skipping" 2>/dev/null || true
   emit_event "codebase-pilot" "no_source_files" "allow" 2>/dev/null || true
+  exit 0
+fi
+if [[ "$SOURCE_COUNT" -gt "$MAX_FILES" ]]; then
+  hook_log "codebase-pilot: project too large (>${MAX_FILES} source files), skipping" 2>/dev/null || true
+  emit_event "codebase-pilot" "index_skipped_too_large" "warn" 2>/dev/null || true
   exit 0
 fi
 
@@ -90,10 +110,13 @@ else
   fi
 fi
 
-# Run the indexer (output goes to stderr)
+# Run the indexer — capture stderr so we get the actual error in telemetry
 _idx_start=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)} 2>/dev/null || true
-if ! node "$CLI" index "$PROJECT_ROOT" 2>/dev/null; then
-  hook_log "codebase-pilot: indexing FAILED for $PROJECT_ROOT" 2>/dev/null || true
+_idx_ok=1
+IDX_OUTPUT=$(node "$CLI" index "$PROJECT_ROOT" 2>&1) || _idx_ok=0
+if [[ "$_idx_ok" -eq 0 ]]; then
+  IDX_ERR_SHORT="${IDX_OUTPUT:0:200}"
+  hook_log "codebase-pilot: indexing FAILED for $PROJECT_ROOT: $IDX_ERR_SHORT" 2>/dev/null || true
   emit_event "codebase-pilot" "index_failed" "error" 2>/dev/null || true
 else
   _idx_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)} 2>/dev/null || true
@@ -102,10 +125,17 @@ else
 fi
 
 # Output the project map to stdout (injected as context for the agent)
-MAP_OUTPUT=$(node "$CLI" map "$PROJECT_ROOT" 2>/dev/null) || true
-if [[ -z "$MAP_OUTPUT" ]]; then
-  hook_log "codebase-pilot: map generation returned empty for $PROJECT_ROOT" 2>/dev/null || true
-  emit_event "codebase-pilot" "map_empty" "warn" 2>/dev/null || true
+# Only attempt map if indexing succeeded
+MAP_OUTPUT=""
+if [[ "$_idx_ok" -eq 1 ]]; then
+  MAP_ERR=""
+  MAP_OUTPUT=$(node "$CLI" map "$PROJECT_ROOT" 2>/tmp/codebase-pilot-map-err-$$.txt) || true
+  MAP_ERR=$(head -c 200 /tmp/codebase-pilot-map-err-$$.txt 2>/dev/null || true)
+  rm -f /tmp/codebase-pilot-map-err-$$.txt 2>/dev/null || true
+  if [[ -z "$MAP_OUTPUT" ]]; then
+    hook_log "codebase-pilot: map generation returned empty for $PROJECT_ROOT${MAP_ERR:+: $MAP_ERR}" 2>/dev/null || true
+    emit_event "codebase-pilot" "map_empty" "warn" 2>/dev/null || true
+  fi
 fi
 
 if [[ -n "$MAP_OUTPUT" ]]; then

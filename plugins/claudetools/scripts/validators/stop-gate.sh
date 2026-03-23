@@ -82,11 +82,29 @@ validate_stop_gate() {
     if [ -n "$CHANGED_FILES" ]; then
       local FILE_COUNT
       FILE_COUNT=$(echo "$CHANGED_FILES" | wc -l | tr -d ' ')
-      TIER1_FAIL+=("$FILE_COUNT uncommitted file(s). Uncommitted work is lost when the session ends — commit or stash before stopping.")
-      HOOK_DECISION="reject"; HOOK_REASON="uncommitted changes"
-      _stop_summary
-      record_hook_outcome "session-stop-gate" "Stop" "block" "" "" ""
-      return 2
+
+      # Check if team agents are actively running — if so, downgrade to warning
+      local AGENTS_ACTIVE=0
+      local MESH_CLI
+      MESH_CLI="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/agent-mesh/cli.js"
+      if [ -f "$MESH_CLI" ]; then
+        local AGENT_OUTPUT
+        AGENT_OUTPUT=$(node "$MESH_CLI" list --brief 2>/dev/null || true)
+        if [ -n "$AGENT_OUTPUT" ] && ! echo "$AGENT_OUTPUT" | grep -q "No active agents"; then
+          AGENTS_ACTIVE=1
+        fi
+      fi
+
+      if [ "$AGENTS_ACTIVE" -eq 1 ]; then
+        TIER2_WARNINGS+=("$FILE_COUNT uncommitted file(s) (agents still active — commit when they finish)")
+        HOOK_DECISION="warn"; HOOK_REASON="uncommitted changes (agents active)"
+      else
+        TIER1_FAIL+=("$FILE_COUNT uncommitted file(s). Uncommitted work is lost when the session ends — commit or stash before stopping.")
+        HOOK_DECISION="reject"; HOOK_REASON="uncommitted changes"
+        _stop_summary
+        record_hook_outcome "session-stop-gate" "Stop" "block" "" "" ""
+        return 2
+      fi
     else
       TIER1_PASS+=("No uncommitted changes")
     fi

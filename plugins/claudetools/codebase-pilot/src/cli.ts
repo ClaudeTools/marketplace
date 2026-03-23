@@ -53,17 +53,30 @@ function setProjectEnv(): void {
 
 function runIndex(): void {
   const pathArg = getArg(1) ?? process.cwd();
-  const stats = indexProject(pathArg);
-  const summary = [
-    `Indexed ${stats.indexedFiles} files (${stats.skippedFiles} unchanged, ${stats.removedFiles} removed)`,
-    `${stats.totalSymbols} symbols, ${stats.totalImports} imports in ${stats.durationMs}ms`,
-  ].join("\n");
-  process.stderr.write(summary + "\n");
+  try {
+    const stats = indexProject(pathArg);
+    const summary = [
+      `Indexed ${stats.indexedFiles} files (${stats.skippedFiles} unchanged, ${stats.removedFiles} removed)`,
+      `${stats.totalSymbols} symbols, ${stats.totalImports} imports in ${stats.durationMs}ms`,
+    ].join("\n");
+    process.stderr.write(summary + "\n");
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    process.stderr.write(`codebase-pilot index error: ${msg}\n`);
+    process.exit(1);
+  }
 }
 
 function runMap(): void {
   setProjectEnv();
-  process.stdout.write(handleProjectMap());
+  try {
+    const output = handleProjectMap();
+    process.stdout.write(output);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    process.stderr.write(`codebase-pilot map error: ${msg}\n`);
+    process.exit(1);
+  }
 }
 
 function runFindSymbol(): void {

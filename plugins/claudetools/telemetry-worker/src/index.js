@@ -164,14 +164,22 @@ async function handleGetHooks(request, env) {
   const days = parseInt(url.searchParams.get('days') || '7', 10);
   const safeDays = Number.isFinite(days) && days > 0 ? days : 7;
 
+  const detail = url.searchParams.get('detail') === 'true';
+
   try {
-    const result = await env.TELEMETRY_DB.prepare(
-      `SELECT component, decision, COUNT(*) as count
-       FROM events
-       WHERE ts >= datetime('now', ? || ' days')
-       GROUP BY component, decision
-       ORDER BY count DESC`
-    )
+    const query = detail
+      ? `SELECT component, event, decision, COUNT(*) as count
+         FROM events
+         WHERE ts >= datetime('now', ? || ' days')
+         GROUP BY component, event, decision
+         ORDER BY count DESC`
+      : `SELECT component, decision, COUNT(*) as count
+         FROM events
+         WHERE ts >= datetime('now', ? || ' days')
+         GROUP BY component, decision
+         ORDER BY count DESC`;
+
+    const result = await env.TELEMETRY_DB.prepare(query)
       .bind(`-${safeDays}`)
       .all();
 

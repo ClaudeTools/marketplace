@@ -133,32 +133,74 @@ validate_task_quality() {
 
   # --- UI visual verification check → reject if UI changed without Chrome verification ---
   if [ "$UI_FILES_CHANGED" -gt 0 ]; then
-    local HAS_VISUAL_CHECK
-    HAS_VISUAL_CHECK=$(echo "$INPUT" | grep -ciE 'chrome|screenshot|verified in browser|visual.?verif|browser.?test|checked in browser|rendered.?correct' 2>/dev/null || true)
-    HAS_VISUAL_CHECK=${HAS_VISUAL_CHECK:-0}
-    if [ "$HAS_VISUAL_CHECK" -eq 0 ]; then
-      # Check if this is a mechanical refactor (token replacements, class renames, import changes only)
-      local IS_MECHANICAL=true
-      local UI_DIFF
-      UI_DIFF=$(git -C "$CWD" diff -- '*.tsx' '*.jsx' 2>/dev/null | grep '^[+-]' | grep -v '^[+-][+-][+-]' | grep -v '^[+-]$' || true)
-      if [ -n "$UI_DIFF" ]; then
-        # If any changed line is NOT a className, import, export, or comment change, it's structural
-        local STRUCTURAL_LINES
-        STRUCTURAL_LINES=$(echo "$UI_DIFF" | grep -vE '^\s*[+-]\s*(className=|import\s|from\s|export\s|//|/\*|\*/)' | grep -v '^[+-][[:space:]]*$' || true)
-        if [ -n "$STRUCTURAL_LINES" ]; then
+    # First, check if ALL changed UI files are data-only (no visual impact).
+    # Data-only patterns: type/interface definitions, props, API response mapping,
+    # hooks (use*), config objects, re-exports — none affect rendered layout.
+    local VISUAL_FILES=0
+    while IFS= read -r file; do
+      [ "${file:0:1}" != "/" ] && file="$CWD/$file"
+      [ -f "$file" ] || continue
+      case "$file" in
+        */app/*.tsx|*/components/*.tsx|*/pages/*.tsx) ;;
+        *) continue ;;
+      esac
+      # Get the diff for this specific file
+      local FILE_DIFF
+      FILE_DIFF=$(git -C "$CWD" diff -- "$file" 2>/dev/null | grep '^[+-]' | grep -v '^[+-][+-][+-]' | grep -v '^[+-]$' || true)
+      if [ -z "$FILE_DIFF" ]; then
+        # Untracked file — check file content directly for visual indicators
+        if grep -qE '<[A-Z][a-zA-Z]*[\s/>]|className=|style=|<div|<span|<section|<header|<footer|<main|<form|<button|<input|<table|<ul|<ol|<li|<img|<svg|return\s*\(' "$file" 2>/dev/null; then
+          # Has JSX/HTML rendering — check if it's more than just types
+          if grep -qE 'className=|style=|<div|<span|<section|<header|<footer|<main|<form|<button|<input|<table|<ul|<ol|<li|<img|<svg|css|tailwind' "$file" 2>/dev/null; then
+            VISUAL_FILES=$((VISUAL_FILES + 1))
+          fi
+        fi
+        continue
+      fi
+      # Filter out data-only lines: types, interfaces, imports, exports, comments,
+      # props/type annotations, API mapping, hook calls, const/let/var declarations
+      # without JSX, and pure whitespace changes
+      local VISUAL_LINES
+      VISUAL_LINES=$(echo "$FILE_DIFF" | grep -vE '^\s*[+-]\s*(//|/\*|\*/|\*\s|import\s|from\s|export\s(type|interface|default)|type\s+[A-Z]|interface\s+[A-Z]|^\s*\}|^\s*\{|props\.|Props|\.map\(|\.filter\(|\.find\(|\.reduce\(|\.forEach\(|async\s|await\s|return\s+[a-z]|const\s+\w+\s*[:=]|let\s+\w+\s*[:=]|function\s|use[A-Z]\w*\(|fetch\(|\.json\(|\.then\(|\.catch\(|throw\s|try\s*\{|catch\s*\(|console\.|:\s*(string|number|boolean|null|undefined|void|any|Record|Array|Promise|Partial|Required|Pick|Omit))' | grep -v '^[+-][[:space:]]*$' || true)
+      # Check if remaining lines contain visual indicators (JSX elements, className, style, CSS)
+      if [ -n "$VISUAL_LINES" ]; then
+        if echo "$VISUAL_LINES" | grep -qE 'className=|style=|<[A-Za-z]+[\s/>]|css|tailwind|px-|py-|mx-|my-|flex|grid|gap-|text-|bg-|border|rounded|shadow|w-|h-|<div|<span|<section|<header|<p>' 2>/dev/null; then
+          VISUAL_FILES=$((VISUAL_FILES + 1))
+        fi
+      fi
+    done <<< "$CHANGED"
+
+    # If no files have visual changes, skip visual verification entirely
+    if [ "$VISUAL_FILES" -eq 0 ]; then
+      : # Data-only changes to UI files — no visual verification needed
+    else
+      local HAS_VISUAL_CHECK
+      HAS_VISUAL_CHECK=$(echo "$INPUT" | grep -ciE 'chrome|screenshot|verified in browser|visual.?verif|browser.?test|checked in browser|rendered.?correct' 2>/dev/null || true)
+      HAS_VISUAL_CHECK=${HAS_VISUAL_CHECK:-0}
+      if [ "$HAS_VISUAL_CHECK" -eq 0 ]; then
+        # Check if this is a mechanical refactor (token replacements, class renames, import changes only)
+        local IS_MECHANICAL=true
+        local UI_DIFF
+        UI_DIFF=$(git -C "$CWD" diff -- '*.tsx' '*.jsx' 2>/dev/null | grep '^[+-]' | grep -v '^[+-][+-][+-]' | grep -v '^[+-]$' || true)
+        if [ -n "$UI_DIFF" ]; then
+          # If any changed line is NOT a className, import, export, or comment change, it's structural
+          local STRUCTURAL_LINES
+          STRUCTURAL_LINES=$(echo "$UI_DIFF" | grep -vE '^\s*[+-]\s*(className=|import\s|from\s|export\s|//|/\*|\*/)' | grep -v '^[+-][[:space:]]*$' || true)
+          if [ -n "$STRUCTURAL_LINES" ]; then
+            IS_MECHANICAL=false
+          fi
+        else
+          # No diff available (untracked files) — treat as structural to be safe
           IS_MECHANICAL=false
         fi
-      else
-        # No diff available (untracked files) — treat as structural to be safe
-        IS_MECHANICAL=false
-      fi
 
-      if [ "$IS_MECHANICAL" = true ]; then
-        WARNINGS="${WARNINGS}\n${UI_FILES_CHANGED} UI file(s) changed (mechanical refactor detected — token/class replacements only). Visual verification recommended but not required."
-      else
-        echo "${UI_FILES_CHANGED} UI file(s) changed without visual verification — code that compiles can still render broken in the browser." >&2
-        echo "Open the changed pages in Chrome, confirm they render correctly, then mark the task complete." >&2
-        return 2
+        if [ "$IS_MECHANICAL" = true ]; then
+          WARNINGS="${WARNINGS}\n${VISUAL_FILES} UI file(s) changed (mechanical refactor detected — token/class replacements only). Visual verification recommended but not required."
+        else
+          echo "${VISUAL_FILES} UI file(s) changed without visual verification — code that compiles can still render broken in the browser." >&2
+          echo "Open the changed pages in Chrome, confirm they render correctly, then mark the task complete." >&2
+          return 2
+        fi
       fi
     fi
   fi

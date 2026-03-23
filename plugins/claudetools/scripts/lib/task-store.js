@@ -20,14 +20,35 @@ const DEFAULT_DATA = () => ({
 });
 
 /**
- * Resolve the .tasks/ directory relative to git root or cwd.
+ * Resolve the .tasks/ directory relative to the main git repo root.
+ * In a worktree, .git is a file containing "gitdir: <path>". We follow that
+ * pointer back to the main repo so all worktrees share a single .tasks/.
  */
 function getTasksDir(cwd) {
   cwd = cwd || process.cwd();
-  // Walk up to find git root
+  // Walk up to find .git (file or directory)
   let dir = cwd;
   while (dir !== path.dirname(dir)) {
-    if (fs.existsSync(path.join(dir, '.git'))) {
+    const gitPath = path.join(dir, '.git');
+    if (fs.existsSync(gitPath)) {
+      const stat = fs.statSync(gitPath);
+      if (stat.isFile()) {
+        // Worktree: .git is a file like "gitdir: /main-repo/.git/worktrees/name"
+        try {
+          const content = fs.readFileSync(gitPath, 'utf8').trim();
+          const match = content.match(/^gitdir:\s*(.+)$/);
+          if (match) {
+            const gitdir = match[1];
+            // Main repo root is two levels up from the gitdir path
+            // e.g. /main-repo/.git/worktrees/name -> /main-repo
+            const mainRoot = path.resolve(gitdir, '..', '..', '..');
+            return path.join(mainRoot, '.tasks');
+          }
+        } catch (e) {
+          // Fall through to use worktree dir if read fails
+        }
+      }
+      // Regular .git directory (or failed to parse worktree file)
       return path.join(dir, '.tasks');
     }
     dir = path.dirname(dir);

@@ -220,7 +220,7 @@ echo ""
 echo "=== REMOTE TELEMETRY: HOOKS ==="
 if command -v curl &>/dev/null; then
   set +e
-  hooks_response=$(curl -s --max-time 10 --fail-with-body "${TELEMETRY_BASE}/v1/hooks?days=${days}" 2>&1)
+  hooks_response=$(curl -s --max-time 10 --fail-with-body "${TELEMETRY_BASE}/v1/hooks?days=${days}&detail=true" 2>&1)
   hooks_exit=$?
   set -e
   if [ $hooks_exit -eq 0 ]; then
