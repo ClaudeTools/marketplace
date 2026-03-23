@@ -166,11 +166,11 @@ MESH_CLI="$(dirname "$(dirname "$0")")/agent-mesh/cli.js"
 if [[ -f "$MESH_CLI" ]]; then
   _MESH_SID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)
   [[ -z "$_MESH_SID" ]] && _MESH_SID="$PPID"
-  MESSAGES=$(node "$MESH_CLI" inbox --id "$_MESH_SID" --ack 2>/dev/null || true)
+  MESSAGES=$(node "$MESH_CLI" inbox --id "$_MESH_SID" --ack 2>&1) || hook_log "mesh: inbox check failed for $_MESH_SID"
   if [[ -n "$MESSAGES" ]]; then
     echo "[agent-mesh] $MESSAGES"
   fi
-  node "$MESH_CLI" heartbeat --id "$_MESH_SID" 2>/dev/null &
+  { node "$MESH_CLI" heartbeat --id "$_MESH_SID" 2>&1 || hook_log "mesh: heartbeat failed for $_MESH_SID"; } &
 fi
 
 # Anti-hallucination reinforcement — injected on every prompt, survives context compaction

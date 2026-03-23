@@ -38,6 +38,15 @@
         "hooks": [
           {
             "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-worktree-isolation.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/pre-edit-gate.sh"
           }
         ]
@@ -162,6 +171,15 @@
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/verify-subagent-independently.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/mesh-lifecycle.sh deregister",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "TeammateIdle": [
@@ -246,6 +264,15 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/mesh-lifecycle.sh register",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "SubagentStart": [
@@ -255,6 +282,15 @@
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/codebase-pilot/scripts/session-index.sh",
             "timeout": 30
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/mesh-lifecycle.sh register",
+            "timeout": 5
           }
         ]
       }
@@ -267,6 +303,15 @@
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-end-dispatcher.sh",
             "async": true,
             "timeout": 60
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/mesh-lifecycle.sh deregister",
+            "timeout": 5
           }
         ]
       }
@@ -370,6 +415,15 @@
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/codebase-pilot/scripts/session-index.sh",
             "timeout": 30
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/mesh-lifecycle.sh register",
+            "timeout": 5
           }
         ]
       }

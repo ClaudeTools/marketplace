@@ -16,6 +16,7 @@ source "$SCRIPT_DIR/validators/task-scope.sh"
 source "$SCRIPT_DIR/validators/research-backing.sh"
 source "$SCRIPT_DIR/validators/bulk-edit.sh"
 source "$SCRIPT_DIR/validators/prefer-edit-over-write.sh"
+source "$SCRIPT_DIR/validators/mesh-lock.sh"
 
 # Phase 3: Run validators in order — stop on first block
 # PreToolUse protocol: block via JSON stdout, warnings as systemMessage, exit 0
@@ -59,6 +60,7 @@ run_pretool_validator "enforce-task-scope"       validate_task_scope
 run_pretool_validator "research-backing-gate"    validate_research_backing
 run_pretool_validator "detect-bulk-edit"         validate_bulk_edit
 run_pretool_validator "prefer-edit-over-write"   validate_prefer_edit_over_write
+run_pretool_validator "mesh-lock-check"         validate_mesh_lock
 
 record_hook_outcome "pre-edit-gate" "PreToolUse" "allow" "" "" "" "$MODEL_FAMILY"
 exit 0
