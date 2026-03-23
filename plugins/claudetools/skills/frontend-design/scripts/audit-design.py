@@ -105,7 +105,7 @@ def audit_spacing(project_dir, grid):
     for ext in extensions:
         files.extend(globmod.glob(os.path.join(project_dir, "**", ext), recursive=True))
 
-    files = [f for f in files if "node_modules" not in f and ".next" not in f]
+    files = [f for f in files if not _is_build_path(f)]
 
     # Extract spacing values from Tailwind classes
     spacing_pattern = re.compile(r'(?:p|m|gap|space|w|h|top|left|right|bottom|inset)-\[(\d+)px\]')
@@ -135,7 +135,7 @@ def audit_vertical_rhythm(project_dir, grid):
     files = []
     for ext in extensions:
         files.extend(globmod.glob(os.path.join(project_dir, "**", ext), recursive=True))
-    files = [f for f in files if "node_modules" not in f and ".next" not in f]
+    files = [f for f in files if not _is_build_path(f)]
 
     # Check for off-grid line-height values in CSS/Tailwind
     lh_pattern = re.compile(r'line-height:\s*(\d+)px')
@@ -165,6 +165,12 @@ def audit_vertical_rhythm(project_dir, grid):
             print(f"  ... and {len(violations)-10} more")
     else:
         print("  All vertical spacings on baseline grid!")
+
+BUILD_DIRS = {"node_modules", ".next", "dist", "build", "out", ".svelte-kit", ".output", ".nuxt", ".vercel", ".turbo", ".cache", ".parcel-cache", "storybook-static"}
+
+def _is_build_path(filepath):
+    """Check if a filepath passes through a build/vendor directory."""
+    return any(d in filepath.split(os.sep) for d in BUILD_DIRS)
 
 def compute_completeness_score(project_dir, globals_path=None):
     """Compute a 0-100 design system completeness score."""
@@ -199,7 +205,7 @@ def compute_completeness_score(project_dir, globals_path=None):
     raw_count = 0
     for ext in ["*.tsx", "*.jsx"]:
         for f in globmod.glob(os.path.join(project_dir, "**", ext), recursive=True):
-            if "node_modules" in f: continue
+            if _is_build_path(f): continue
             try:
                 with open(f) as fh:
                     raw_count += len(re.findall(r'(?:text-white|bg-white|bg-black|text-black|bg-gray-|text-gray-)', fh.read()))
@@ -221,7 +227,7 @@ def compute_completeness_score(project_dir, globals_path=None):
     img_with_alt = 0
     for ext in ["*.tsx", "*.jsx"]:
         for f in globmod.glob(os.path.join(project_dir, "**", ext), recursive=True):
-            if "node_modules" in f: continue
+            if _is_build_path(f): continue
             try:
                 with open(f) as fh:
                     content = fh.read()
@@ -246,7 +252,7 @@ def compute_completeness_score(project_dir, globals_path=None):
     total_components = 0
     for ext in ["*.tsx", "*.jsx"]:
         for f in globmod.glob(os.path.join(project_dir, "**", ext), recursive=True):
-            if "node_modules" in f or ".next" in f: continue
+            if _is_build_path(f): continue
             total_components += 1
             try:
                 lines = sum(1 for _ in open(f))
@@ -267,7 +273,7 @@ def compute_completeness_score(project_dir, globals_path=None):
     ap_categories = {"space-*": 0, "hardcoded colors": 0, "localStorage": 0, "inline styles": 0, "!important": 0, "fetch-in-useEffect": 0}
     for ext in ["*.tsx", "*.jsx", "*.ts", "*.js"]:
         for f in globmod.glob(os.path.join(project_dir, "**", ext), recursive=True):
-            if "node_modules" in f or ".next" in f: continue
+            if _is_build_path(f): continue
             try:
                 with open(f) as fh:
                     content = fh.read()
@@ -338,7 +344,7 @@ def audit_responsive(project_dir):
     files = []
     for ext in extensions:
         files.extend(globmod.glob(os.path.join(project_dir, "**", ext), recursive=True))
-    files = [f for f in files if "node_modules" not in f and ".next" not in f]
+    files = [f for f in files if not _is_build_path(f)]
 
     small_fonts = 0
     for filepath in files:
@@ -352,7 +358,7 @@ def audit_responsive(project_dir):
     # Check for viewport meta in HTML files
     html_files = globmod.glob(os.path.join(project_dir, "**", "*.html"), recursive=True)
     html_files += globmod.glob(os.path.join(project_dir, "**/layout.tsx"), recursive=True)
-    html_files = [f for f in html_files if "node_modules" not in f]
+    html_files = [f for f in html_files if not _is_build_path(f)]
     has_viewport = False
     for filepath in html_files:
         try:
@@ -374,7 +380,7 @@ def audit_state_handling(project_dir):
     files = []
     for ext in extensions:
         files.extend(globmod.glob(os.path.join(project_dir, "**", ext), recursive=True))
-    files = [f for f in files if "node_modules" not in f and ".next" not in f]
+    files = [f for f in files if not _is_build_path(f)]
 
     total_components = 0
     components_with_states = 0

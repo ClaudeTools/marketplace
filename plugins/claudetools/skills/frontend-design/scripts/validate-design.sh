@@ -52,8 +52,13 @@ fi
 
 # Check 2: Font count (distinct font families, not weight variants)
 FONT_FAMILIES=""
-# Extract distinct font-family values from CSS
-CSS_FAMILIES=$(grep -rh 'font-family:' "$PROJECT_DIR" --include="*.css" 2>/dev/null | grep -v node_modules | grep -v '@font-face' | sed -n "s/.*font-family:\s*['\"]\\?\([^;'\"]*\\).*/\\1/p" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | sort -u)
+# Extract distinct font-family values from CSS usage declarations only.
+# @font-face blocks declare fonts but don't represent additional families in use.
+# Use awk to skip any font-family: inside @font-face blocks.
+CSS_FAMILIES=$(find "$PROJECT_DIR" -name "*.css" -not -path "*/node_modules/*" -print0 2>/dev/null | \
+  xargs -0 awk '/@font-face/{ff=1} /\}/{if(ff) ff=0} !ff && /font-family:/{print}' 2>/dev/null | \
+  sed -n "s/.*font-family:\s*['\"]\\?\([^;'\"]*\\).*/\\1/p" | tr ',' '\n' | \
+  sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | sort -u)
 [ -n "$CSS_FAMILIES" ] && FONT_FAMILIES="$CSS_FAMILIES"
 # Extract distinct next/font constructor names (e.g., Inter, Playfair_Display)
 NEXT_FONTS=$(grep -roh "from ['\"]next/font/[^'\"]*['\"]" "$PROJECT_DIR" --include="*.tsx" --include="*.ts" --include="*.js" 2>/dev/null | grep -v node_modules | sed "s/.*next\/font\/[a-z]*['\"]//;s/['\"]//g" | sort -u)
@@ -74,7 +79,9 @@ fi
 
 # Check 3: Accessibility - images without alt
 MISSING_ALT=$(grep -rn '<img\b' "$PROJECT_DIR" --include="*.tsx" --include="*.jsx" --include="*.vue" --include="*.svelte" --include="*.astro" 2>/dev/null | grep -v node_modules | grep -cv 'alt=' || echo 0)
-if [ "$MISSING_ALT" -gt 0 ]; then
+MISSING_ALT=$(echo "$MISSING_ALT" | tr -d '[:space:]')
+MISSING_ALT=${MISSING_ALT:-0}
+if [ "$MISSING_ALT" -gt 0 ] 2>/dev/null; then
   check WARN "Image alt text" "$MISSING_ALT <img> tags without alt attribute"
 else
   check PASS "Image alt text" ""
@@ -96,16 +103,19 @@ fi
 
 # Check 5: space-* classes (anti-pattern)
 SPACE_CLASSES=$(grep -rn 'space-[xy]-' "$PROJECT_DIR" --include="*.tsx" --include="*.jsx" --include="*.vue" --include="*.svelte" --include="*.astro" 2>/dev/null | grep -vc node_modules || echo 0)
-if [ "$SPACE_CLASSES" -gt 0 ]; then
+SPACE_CLASSES=$(echo "$SPACE_CLASSES" | tr -d '[:space:]')
+SPACE_CLASSES=${SPACE_CLASSES:-0}
+if [ "$SPACE_CLASSES" -gt 0 ] 2>/dev/null; then
   check WARN "Spacing" "$SPACE_CLASSES uses of space-* classes — prefer gap classes"
 else
   check PASS "Spacing patterns" ""
 fi
 
 # Check 6: localStorage usage (exclude build output dirs)
-LOCALSTORAGE=$(grep -rn 'localStorage' "$PROJECT_DIR" --include="*.tsx" --include="*.ts" --include="*.jsx" --include="*.js" --include="*.vue" --include="*.svelte" --include="*.astro" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next --exclude-dir=build --exclude-dir=out --exclude-dir=.svelte-kit 2>/dev/null | grep -vc '// *ignore\|\.test\.' || echo 0)
+LOCALSTORAGE=$(grep -rn 'localStorage' "$PROJECT_DIR" --include="*.tsx" --include="*.ts" --include="*.jsx" --include="*.js" --include="*.vue" --include="*.svelte" --include="*.astro" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next --exclude-dir=build --exclude-dir=out --exclude-dir=.svelte-kit --exclude-dir=.output --exclude-dir=.nuxt --exclude-dir=.vercel --exclude-dir=.turbo --exclude-dir=.cache --exclude-dir=.parcel-cache --exclude-dir=storybook-static 2>/dev/null | grep -vc '// *ignore\|\.test\.\|\.spec\.\|\.stories\.' || echo 0)
 LOCALSTORAGE=$(echo "$LOCALSTORAGE" | tr -d '[:space:]')
-if [ "$LOCALSTORAGE" -gt 0 ]; then
+LOCALSTORAGE=${LOCALSTORAGE:-0}
+if [ "$LOCALSTORAGE" -gt 0 ] 2>/dev/null; then
   check WARN "localStorage" "$LOCALSTORAGE uses of localStorage — consider server-side persistence"
 else
   check PASS "No localStorage" ""
