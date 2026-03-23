@@ -7,5 +7,12 @@ export interface IndexStats {
     totalImports: number;
     durationMs: number;
 }
+export interface SingleFileStats {
+    symbols: number;
+    imports: number;
+    durationMs: number;
+    deleted: boolean;
+}
+export declare function indexSingleFile(projectRoot: string, relPath: string): SingleFileStats;
 export declare function indexProject(projectRoot: string): IndexStats;
 //# sourceMappingURL=indexer.d.ts.map

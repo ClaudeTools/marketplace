@@ -27,6 +27,105 @@ const FILE_PATTERNS = [
     "**/*.cjs",
     "**/*.py",
 ];
+export function indexSingleFile(projectRoot, relPath) {
+    const startTime = Date.now();
+    const db = openDatabase(projectRoot);
+    // Wait up to 3s for concurrent writes (e.g. rapid sequential edits)
+    db.pragma("busy_timeout = 3000");
+    const stmts = prepareStatements(db);
+    const absPath = path.join(projectRoot, relPath);
+    const fileExists = fs.existsSync(absPath);
+    let totalSymbols = 0;
+    let totalImports = 0;
+    let deleted = false;
+    const reindex = db.transaction(() => {
+        const existing = stmts.getFile.get(relPath);
+        if (!fileExists) {
+            // File was deleted — remove from index
+            if (existing) {
+                stmts.deleteSymbolsByFile.run(existing.id);
+                stmts.deleteImportsByFile.run(existing.id);
+                stmts.deleteFile.run(relPath);
+                deleted = true;
+            }
+            return;
+        }
+        const stat = fs.statSync(absPath);
+        const mtimeMs = Math.floor(stat.mtimeMs);
+        const size = stat.size;
+        const language = detectLanguage(relPath);
+        if (!language)
+            return;
+        const source = fs.readFileSync(absPath, "utf-8");
+        let result;
+        try {
+            result = parseFile(source, language);
+        }
+        catch {
+            return;
+        }
+        // Upsert file record
+        if (existing) {
+            stmts.deleteSymbolsByFile.run(existing.id);
+            stmts.deleteImportsByFile.run(existing.id);
+            stmts.updateFile.run({
+                path: relPath,
+                language,
+                size,
+                modified_at: mtimeMs,
+                hash: null,
+            });
+        }
+        else {
+            stmts.insertFile.run({
+                path: relPath,
+                language,
+                size,
+                modified_at: mtimeMs,
+                hash: null,
+            });
+        }
+        const fileRow = stmts.getFile.get(relPath);
+        const fileId = fileRow.id;
+        // Insert symbols (with parent tracking)
+        const insertSymbolTree = (symbols, parentId) => {
+            for (const sym of symbols) {
+                const info = stmts.insertSymbol.run({
+                    file_id: fileId,
+                    name: sym.name,
+                    kind: sym.kind,
+                    line: sym.line,
+                    end_line: sym.endLine,
+                    signature: sym.signature,
+                    exported: sym.exported ? 1 : 0,
+                    parent_id: parentId,
+                });
+                totalSymbols++;
+                if (sym.children.length > 0) {
+                    insertSymbolTree(sym.children, Number(info.lastInsertRowid));
+                }
+            }
+        };
+        insertSymbolTree(result.symbols, null);
+        // Insert imports
+        for (const imp of result.imports) {
+            stmts.insertImport.run({
+                file_id: fileId,
+                source: imp.source,
+                symbols: imp.symbols.length > 0 ? imp.symbols.join(", ") : null,
+            });
+            totalImports++;
+        }
+    });
+    reindex();
+    db.close();
+    return {
+        symbols: totalSymbols,
+        imports: totalImports,
+        durationMs: Date.now() - startTime,
+        deleted,
+    };
+}
 export function indexProject(projectRoot) {
     const startTime = Date.now();
     const db = openDatabase(projectRoot);

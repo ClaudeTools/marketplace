@@ -8,11 +8,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PILOT_DIR="$(dirname "$SCRIPT_DIR")"
 CLI="$PILOT_DIR/dist/cli.js"
 
+# Read stdin unconditionally (before LOG_SCRIPT check — stdin must be consumed first)
+INPUT=$(cat 2>/dev/null || true)
+
 # Source shared logging and telemetry
 PLUGIN_ROOT="$(dirname "$PILOT_DIR")"
 LOG_SCRIPT="$PLUGIN_ROOT/scripts/hook-log.sh"
 if [[ -f "$LOG_SCRIPT" ]]; then
-  INPUT=$(cat 2>/dev/null || true)
   source "$LOG_SCRIPT"
 fi
 TELEM_SCRIPT="$PLUGIN_ROOT/scripts/lib/telemetry.sh"
@@ -52,14 +54,35 @@ if [[ "$SOURCE_COUNT" -eq 0 ]]; then
   exit 0
 fi
 
+# Persist session_id for CLI tools to find the reads file
+SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)
+if [ -z "$SESSION_ID" ]; then
+  SESSION_ID="$$"
+fi
+INDEX_DIR="$PROJECT_ROOT/.codeindex"
+mkdir -p "$INDEX_DIR" 2>/dev/null || true
+# Determine hook event type
+HOOK_EVENT=$(echo "$INPUT" | jq -r '.hook_event_name // empty' 2>/dev/null || true)
+
+# On SessionStart: fresh session-ids file (prevents unbounded growth across sessions)
+# On SubagentStart: append to existing file
+if [ "$HOOK_EVENT" = "SessionStart" ] || [ "$HOOK_EVENT" = "WorktreeCreate" ]; then
+  echo "$SESSION_ID" > "$INDEX_DIR/session-ids" 2>/dev/null || true
+  : > "/tmp/codebase-pilot-reads-${SESSION_ID}.jsonl" 2>/dev/null || true
+else
+  if ! grep -qxF "$SESSION_ID" "$INDEX_DIR/session-ids" 2>/dev/null; then
+    echo "$SESSION_ID" >> "$INDEX_DIR/session-ids" 2>/dev/null || true
+  fi
+fi
+
 # Run the indexer (output goes to stderr)
-local _idx_start=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)} 2>/dev/null || true
+_idx_start=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)} 2>/dev/null || true
 if ! node "$CLI" index "$PROJECT_ROOT" 2>/dev/null; then
   hook_log "codebase-pilot: indexing FAILED for $PROJECT_ROOT" 2>/dev/null || true
   emit_event "codebase-pilot" "index_failed" "error" 2>/dev/null || true
 else
-  local _idx_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)} 2>/dev/null || true
-  local _idx_ms=$(awk "BEGIN {printf \"%d\", ($_idx_end - $_idx_start) * 1000}" 2>/dev/null || echo 0)
+  _idx_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)} 2>/dev/null || true
+  _idx_ms=$(awk "BEGIN {printf \"%d\", ($_idx_end - $_idx_start) * 1000}" 2>/dev/null || echo 0)
   emit_event "codebase-pilot" "index_success" "allow" "$_idx_ms" 2>/dev/null || true
 fi
 

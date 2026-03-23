@@ -89,7 +89,7 @@ bash ${CLAUDE_SKILL_DIR}/scripts/gather-context.sh .
 ```
 Extract the TYPECHECK, TEST, and BUILD commands. Use these exact commands in verification blocks.
 
-Then use codebase-pilot MCP tools to gather structural context: call `project_map` for the project overview. For any file paths or function/class names mentioned in the raw input, call `find_symbol` to locate them and `file_overview` to understand their structure. Use REAL paths from these tools in your output — do not invent file paths.
+Then use the codebase-pilot CLI to gather structural context: run `node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js map` for the project overview. For any file paths or function/class names mentioned in the raw input, run `node .../cli.js find-symbol "<name>"` to locate them and `node .../cli.js file-overview "<path>"` to understand their structure. Use REAL paths from these commands in your output — do not invent file paths.
 
 **Step 2: Read prompting references**
 Read these files for the XML template, transformation rules, and examples:

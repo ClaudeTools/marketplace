@@ -24,15 +24,15 @@ Create a new task with enriched context. The raw input goes through a lightweigh
 
 1. **Parse** the remaining arguments as the raw input.
 
-2. **Gather codebase context** using codebase-pilot MCP tools before any triage or enrichment:
-   - Call `project_map` to get the project overview (languages, structure, entry points, key exports)
-   - For any file paths mentioned in the input, call `file_overview` and `related_files` to verify they exist and understand their structure
-   - For any function/class names mentioned, call `find_symbol` to locate them
+2. **Gather codebase context** using codebase-pilot CLI before any triage or enrichment:
+   - Run `node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js map` to get the project overview (languages, structure, entry points, key exports)
+   - For any file paths mentioned in the input, run `node .../cli.js file-overview "<path>"` and `node .../cli.js related-files "<path>"` to verify they exist and understand their structure
+   - For any function/class names mentioned, run `node .../cli.js find-symbol "<name>"` to locate them
    - Store this context as `{CODEBASE_CONTEXT}` — it will be passed to the enrichment agent or used directly for triage
 
 3. **Resolve and triage** the input:
    - If the input is a file path, read it. If it's a URL, fetch it. The resolved content is what you assess.
-   - **Already detailed** (comprehensive spec, structured prompt with requirements/verification/approach, implementation guide with code examples): Skip the enrichment agent. However, still verify file references against `{CODEBASE_CONTEXT}` — replace any invented paths with real ones discovered from codebase-pilot. Go straight to step 5 (task creation).
+   - **Already detailed** (comprehensive spec, structured prompt with requirements/verification/approach, implementation guide with code examples): Skip the enrichment agent. However, still verify file references against `{CODEBASE_CONTEXT}` — replace any invented paths with real ones discovered from the codebase-pilot CLI. Go straight to step 5 (task creation).
    - **Needs enrichment** (vague, rough notes, missing context, incomplete): Proceed to step 4.
 
 4. **Enrich** (only if triage says input needs it) — Spawn a general-purpose Agent to analyse the source material and produce a detailed task description. The agent prompt:
@@ -56,7 +56,7 @@ Create a new task with enriched context. The raw input goes through a lightweigh
    >    - **Comprehensive source**: Preserve all detail — code examples, schemas, exact content. Your job is to structure it for task execution, not to summarise it.
    >    - **Rough source**: Research the codebase, fill gaps, add concrete requirements, think through the approach.
    >    - **Mixed**: Preserve detailed sections, enrich vague ones.
-   > 3. **Use codebase-pilot MCP tools for file discovery.** You have access to: project_map (project overview), find_symbol (locate functions/classes by name), file_overview (list symbols in a file), related_files (find imports/dependents). Use REAL paths from these tools — do not invent file paths. Call find_symbol and file_overview to verify any paths before including them in task content.
+   > 3. **Use codebase-pilot CLI for file discovery.** Run via Bash: `node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js <command>`. Commands: `map` (project overview), `find-symbol "<name>"` (locate functions/classes by name), `file-overview "<path>"` (list symbols in a file), `related-files "<path>"` (find imports/dependents). Use REAL paths from these commands — do not invent file paths. Run `find-symbol` and `file-overview` to verify any paths before including them in task content.
    > 4. If the input references external libraries, services, or concepts that need research, use WebSearch to gather what's needed.
    > 5. Think through the approach: what are the concrete steps? What are the dependencies? What could go wrong?
    > 6. Identify relevant codebase context: existing patterns to follow, files that will be touched, conventions to respect.

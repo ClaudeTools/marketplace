@@ -1,17 +1,17 @@
 #!/usr/bin/env node
-import { indexProject } from "./indexer.js";
-import { handleProjectMap, handleFindSymbol, handleFindUsages, handleFileOverview, handleRelatedFiles, } from "./mcp-server.js";
-import { startMcpServer } from "./mcp-server.js";
+import { indexProject, indexSingleFile } from "./indexer.js";
+import { handleProjectMap, handleFindSymbol, handleFindUsages, handleFileOverview, handleRelatedFiles, handleNavigate, } from "./handlers.js";
 const USAGE_TEXT = `Usage: codebase-pilot <command> [options]
 
 Commands:
   index [path]             Index a project (default: current directory)
+  index-file <path>        Re-index a single file (incremental)
   map [path]               Generate project map
   find-symbol <name>       Search for a symbol by name
   find-usages <name>       Find all files that import a symbol
   file-overview <path>     List all symbols defined in a file
   related-files <path>     Find files connected via imports
-  mcp-server               Start MCP server (stdio)
+  navigate <query>         Query-driven search across symbols, paths, and imports
 
 Options:
   --kind <kind>            Filter find-symbol by kind
@@ -88,16 +88,39 @@ function runRelatedFiles() {
     setProjectEnv();
     process.stdout.write(handleRelatedFiles({ path: filePath }) + "\n");
 }
-function runMcpServer() {
-    setProjectEnv();
-    startMcpServer().catch((err) => {
-        process.stderr.write("MCP server error: " + String(err) + "\n");
+function runIndexFile() {
+    const filePath = getArg(1);
+    if (!filePath) {
+        process.stderr.write("Error: file path required\n" + USAGE_TEXT + "\n");
         process.exit(1);
-    });
+    }
+    const projectRoot = getProjectRoot();
+    if (!process.env.CODEBASE_PILOT_PROJECT_ROOT) {
+        process.env.CODEBASE_PILOT_PROJECT_ROOT = projectRoot;
+    }
+    const stats = indexSingleFile(projectRoot, filePath);
+    if (stats.deleted) {
+        process.stderr.write(`Removed ${filePath} from index (${stats.durationMs}ms)\n`);
+    }
+    else {
+        process.stderr.write(`Re-indexed ${filePath}: ${stats.symbols} symbols, ${stats.imports} imports (${stats.durationMs}ms)\n`);
+    }
+}
+function runNavigate() {
+    const query = getArg(1);
+    if (!query) {
+        process.stderr.write("Error: query required\n" + USAGE_TEXT + "\n");
+        process.exit(1);
+    }
+    setProjectEnv();
+    process.stdout.write(handleNavigate({ query }) + "\n");
 }
 switch (command) {
     case "index":
         runIndex();
+        break;
+    case "index-file":
+        runIndexFile();
         break;
     case "map":
         runMap();
@@ -114,8 +137,8 @@ switch (command) {
     case "related-files":
         runRelatedFiles();
         break;
-    case "mcp-server":
-        runMcpServer();
+    case "navigate":
+        runNavigate();
         break;
     default:
         if (command) {

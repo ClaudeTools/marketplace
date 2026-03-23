@@ -28,6 +28,9 @@ export interface RelatedRow {
     direction: string;
 }
 export declare function escapeLike(input: string): string;
+export declare function handleNavigate(args: {
+    query: string;
+}): string;
 export declare function handleProjectMap(): string;
 export declare function handleFindSymbol(args: {
     name: string;
@@ -42,5 +45,4 @@ export declare function handleFileOverview(args: {
 export declare function handleRelatedFiles(args: {
     path: string;
 }): string;
-export declare function startMcpServer(): Promise<void>;
-//# sourceMappingURL=mcp-server.d.ts.map
+//# sourceMappingURL=handlers.d.ts.map

@@ -1,31 +1,30 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
 import { appendFileSync, mkdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { getDbPath } from "./db.js";
 import { generateProjectMap } from "./project-map.js";
 
-// --- Structured logging for MCP server ---
+// ESM __dirname polyfill
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// --- Structured logging ---
 const LOG_DIR = path.resolve(
   process.env.CLAUDE_PLUGIN_ROOT ?? path.join(__dirname, "../.."),
   "logs"
 );
-const MCP_LOG = path.join(LOG_DIR, "mcp.log");
+const LOG_FILE = path.join(LOG_DIR, "codebase-pilot.log");
 
-function mcpLog(event: string, detail: string, durationMs?: number): void {
+function log(event: string, detail: string, durationMs?: number): void {
   try {
     mkdirSync(LOG_DIR, { recursive: true });
     const ts = new Date().toISOString();
     const dur = durationMs !== undefined ? ` duration=${durationMs}ms` : "";
-    appendFileSync(MCP_LOG, `${ts} | codebase-pilot | ${event} | ${detail}${dur}\n`);
+    appendFileSync(LOG_FILE, `${ts} | codebase-pilot | ${event} | ${detail}${dur}\n`);
   } catch {
-    // Never let logging break the server
+    // Never let logging break queries
   }
 }
 
@@ -66,6 +65,224 @@ export function escapeLike(input: string): string {
   return input.replace(/[%_\\]/g, "\\$&");
 }
 
+// --- Session context tracking (4-state model) ---
+interface FileContext {
+  lastReadTs: number;
+  lastEditTs: number;  // 0 = never edited
+}
+
+interface SessionContext {
+  files: Map<string, FileContext>;
+  lastCompactTs: number;
+}
+
+function loadSessionContext(): SessionContext {
+  const files = new Map<string, FileContext>();
+  let lastCompactTs = 0;
+  try {
+    const projectRoot = getProjectRoot();
+    const sessionIdsPath = path.join(projectRoot, ".codeindex", "session-ids");
+    if (!fs.existsSync(sessionIdsPath)) return { files, lastCompactTs };
+    const sessionIds = fs.readFileSync(sessionIdsPath, "utf-8")
+      .split("\n")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    if (sessionIds.length === 0) return { files, lastCompactTs };
+
+    for (const sessionId of sessionIds) {
+      const readsFile = `/tmp/codebase-pilot-reads-${sessionId}.jsonl`;
+      if (!fs.existsSync(readsFile)) continue;
+      const lines = fs.readFileSync(readsFile, "utf-8").split("\n");
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const entry = JSON.parse(line);
+          // Compact event (global)
+          if (entry.event === "compact" && entry.ts > lastCompactTs) {
+            lastCompactTs = entry.ts;
+            continue;
+          }
+          if (!entry.path) continue;
+          const existing = files.get(entry.path) ?? { lastReadTs: 0, lastEditTs: 0 };
+          if (entry.event === "edit") {
+            if (entry.ts > existing.lastEditTs) existing.lastEditTs = entry.ts;
+          } else {
+            // Read event (or legacy entry without event field)
+            if (entry.ts > existing.lastReadTs) existing.lastReadTs = entry.ts;
+          }
+          files.set(entry.path, existing);
+        } catch { /* skip malformed lines */ }
+      }
+    }
+  } catch { /* never break on context tracking errors */ }
+  return { files, lastCompactTs };
+}
+
+function findFileContext(filePath: string, ctx: SessionContext): FileContext | null {
+  // Direct match
+  const direct = ctx.files.get(filePath);
+  if (direct && direct.lastReadTs > 0) return direct;
+  // Suffix match — reads store absolute paths, index stores relative
+  for (const [p, entry] of ctx.files) {
+    if (entry.lastReadTs === 0) continue;
+    if (p.endsWith(`/${filePath}`) || filePath.endsWith(`/${p}`)) return entry;
+  }
+  return null;
+}
+
+function contextTag(filePath: string, ctx: SessionContext): string {
+  const entry = findFileContext(filePath, ctx);
+  if (!entry) return "";
+
+  // Was read before compaction and not re-read since?
+  if (ctx.lastCompactTs > 0 && entry.lastReadTs < ctx.lastCompactTs) {
+    return " [was read]";
+  }
+
+  // Check file mtime against read timestamp
+  try {
+    const projectRoot = getProjectRoot();
+    const absPath = path.join(projectRoot, filePath);
+    const mtime = Math.floor(fs.statSync(absPath).mtimeMs / 1000);
+
+    if (mtime <= entry.lastReadTs) {
+      return " [in context]";  // unchanged since last read
+    }
+
+    // File modified since last read — was it Claude's edit?
+    if (entry.lastEditTs > 0 && entry.lastEditTs >= entry.lastReadTs) {
+      return " [in context, edited]";  // Claude edited, knows the changes
+    }
+
+    return "";  // externally modified — needs re-read
+  } catch {
+    return "";  // file may be deleted or inaccessible
+  }
+}
+
+// --- Navigate: query-driven multi-channel search ---
+const NAVIGATE_STOPWORDS = new Set([
+  "a", "an", "the", "is", "it", "in", "on", "at", "to", "for", "of", "and",
+  "or", "not", "but", "if", "do", "be", "as", "by", "so", "no", "up", "we",
+  "my", "me", "he", "all", "can", "has", "had", "was", "are", "its", "get",
+  "set", "new", "use", "how", "who", "why", "what", "when", "from", "with",
+  "this", "that", "will", "been", "have", "each", "make", "like", "then",
+  "them", "than", "into", "only", "also", "just", "more", "some", "file",
+  "code", "find", "show", "list",
+]);
+
+export function handleNavigate(args: { query: string }): string {
+  const db = getDatabase();
+  if (!db) return dbErrorMessage();
+
+  // Tokenize query (split camelCase, PascalCase, snake_case, paths)
+  const tokens = args.query
+    .replace(/([a-z])([A-Z])/g, "$1 $2")  // camelCase → camel Case
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")  // HTTPServer → HTTP Server
+    .toLowerCase()
+    .split(/[\s_\-./]+/)
+    .filter((t) => t.length >= 2 && !NAVIGATE_STOPWORDS.has(t));
+
+  if (tokens.length === 0) {
+    return "No searchable terms in query. Try more specific keywords.";
+  }
+
+  const sessionCtx = loadSessionContext();
+  const scores = new Map<string, { score: number; symbols: string[] }>();
+
+  for (const token of tokens) {
+    // Channel 1: FTS5 symbol name match
+    const sanitized = token.replace(/[^\w*]/g, "");
+    if (sanitized) {
+      const ftsQuery = `${sanitized}*`;
+      try {
+        const symbolHits = db
+          .prepare(
+            `SELECT s.name, s.kind, s.line, f.path,
+                    CASE WHEN LOWER(s.name) = ? THEN 15 ELSE 10 END as pts
+             FROM symbols_fts fts
+             JOIN symbols s ON fts.rowid = s.id
+             JOIN files f ON s.file_id = f.id
+             WHERE symbols_fts MATCH ?
+             LIMIT 20`
+          )
+          .all(token, ftsQuery) as { name: string; kind: string; line: number; path: string; pts: number }[];
+
+        for (const hit of symbolHits) {
+          const entry = scores.get(hit.path) ?? { score: 0, symbols: [] };
+          entry.score += hit.pts;
+          const desc = `${hit.kind} ${hit.name}:${hit.line}`;
+          if (!entry.symbols.includes(desc)) entry.symbols.push(desc);
+          scores.set(hit.path, entry);
+        }
+      } catch { /* skip FTS errors */ }
+    }
+
+    // Channel 2: File path substring match
+    try {
+      const safeToken = escapeLike(token);
+      const pathHits = db
+        .prepare(
+          `SELECT DISTINCT path FROM files WHERE path LIKE ? ESCAPE '\\' LIMIT 15`
+        )
+        .all(`%${safeToken}%`) as { path: string }[];
+
+      for (const hit of pathHits) {
+        const entry = scores.get(hit.path) ?? { score: 0, symbols: [] };
+        entry.score += 3;
+        scores.set(hit.path, entry);
+      }
+    } catch { /* skip */ }
+
+    // Channel 3: Import source match
+    try {
+      const safeToken = escapeLike(token);
+      const importHits = db
+        .prepare(
+          `SELECT DISTINCT f.path FROM imports i
+           JOIN files f ON i.file_id = f.id
+           WHERE i.source LIKE ? ESCAPE '\\'
+           LIMIT 15`
+        )
+        .all(`%${safeToken}%`) as { path: string }[];
+
+      for (const hit of importHits) {
+        const entry = scores.get(hit.path) ?? { score: 0, symbols: [] };
+        entry.score += 1;
+        scores.set(hit.path, entry);
+      }
+    } catch { /* skip */ }
+  }
+
+  if (scores.size === 0) {
+    return `No results for "${args.query}"`;
+  }
+
+  // Context bonus: files already in context are "free" to reference — boost their ranking
+  for (const [filePath, data] of scores) {
+    const tag = contextTag(filePath, sessionCtx);
+    if (tag === " [in context]" || tag === " [in context, edited]") {
+      data.score += 5;
+    } else if (tag === " [was read]") {
+      data.score += 2;
+    }
+  }
+
+  // Rank by score descending, take top 15
+  const ranked = [...scores.entries()]
+    .sort((a, b) => b[1].score - a[1].score)
+    .slice(0, 15);
+
+  const lines: string[] = [`Navigate: "${args.query}" — ${ranked.length} result(s)`, ""];
+  for (const [filePath, data] of ranked) {
+    const tag = contextTag(filePath, sessionCtx);
+    const syms = data.symbols.length > 0 ? ` — ${data.symbols.join(", ")}` : "";
+    lines.push(`  [${data.score}] ${filePath}${tag}${syms}`);
+  }
+
+  return lines.join("\n");
+}
+
 function getProjectRoot(): string {
   return process.env.CODEBASE_PILOT_PROJECT_ROOT ?? process.cwd();
 }
@@ -74,26 +291,6 @@ function getProjectRoot(): string {
 let cachedDb: Database.Database | null = null;
 let cachedDbPath: string | null = null;
 
-// Simple LRU cache for query results (1-minute TTL, max 50 entries)
-const queryCache = new Map<string, { result: string; expires: number }>();
-const CACHE_TTL_MS = 60_000;
-const CACHE_MAX_SIZE = 50;
-
-function cachedQuery(key: string, fn: () => string): string {
-  const now = Date.now();
-  const cached = queryCache.get(key);
-  if (cached && cached.expires > now) {
-    return cached.result;
-  }
-  const result = fn();
-  // Evict oldest entries if at capacity
-  if (queryCache.size >= CACHE_MAX_SIZE) {
-    const firstKey = queryCache.keys().next().value;
-    if (firstKey !== undefined) queryCache.delete(firstKey);
-  }
-  queryCache.set(key, { result, expires: now + CACHE_TTL_MS });
-  return result;
-}
 
 function getDatabase(): Database.Database | null {
   const projectRoot = getProjectRoot();
@@ -120,22 +317,16 @@ function getDatabase(): Database.Database | null {
 
   try {
     cachedDb = new Database(dbPath, { readonly: true });
+    cachedDb.pragma("busy_timeout = 1000");
     cachedDbPath = dbPath;
     return cachedDb;
   } catch (err) {
     process.stderr.write(`codebase-pilot: failed to open database: ${err}\n`);
-    mcpLog("db_error", `failed to open database: ${err}`);
+    log("db_error", `failed to open database: ${err}`);
     return null;
   }
 }
 
-function closeDatabase(): void {
-  if (cachedDb) {
-    try { cachedDb.close(); } catch { /* ignore */ }
-    cachedDb = null;
-    cachedDbPath = null;
-  }
-}
 
 function dbErrorMessage(): string {
   const projectRoot = getProjectRoot();
@@ -146,92 +337,6 @@ function dbErrorMessage(): string {
   return `Codebase index could not be opened. It may be corrupt or locked. Run \`codebase-pilot index\` to rebuild.`;
 }
 
-const TOOLS = [
-  {
-    name: "project_map",
-    description:
-      "Returns a structured overview of the project: name, languages, directory structure, entry points, and key exports. Use this to orient yourself in an unfamiliar codebase.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {},
-    },
-  },
-  {
-    name: "find_symbol",
-    description:
-      "Search for symbols (functions, classes, types, interfaces, variables) by name. Returns file path, line number, kind, and signature for each match. Supports prefix matching.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
-        name: {
-          type: "string",
-          description: "Symbol name to search for (supports prefix matching)",
-        },
-        kind: {
-          type: "string",
-          description:
-            "Optional filter by kind: function, class, interface, type, enum, variable, method, property",
-          enum: [
-            "function",
-            "class",
-            "interface",
-            "type",
-            "enum",
-            "variable",
-            "method",
-            "property",
-          ],
-        },
-      },
-      required: ["name"],
-    },
-  },
-  {
-    name: "find_usages",
-    description:
-      "Find all files that import a given symbol name. Shows which files depend on a symbol and what they import from its source.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
-        name: {
-          type: "string",
-          description: "Symbol name to find usages of",
-        },
-      },
-      required: ["name"],
-    },
-  },
-  {
-    name: "file_overview",
-    description:
-      "List all symbols defined in a specific file, grouped by kind. Shows structure without source code — useful for understanding a file before reading it.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
-        path: {
-          type: "string",
-          description: "Relative file path from project root",
-        },
-      },
-      required: ["path"],
-    },
-  },
-  {
-    name: "related_files",
-    description:
-      "Find files connected to a given file via import relationships — both files it imports from and files that import from it.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
-        path: {
-          type: "string",
-          description: "Relative file path from project root",
-        },
-      },
-      required: ["path"],
-    },
-  },
-];
 
 export function handleProjectMap(): string {
   const projectRoot = getProjectRoot();
@@ -241,11 +346,6 @@ export function handleProjectMap(): string {
 }
 
 export function handleFindSymbol(args: { name: string; kind?: string }): string {
-  const cacheKey = `find_symbol:${args.name}:${args.kind ?? ""}`;
-  return cachedQuery(cacheKey, () => handleFindSymbolUncached(args));
-}
-
-function handleFindSymbolUncached(args: { name: string; kind?: string }): string {
   const db = getDatabase();
   if (!db) return dbErrorMessage();
 
@@ -293,24 +393,21 @@ function handleFindSymbolUncached(args: { name: string; kind?: string }): string
     return `No symbols found matching "${args.name}"`;
   }
 
+  const sessionCtx = loadSessionContext();
   const lines: string[] = [`Found ${results.length} match(es) for "${args.name}":`];
   for (const r of results) {
     const exported = r.exported ? " [exported]" : "";
     const parent = r.parent_name ? ` in ${r.parent_name}` : "";
     const sig = r.signature ? ` — ${r.signature}` : "";
+    const tag = contextTag(r.path, sessionCtx);
     lines.push(`  ${r.kind} ${r.name}${parent}${exported}`);
-    lines.push(`    ${r.path}:${r.line}${sig}`);
+    lines.push(`    ${r.path}:${r.line}${tag}${sig}`);
   }
 
   return lines.join("\n");
 }
 
 export function handleFindUsages(args: { name: string }): string {
-  const cacheKey = `find_usages:${args.name}`;
-  return cachedQuery(cacheKey, () => handleFindUsagesUncached(args));
-}
-
-function handleFindUsagesUncached(args: { name: string }): string {
   const db = getDatabase();
   if (!db) return dbErrorMessage();
 
@@ -366,8 +463,10 @@ export function handleFileOverview(args: { path: string }): string {
     .prepare("SELECT source, symbols FROM imports WHERE file_id = ? ORDER BY source")
     .all(file.id) as { source: string; symbols: string | null }[];
 
+  const sessionCtx = loadSessionContext();
+  const tag = contextTag(args.path, sessionCtx);
   const lines: string[] = [
-    `## ${args.path}`,
+    `## ${args.path}${tag}`,
     `Language: ${file.language} | Size: ${file.size} bytes | ${symbols.length} symbols`,
     "",
   ];
@@ -395,11 +494,6 @@ export function handleFileOverview(args: { path: string }): string {
 }
 
 export function handleRelatedFiles(args: { path: string }): string {
-  const cacheKey = `related_files:${args.path}`;
-  return cachedQuery(cacheKey, () => handleRelatedFilesUncached(args));
-}
-
-function handleRelatedFilesUncached(args: { path: string }): string {
   const db = getDatabase();
   if (!db) return dbErrorMessage();
 
@@ -440,6 +534,7 @@ function handleRelatedFilesUncached(args: { path: string }): string {
       `./${safeFullBasename}`
     ) as RelatedRow[];
 
+  const sessionCtx = loadSessionContext();
   const lines: string[] = [`## Related files for ${args.path}`, ""];
 
   if (importsFrom.length > 0) {
@@ -455,7 +550,8 @@ function handleRelatedFilesUncached(args: { path: string }): string {
     lines.push("### Imported by");
     for (const dep of importedBy) {
       const syms = dep.symbols ? ` { ${dep.symbols} }` : "";
-      lines.push(`  ${dep.path}${syms}`);
+      const tag = contextTag(dep.path, sessionCtx);
+      lines.push(`  ${dep.path}${tag}${syms}`);
     }
     lines.push("");
   }
@@ -467,103 +563,3 @@ function handleRelatedFilesUncached(args: { path: string }): string {
   return lines.join("\n");
 }
 
-export async function startMcpServer(): Promise<void> {
-  // --- Process-level error handling ---
-  // Ignore SIGPIPE — standard for stdio servers (client may disconnect)
-  process.on("SIGPIPE", () => { /* intentionally ignored — standard for stdio servers */ });
-
-  // Catch unhandled errors to prevent process crashes
-  process.on("uncaughtException", (err) => {
-    process.stderr.write(`codebase-pilot: uncaught exception: ${err}\n`);
-  });
-  process.on("unhandledRejection", (reason) => {
-    process.stderr.write(`codebase-pilot: unhandled rejection: ${reason}\n`);
-  });
-
-  // Handle stdout write errors (EPIPE when client disconnects)
-  process.stdout.on("error", (err) => {
-    if ((err as NodeJS.ErrnoException).code === "EPIPE") {
-      closeDatabase();
-      process.exit(0);
-    }
-    process.stderr.write(`codebase-pilot: stdout error: ${err}\n`);
-  });
-
-  // Graceful shutdown on signals
-  const shutdown = () => {
-    closeDatabase();
-    process.exit(0);
-  };
-  process.on("SIGINT", shutdown);
-  process.on("SIGTERM", shutdown);
-
-  // --- Server setup ---
-  const server = new Server(
-    { name: "codebase-pilot", version: "1.0.0" },
-    { capabilities: { tools: {} } }
-  );
-
-  // Transport lifecycle handlers
-  server.onerror = (err) => {
-    process.stderr.write(`codebase-pilot: server error: ${err}\n`);
-  };
-  server.onclose = () => {
-    closeDatabase();
-    process.exit(0);
-  };
-
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: TOOLS,
-  }));
-
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const { name, arguments: args } = request.params;
-    const callStart = Date.now();
-
-    try {
-      let result: string;
-      switch (name) {
-        case "project_map":
-          result = handleProjectMap();
-          break;
-        case "find_symbol":
-          result = handleFindSymbol(args as { name: string; kind?: string });
-          break;
-        case "find_usages":
-          result = handleFindUsages(args as { name: string });
-          break;
-        case "file_overview":
-          result = handleFileOverview(args as { path: string });
-          break;
-        case "related_files":
-          result = handleRelatedFiles(args as { path: string });
-          break;
-        default:
-          result = `Unknown tool: ${name}`;
-      }
-
-      mcpLog("tool_call", `tool=${name} status=ok`, Date.now() - callStart);
-      return {
-        content: [{ type: "text", text: result }],
-      };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      mcpLog("tool_error", `tool=${name} error=${message.slice(0, 200)}`, Date.now() - callStart);
-      return {
-        content: [{ type: "text", text: `Error: ${message}` }],
-        isError: true,
-      };
-    }
-  });
-
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  mcpLog("startup", `project=${getProjectRoot()} pid=${process.pid}`);
-
-  // Detect client disconnect via stdin EOF
-  process.stdin.on("end", () => {
-    mcpLog("shutdown", "stdin EOF (client disconnected)");
-    closeDatabase();
-    process.exit(0);
-  });
-}
