@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# enforce-worktree-isolation.sh — Block ALL tools on main worktree
-# PreToolUse hook — forces EnterWorktree before any work
-# Exit 0 always — blocking done via JSON stdout
+# enforce-worktree-isolation.sh — Block destructive tools on main worktree
+# PreToolUse:Edit|Write|Bash|NotebookEdit — forces EnterWorktree before mutations
+# Read/Grep/Glob are allowed so Claude can research before entering a worktree.
+# Exit 0 always — denial done via JSON stdout
 
 set -euo pipefail
 
@@ -14,9 +15,9 @@ if is_worktree; then
   exit 0
 fi
 
-# Not in a worktree — block.
-jq -n --arg reason "Call EnterWorktree first. All tools are blocked on the main worktree." \
-  '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"block","permissionDecisionReason":$reason}}'
+# Not in a worktree — deny destructive tools.
+jq -n --arg reason "Call EnterWorktree first. File modifications and commands are blocked on the main worktree." \
+  '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":$reason}}'
 
-hook_log "enforce-worktree-isolation: blocked on main worktree"
+hook_log "enforce-worktree-isolation: denied on main worktree"
 exit 0
