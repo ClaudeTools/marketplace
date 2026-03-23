@@ -1,5 +1,9 @@
 const MAX_LINES = 100;
 const MAX_BODY_BYTES = 1_000_000; // 1MB
+const MAX_FEEDBACK_BYTES = 51_200; // 50KB per feedback report
+const MAX_FEEDBACK_ITEMS = 50;
+const VALID_CATEGORIES = ['false_positive', 'bug', 'missing_feature', 'workflow_gap', 'praise', 'suggestion'];
+const VALID_SEVERITIES = ['critical', 'high', 'medium', 'low'];
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 const RATE_LIMIT_MAX = 10;
 
@@ -177,6 +181,188 @@ async function handleGetHooks(request, env) {
   }
 }
 
+function validateFeedbackReport(obj) {
+  if (!obj || typeof obj !== 'object') return 'body must be a JSON object';
+  if (typeof obj.ts !== 'string') return 'ts is required (ISO 8601 string)';
+  if (typeof obj.install_id !== 'string') return 'install_id is required';
+  if (!obj.items || !Array.isArray(obj.items)) return 'items array is required';
+  if (obj.items.length === 0) return 'items must contain at least one finding';
+  if (obj.items.length > MAX_FEEDBACK_ITEMS) return `items limited to ${MAX_FEEDBACK_ITEMS}`;
+
+  for (let i = 0; i < obj.items.length; i++) {
+    const item = obj.items[i];
+    if (!item.category || !VALID_CATEGORIES.includes(item.category)) {
+      return `items[${i}].category must be one of: ${VALID_CATEGORIES.join(', ')}`;
+    }
+    if (typeof item.component !== 'string' || !item.component) {
+      return `items[${i}].component is required`;
+    }
+    if (typeof item.title !== 'string' || !item.title) {
+      return `items[${i}].title is required`;
+    }
+    if (item.severity && !VALID_SEVERITIES.includes(item.severity)) {
+      return `items[${i}].severity must be one of: ${VALID_SEVERITIES.join(', ')}`;
+    }
+  }
+  return null;
+}
+
+async function handlePostFeedback(request, env) {
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  if (!checkRateLimit(ip)) {
+    return jsonResponse({ error: 'Rate limit exceeded' }, 429);
+  }
+
+  const contentLength = parseInt(request.headers.get('Content-Length') || '0', 10);
+  if (contentLength > MAX_FEEDBACK_BYTES) {
+    return jsonResponse({ error: 'Body too large (50KB max)' }, 413);
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ error: 'Invalid JSON' }, 400);
+  }
+
+  const validationError = validateFeedbackReport(body);
+  if (validationError) {
+    return jsonResponse({ error: validationError }, 400);
+  }
+
+  try {
+    // Insert the report
+    const reportResult = await env.TELEMETRY_DB.prepare(
+      `INSERT INTO feedback_reports (ts, install_id, plugin_version, project_type, project_size, overall_grade, model_family, os, review_type, report_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+      .bind(
+        body.ts,
+        body.install_id,
+        body.plugin_version ?? null,
+        body.project_type ?? null,
+        body.project_size ?? null,
+        body.overall_grade ?? null,
+        body.model_family ?? null,
+        body.os ?? null,
+        body.review_type ?? 'manual',
+        JSON.stringify(body.report_summary ?? {})
+      )
+      .run();
+
+    const reportId = reportResult.meta?.last_row_id;
+    if (!reportId) {
+      return jsonResponse({ error: 'Failed to create report' }, 500);
+    }
+
+    // Batch insert items
+    const itemStmt = env.TELEMETRY_DB.prepare(
+      `INSERT INTO feedback_items (report_id, category, component, severity, title, description)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    );
+    const itemBatch = body.items.map((item) =>
+      itemStmt.bind(
+        reportId,
+        item.category,
+        item.component,
+        item.severity ?? null,
+        item.title.slice(0, 200),
+        (item.description ?? '').slice(0, 500)
+      )
+    );
+    await env.TELEMETRY_DB.batch(itemBatch);
+
+    return jsonResponse({ report_id: reportId, items_accepted: body.items.length });
+  } catch (err) {
+    return jsonResponse({ error: 'Database error', detail: err.message }, 500);
+  }
+}
+
+async function handleGetFeedback(request, env) {
+  const url = new URL(request.url);
+  const days = parseInt(url.searchParams.get('days') || '90', 10);
+  const safeDays = Number.isFinite(days) && days > 0 && days <= 365 ? days : 90;
+  const component = url.searchParams.get('component') || null;
+  const category = url.searchParams.get('category') || null;
+
+  try {
+    // Summary stats
+    const [summaryResult, gradeResult] = await env.TELEMETRY_DB.batch([
+      env.TELEMETRY_DB.prepare(
+        `SELECT COUNT(*) as total_reports,
+                COUNT(DISTINCT install_id) as unique_installs
+         FROM feedback_reports
+         WHERE ts >= datetime('now', ? || ' days')`
+      ).bind(`-${safeDays}`),
+      env.TELEMETRY_DB.prepare(
+        `SELECT overall_grade, COUNT(*) as count
+         FROM feedback_reports
+         WHERE ts >= datetime('now', ? || ' days') AND overall_grade IS NOT NULL
+         GROUP BY overall_grade
+         ORDER BY count DESC`
+      ).bind(`-${safeDays}`),
+    ]);
+
+    // Top issues — optionally filtered by component/category
+    let issueQuery = `
+      SELECT fi.category, fi.component, fi.severity, fi.title,
+             COUNT(*) as report_count,
+             COUNT(DISTINCT fr.install_id) as unique_installs
+      FROM feedback_items fi
+      JOIN feedback_reports fr ON fi.report_id = fr.id
+      WHERE fr.ts >= datetime('now', ? || ' days')`;
+    const binds = [`-${safeDays}`];
+
+    if (component) {
+      issueQuery += ' AND fi.component = ?';
+      binds.push(component);
+    }
+    if (category) {
+      issueQuery += ' AND fi.category = ?';
+      binds.push(category);
+    }
+
+    issueQuery += `
+      GROUP BY fi.category, fi.component, fi.title
+      ORDER BY report_count DESC
+      LIMIT 30`;
+
+    let stmt = env.TELEMETRY_DB.prepare(issueQuery);
+    for (const val of binds) {
+      stmt = stmt.bind(val);
+    }
+    const issueResult = await stmt.all();
+
+    // Component average grades
+    const componentResult = await env.TELEMETRY_DB.prepare(
+      `SELECT fi.component,
+              COUNT(DISTINCT fi.report_id) as review_count,
+              SUM(CASE WHEN fi.category = 'false_positive' THEN 1 ELSE 0 END) as false_positives,
+              SUM(CASE WHEN fi.category = 'bug' THEN 1 ELSE 0 END) as bugs,
+              SUM(CASE WHEN fi.category = 'missing_feature' THEN 1 ELSE 0 END) as feature_requests,
+              SUM(CASE WHEN fi.category = 'praise' THEN 1 ELSE 0 END) as praise_count
+       FROM feedback_items fi
+       JOIN feedback_reports fr ON fi.report_id = fr.id
+       WHERE fr.ts >= datetime('now', ? || ' days')
+       GROUP BY fi.component
+       ORDER BY review_count DESC
+       LIMIT 30`
+    )
+      .bind(`-${safeDays}`)
+      .all();
+
+    return jsonResponse({
+      window_days: safeDays,
+      summary: summaryResult.results[0] ?? { total_reports: 0, unique_installs: 0 },
+      grade_distribution: gradeResult.results,
+      top_issues: issueResult.results,
+      component_breakdown: componentResult.results,
+    });
+  } catch (err) {
+    return jsonResponse({ error: 'Database error', detail: err.message }, 500);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const method = request.method.toUpperCase();
@@ -199,6 +385,14 @@ export default {
 
     if (path === '/v1/hooks' && method === 'GET') {
       return handleGetHooks(request, env);
+    }
+
+    if (path === '/v1/feedback' && method === 'POST') {
+      return handlePostFeedback(request, env);
+    }
+
+    if (path === '/v1/feedback' && method === 'GET') {
+      return handleGetFeedback(request, env);
     }
 
     return jsonResponse({ error: 'Not found' }, 404);
