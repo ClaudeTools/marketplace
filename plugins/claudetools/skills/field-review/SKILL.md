@@ -1,13 +1,13 @@
 ---
 name: field-review
-description: Generate a field review of the claudetools PLUGIN itself — NOT a code review. Produces a structured feedback report on how claudetools hooks, validators, skills, and guardrails are performing in the current project. Covers false positives, bugs, missing features, workflow gaps, and what works well. Submits sanitized findings to cross-install telemetry for improvement prioritization. Use when the user says review claudetools, plugin feedback, field report, how is claudetools working, audit the plugin, claudetools field review, plugin review, or rate claudetools.
+description: Field review of the claudetools plugin itself (NOT code review). Reports on hooks, validators, skills performance — false positives, bugs, gaps, praise. Use when the user says claudetools review, plugin feedback, field report, audit the plugin, rate claudetools.
 argument-hint: [--days N] [--submit]
 allowed-tools: Read, Bash, Grep, Glob, Write
 metadata:
   author: Owen Innes
   version: 1.0.0
   category: meta
-  tags: [feedback, plugin-review, telemetry, quality, field-report]
+  tags: [feedback, plugin-review, telemetry, field-report]
 ---
 
 # claudetools Plugin Field Review
