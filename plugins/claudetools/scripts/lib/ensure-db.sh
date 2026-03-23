@@ -384,6 +384,6 @@ SQL
   sqlite3 "$METRICS_DB" "UPDATE threshold_overrides SET current_value = 5000, default_value = 5000, min_bound = 2000, max_bound = 10000 WHERE metric_name = 'read_block_lines' AND current_value <= 2000;" 2>/dev/null || true
 
   # Enable WAL mode and busy timeout for concurrent write safety
-  sqlite3 "$METRICS_DB" "PRAGMA journal_mode=WAL;" 2>/dev/null || true
-  sqlite3 "$METRICS_DB" "PRAGMA busy_timeout=5000;" 2>/dev/null || true
+  sqlite3 "$METRICS_DB" "PRAGMA journal_mode=WAL;" >/dev/null 2>/dev/null || true
+  sqlite3 "$METRICS_DB" "PRAGMA busy_timeout=5000;" >/dev/null 2>/dev/null || true
 }

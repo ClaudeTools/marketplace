@@ -60,8 +60,8 @@ BASENAME=$(basename "$FILE_PATH")
 # Thresholds — hardcoded to prevent DB/threshold lookup failures
 # Previous versions had bugs where get_threshold returned empty/wrong values
 # causing 4-line files to be blocked. Hardcode for reliability.
-WARN_THRESHOLD=1000
-BLOCK_THRESHOLD=5000
+WARN_THRESHOLD=2000
+BLOCK_THRESHOLD=10000
 
 if [ "$LINE_COUNT" -gt "$BLOCK_THRESHOLD" ]; then
   BLOCKED="File '${BASENAME}' is ${LINE_COUNT} lines — too large to read in full.
