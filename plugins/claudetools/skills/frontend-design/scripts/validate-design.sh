@@ -50,14 +50,26 @@ else
   check WARN "Design tokens" "No globals.css found"
 fi
 
-# Check 2: Font count
-FONT_COUNT=$(grep -rh "fontFamily\|font-family\|next/font\|@fontsource" "$PROJECT_DIR" --include="*.tsx" --include="*.ts" --include="*.css" --include="*.js" --include="*.vue" --include="*.svelte" --include="*.astro" 2>/dev/null | grep -v node_modules | sort -u | wc -l || echo 0)
+# Check 2: Font count (distinct font families, not weight variants)
+FONT_FAMILIES=""
+# Extract distinct font-family values from CSS
+CSS_FAMILIES=$(grep -rh 'font-family' "$PROJECT_DIR" --include="*.css" 2>/dev/null | grep -v node_modules | sed -n "s/.*font-family:\s*['\"]\\?\([^;'\"]*\\).*/\\1/p" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | sort -u)
+[ -n "$CSS_FAMILIES" ] && FONT_FAMILIES="$CSS_FAMILIES"
+# Extract distinct next/font constructor names (e.g., Inter, Playfair_Display)
+NEXT_FONTS=$(grep -roh "from ['\"]next/font/[^'\"]*['\"]" "$PROJECT_DIR" --include="*.tsx" --include="*.ts" --include="*.js" 2>/dev/null | grep -v node_modules | sed "s/.*next\/font\/[a-z]*['\"]//;s/['\"]//g" | sort -u)
+# Extract @fontsource package names
+FONTSOURCE=$(grep -roh "@fontsource[a-z-]*/[a-z-]*" "$PROJECT_DIR" --include="*.tsx" --include="*.ts" --include="*.js" 2>/dev/null | grep -v node_modules | sed 's/@fontsource[a-z-]*\///' | sort -u)
+# Also extract import names: import { Inter, Roboto } from 'next/font/google'
+NEXT_IMPORTS=$(grep -rhE "import\s*\{[^}]+\}\s*from\s*['\"]next/font" "$PROJECT_DIR" --include="*.tsx" --include="*.ts" --include="*.js" 2>/dev/null | grep -v node_modules | sed "s/.*import\s*{\s*//;s/\s*}.*//" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sort -u)
+ALL_FONTS=$(printf '%s\n%s\n%s\n%s' "$CSS_FAMILIES" "$NEXT_FONTS" "$FONTSOURCE" "$NEXT_IMPORTS" | grep -v '^$' | grep -v 'sans-serif\|serif\|monospace\|system-ui\|inherit' | sort -u)
+FONT_COUNT=$(echo "$ALL_FONTS" | grep -c . || echo 0)
+FONT_COUNT=$(echo "$FONT_COUNT" | tr -d '[:space:]')
 if [ "$FONT_COUNT" -le 2 ]; then
   check PASS "Font families" ""
 elif [ "$FONT_COUNT" -le 3 ]; then
-  check WARN "Font families" "$FONT_COUNT font declarations — max 2 recommended"
+  check WARN "Font families" "$FONT_COUNT distinct font families — max 2 recommended"
 else
-  check FAIL "Font families" "$FONT_COUNT font declarations — use max 2 font families"
+  check FAIL "Font families" "$FONT_COUNT distinct font families — use max 2 font families"
 fi
 
 # Check 3: Accessibility - images without alt
@@ -90,24 +102,27 @@ else
   check PASS "Spacing patterns" ""
 fi
 
-# Check 6: localStorage usage
-LOCALSTORAGE=$(grep -rn 'localStorage' "$PROJECT_DIR" --include="*.tsx" --include="*.ts" --include="*.jsx" --include="*.js" --include="*.vue" --include="*.svelte" --include="*.astro" 2>/dev/null | grep -v node_modules | grep -vc '// *ignore\|\.test\.' || echo 0)
+# Check 6: localStorage usage (exclude build output dirs)
+LOCALSTORAGE=$(grep -rn 'localStorage' "$PROJECT_DIR" --include="*.tsx" --include="*.ts" --include="*.jsx" --include="*.js" --include="*.vue" --include="*.svelte" --include="*.astro" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next --exclude-dir=build --exclude-dir=out --exclude-dir=.svelte-kit 2>/dev/null | grep -vc '// *ignore\|\.test\.' || echo 0)
+LOCALSTORAGE=$(echo "$LOCALSTORAGE" | tr -d '[:space:]')
 if [ "$LOCALSTORAGE" -gt 0 ]; then
   check FAIL "localStorage" "$LOCALSTORAGE uses of localStorage — use a database for persistence"
 else
   check PASS "No localStorage" ""
 fi
 
-# Check 7: fetch inside useEffect (anti-pattern)
-FETCH_EFFECT=$(grep -rPzn 'useEffect\s*\([^)]*\{[^}]*fetch\(' "$PROJECT_DIR" --include="*.tsx" --include="*.ts" --include="*.jsx" --include="*.js" 2>/dev/null | grep -vc node_modules || echo 0)
+# Check 7: fetch inside useEffect (anti-pattern, exclude build output dirs)
+FETCH_EFFECT=$(grep -rlP 'useEffect\s*\([^)]*\{[^}]*fetch\(' "$PROJECT_DIR" --include="*.tsx" --include="*.ts" --include="*.jsx" --include="*.js" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next --exclude-dir=build --exclude-dir=out --exclude-dir=.svelte-kit 2>/dev/null | wc -l | tr -d '[:space:]')
+FETCH_EFFECT=${FETCH_EFFECT:-0}
 if [ "$FETCH_EFFECT" -gt 0 ]; then
-  check WARN "Data fetching" "fetch() inside useEffect detected — use SWR or pass data from RSC"
+  check WARN "Data fetching" "fetch() inside useEffect detected in $FETCH_EFFECT file(s) — use SWR or pass data from RSC"
 else
   check PASS "Data fetching" ""
 fi
 
-# Check 8: Emoji as icons
-EMOJI_ICONS=$(grep -rPn '[\x{1F300}-\x{1F9FF}]' "$PROJECT_DIR" --include="*.tsx" --include="*.jsx" --include="*.vue" --include="*.svelte" --include="*.astro" 2>/dev/null | grep -vc node_modules || echo 0)
+# Check 8: Emoji as icons (exclude build output dirs)
+EMOJI_ICONS=$(grep -rPn '[\x{1F300}-\x{1F9FF}]' "$PROJECT_DIR" --include="*.tsx" --include="*.jsx" --include="*.vue" --include="*.svelte" --include="*.astro" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next --exclude-dir=build --exclude-dir=out --exclude-dir=.svelte-kit 2>/dev/null | wc -l | tr -d '[:space:]')
+EMOJI_ICONS=${EMOJI_ICONS:-0}
 if [ "$EMOJI_ICONS" -gt 2 ]; then
   check WARN "Icons" "$EMOJI_ICONS potential emoji-as-icon uses — use Lucide or similar icon library"
 else

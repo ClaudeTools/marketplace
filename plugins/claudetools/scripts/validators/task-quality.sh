@@ -137,9 +137,29 @@ validate_task_quality() {
     HAS_VISUAL_CHECK=$(echo "$INPUT" | grep -ciE 'chrome|screenshot|verified in browser|visual.?verif|browser.?test|checked in browser|rendered.?correct' 2>/dev/null || true)
     HAS_VISUAL_CHECK=${HAS_VISUAL_CHECK:-0}
     if [ "$HAS_VISUAL_CHECK" -eq 0 ]; then
-      echo "${UI_FILES_CHANGED} UI file(s) changed without visual verification — code that compiles can still render broken in the browser." >&2
-      echo "Open the changed pages in Chrome, confirm they render correctly, then mark the task complete." >&2
-      return 2
+      # Check if this is a mechanical refactor (token replacements, class renames, import changes only)
+      local IS_MECHANICAL=true
+      local UI_DIFF
+      UI_DIFF=$(git -C "$CWD" diff -- '*.tsx' '*.jsx' 2>/dev/null | grep '^[+-]' | grep -v '^[+-][+-][+-]' | grep -v '^[+-]$' || true)
+      if [ -n "$UI_DIFF" ]; then
+        # If any changed line is NOT a className, import, export, or comment change, it's structural
+        local STRUCTURAL_LINES
+        STRUCTURAL_LINES=$(echo "$UI_DIFF" | grep -vE '^\s*[+-]\s*(className=|import\s|from\s|export\s|//|/\*|\*/)' | grep -v '^[+-][[:space:]]*$' || true)
+        if [ -n "$STRUCTURAL_LINES" ]; then
+          IS_MECHANICAL=false
+        fi
+      else
+        # No diff available (untracked files) — treat as structural to be safe
+        IS_MECHANICAL=false
+      fi
+
+      if [ "$IS_MECHANICAL" = true ]; then
+        WARNINGS="${WARNINGS}\n${UI_FILES_CHANGED} UI file(s) changed (mechanical refactor detected — token/class replacements only). Visual verification recommended but not required."
+      else
+        echo "${UI_FILES_CHANGED} UI file(s) changed without visual verification — code that compiles can still render broken in the browser." >&2
+        echo "Open the changed pages in Chrome, confirm they render correctly, then mark the task complete." >&2
+        return 2
+      fi
     fi
   fi
 

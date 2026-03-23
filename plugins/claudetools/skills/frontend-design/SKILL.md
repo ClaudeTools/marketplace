@@ -41,7 +41,67 @@ All paths: `${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/<name>`
 
 ---
 
-## Design-First Workflow
+## Mode Detection
+
+Before starting work, determine which mode applies. Evaluate in order, stop at first match:
+
+| Condition | Mode |
+|-----------|------|
+| User asks to audit, fix, maintain, update, or improve existing pages AND project has `.frontend-design/system.md` or an established design system | **Maintain Mode** |
+| User asks to build new pages/features, redesign, or create from scratch | **Build Mode** |
+| Project has no design system (new or unstyled) | **Build Mode** |
+
+### Build Mode
+Full creative workflow: intent exploration, domain exploration, theme selection, design brief, signature elements. Creative principles (swap test, signature test, sameness-is-failure) apply. Use when building something new where differentiation matters.
+
+### Maintain Mode
+Consistency IS the goal. Pages should look the same — that's the system working correctly. Do not apply swap test or signature test. Do not flag consistency as "defaulting." For a production app with an established design, matching existing patterns is the correct outcome.
+
+In Maintain Mode, replace creative principles with:
+- **Token consistency check** — all values reference system.md tokens
+- **Pattern reuse check** — new components follow existing patterns
+- **Regression check** — no existing functionality broken
+
+---
+
+## Audit Mode (Maintain Mode)
+
+When the user asks to audit, fix design issues, or improve design consistency in an existing project:
+
+### Step 1: Run Diagnostics
+Run all three scripts in sequence:
+```bash
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/extract-system.py --dir .
+bash ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/validate-design.sh .
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/audit-design.py --dir .
+```
+
+### Step 2: Collate Results
+Combine all outputs into a single prioritized report. Order by severity: FAIL > WARN > INFO.
+
+### Step 3: Categorize Issues
+Classify each issue as auto-fixable or manual:
+
+**Auto-fixable** (safe to batch-fix):
+- Hardcoded colors → replace with semantic tokens
+- `space-*` classes → replace with `gap` classes
+- Missing `alt` text → add descriptive alt attributes
+
+**Manual** (requires design decisions):
+- Contrast failures → needs color adjustment decisions
+- Missing state handling → requires component logic
+- Large components → requires architectural decisions
+- Responsive issues → requires layout strategy
+
+### Step 4: Present Report
+Show the user: total issue count, breakdown by category, which are auto-fixable vs manual. Offer to auto-fix eligible issues.
+
+### Step 5: Re-audit After Fixes
+After applying fixes, re-run the audit scripts. The audit history in `.frontend-design/audit-history.json` shows the score delta — confirm improvement.
+
+---
+
+## Design-First Workflow (Build Mode)
 
 Before writing any code, establish design direction.
 
@@ -293,6 +353,8 @@ Do not present work you have not visually verified.
 
 ## Craft Checks
 
+**These checks apply in Build Mode only.** In Maintain Mode, replace with the consistency checks from Mode Detection above.
+
 Run these before presenting any output to the user.
 
 **Swap test:** If you swapped your typeface, layout, or palette for the most common alternatives and nothing felt different — you defaulted. Iterate.
@@ -370,7 +432,8 @@ Lead with work. State suggestions with reasoning. Write a postamble of 2-4 sente
 1. Run `validate-design.sh <project-dir>` — all PASS
 2. Run `audit-design.py --dir <project-dir>` — contrast passes, spacing on grid
 3. Preview loop completed — screenshotted and evaluated against design brief
-4. Craft checks passed — swap, squint, signature, token tests
+4. **(Build Mode only)** Craft checks passed — swap, squint, signature, token tests
 5. All data states handled — loading, empty, error, populated
 6. No raw color values — everything via semantic tokens
 7. system.md saved — design decisions persist for future sessions
+8. **(Maintain Mode only)** Audit history shows improvement — score delta is positive or zero
