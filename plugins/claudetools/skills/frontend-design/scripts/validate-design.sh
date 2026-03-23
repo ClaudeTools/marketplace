@@ -187,6 +187,53 @@ else
   check PASS "Touch targets" ""
 fi
 
+# Check 12: Focus outline removal without focus-visible replacement (WCAG 2.4.7)
+# outline-none removes keyboard focus indicators — must be paired with focus-visible:ring or similar
+OUTLINE_NONE_FILES=$(grep -rl 'outline-none\|outline:\s*none\|outline:\s*0' "$PROJECT_DIR" --include="*.tsx" --include="*.jsx" --include="*.vue" --include="*.svelte" --include="*.css" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next --exclude-dir=build --exclude-dir=out 2>/dev/null || true)
+FOCUS_MISSING=0
+if [ -n "$OUTLINE_NONE_FILES" ]; then
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    if ! grep -q 'focus-visible:\|focus:ring\|focus-visible:ring\|:focus-visible' "$f" 2>/dev/null; then
+      FOCUS_MISSING=$((FOCUS_MISSING + 1))
+    fi
+  done <<< "$OUTLINE_NONE_FILES"
+fi
+if [ "$FOCUS_MISSING" -gt 0 ] 2>/dev/null; then
+  check WARN "Focus indicators" "$FOCUS_MISSING file(s) remove outline without focus-visible replacement — keyboard users lose focus visibility (WCAG 2.4.7)"
+else
+  check PASS "Focus indicators" ""
+fi
+
+# Check 13: Multiple h1 tags (SEO + accessibility)
+H1_COUNT=$(grep -rn '<h1\b\|<Heading.*level.*1\|<Typography.*variant.*h1' "$PROJECT_DIR" --include="*.tsx" --include="*.jsx" --include="*.vue" --include="*.svelte" --include="*.astro" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next --exclude-dir=build --exclude-dir=out 2>/dev/null | wc -l | tr -d '[:space:]')
+H1_COUNT=${H1_COUNT:-0}
+if [ "$H1_COUNT" -gt 3 ] 2>/dev/null; then
+  check WARN "Heading hierarchy" "$H1_COUNT <h1> tags across project — most pages should have exactly one h1"
+else
+  check PASS "Heading hierarchy" ""
+fi
+
+# Check 14: Images without width/height (Cumulative Layout Shift)
+IMG_NO_DIMS=$(grep -rn '<img\b' "$PROJECT_DIR" --include="*.tsx" --include="*.jsx" --include="*.vue" --include="*.svelte" --include="*.astro" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next --exclude-dir=build --exclude-dir=out 2>/dev/null | grep -v 'width=\|height=\|fill\b\|<Image\b' | wc -l | tr -d '[:space:]')
+IMG_NO_DIMS=${IMG_NO_DIMS:-0}
+if [ "$IMG_NO_DIMS" -gt 0 ] 2>/dev/null; then
+  check WARN "Image dimensions" "$IMG_NO_DIMS <img> tag(s) without width/height — causes layout shift (CLS)"
+else
+  check PASS "Image dimensions" ""
+fi
+
+# Check 15: Animations without prefers-reduced-motion (WCAG 2.3.3)
+HAS_ANIMATIONS=$(grep -rn 'animate-\|transition-\|@keyframes\|animation:' "$PROJECT_DIR" --include="*.tsx" --include="*.jsx" --include="*.css" --include="*.vue" --include="*.svelte" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next --exclude-dir=build --exclude-dir=out 2>/dev/null | wc -l | tr -d '[:space:]')
+HAS_ANIMATIONS=${HAS_ANIMATIONS:-0}
+HAS_MOTION_QUERY=$(grep -rn 'prefers-reduced-motion\|motion-safe:\|motion-reduce:' "$PROJECT_DIR" --include="*.tsx" --include="*.jsx" --include="*.css" --include="*.vue" --include="*.svelte" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next --exclude-dir=build --exclude-dir=out 2>/dev/null | wc -l | tr -d '[:space:]')
+HAS_MOTION_QUERY=${HAS_MOTION_QUERY:-0}
+if [ "$HAS_ANIMATIONS" -gt 5 ] && [ "$HAS_MOTION_QUERY" -eq 0 ] 2>/dev/null; then
+  check WARN "Motion accessibility" "$HAS_ANIMATIONS animation/transition uses but no prefers-reduced-motion support — add motion-safe: or @media query (WCAG 2.3.3)"
+else
+  check PASS "Motion accessibility" ""
+fi
+
 echo ""
 echo "Summary: $PASS passed, $WARN warnings, $FAIL failures"
 exit 0

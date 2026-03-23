@@ -515,6 +515,100 @@ def audit_dark_mode(globals_path):
         if len(missing) > 10:
             print(f"    ... and {len(missing) - 10} more")
 
+def audit_class_conflicts(project_dir):
+    """Detect conflicting Tailwind utility classes in the same className string."""
+    print("\nTailwind Class Conflict Audit:")
+
+    extensions = ["*.tsx", "*.jsx", "*.vue", "*.svelte", "*.astro"]
+    files = []
+    for ext in extensions:
+        files.extend(globmod.glob(os.path.join(project_dir, "**", ext), recursive=True))
+    files = [f for f in files if not _is_build_path(f)]
+
+    # Define conflict groups — utilities in the same group with different values conflict
+    conflict_prefixes = [
+        "mt-", "mb-", "ml-", "mr-", "mx-", "my-", "m-",
+        "pt-", "pb-", "pl-", "pr-", "px-", "py-", "p-",
+        "w-", "h-", "min-w-", "min-h-", "max-w-", "max-h-",
+        "text-", "bg-", "border-", "rounded-",
+        "gap-", "gap-x-", "gap-y-",
+        "flex-", "grid-cols-", "grid-rows-",
+        "font-", "leading-", "tracking-",
+        "z-", "opacity-",
+    ]
+
+    # Extract className strings and check for conflicts
+    classname_re = re.compile(r'(?:className|class)=[\"\']([^\"\']+)[\"\']|(?:className|class)=\{[`\"]([^`\"]+)[`\"]\}')
+    conflicts = []
+
+    for filepath in files:
+        try:
+            with open(filepath) as f:
+                for i, line in enumerate(f, 1):
+                    for match in classname_re.finditer(line):
+                        classes = (match.group(1) or match.group(2) or "").split()
+                        # Group classes by prefix
+                        for prefix in conflict_prefixes:
+                            matching = [c for c in classes if c.startswith(prefix) and not c.startswith(prefix[:-1] + "[")] # exclude arbitrary values
+                            # Filter out responsive prefixes (sm:mt-4 and mt-2 aren't conflicts)
+                            matching = [c for c in matching if ":" not in c]
+                            if len(matching) > 1:
+                                conflicts.append(f"  {os.path.basename(filepath)}:{i}: {' '.join(matching)}")
+        except (IOError, UnicodeDecodeError):
+            continue
+
+    if conflicts:
+        print(f"  {len(conflicts)} conflict(s) found:")
+        for c in conflicts[:15]:
+            print(c)
+        if len(conflicts) > 15:
+            print(f"  ... and {len(conflicts) - 15} more")
+    else:
+        print("  No conflicting utility classes detected")
+
+def audit_zindex(project_dir):
+    """Audit z-index usage for sprawl and consistency."""
+    print("\nZ-Index Audit:")
+
+    extensions = ["*.tsx", "*.jsx", "*.vue", "*.svelte", "*.astro", "*.css"]
+    files = []
+    for ext in extensions:
+        files.extend(globmod.glob(os.path.join(project_dir, "**", ext), recursive=True))
+    files = [f for f in files if not _is_build_path(f)]
+
+    zindex_values = {}  # value -> list of file:line
+    zindex_re = re.compile(r'z-(\d+)\b|z-\[(\d+)\]|z-index:\s*(\d+)')
+
+    for filepath in files:
+        try:
+            with open(filepath) as f:
+                for i, line in enumerate(f, 1):
+                    for match in zindex_re.finditer(line):
+                        val = match.group(1) or match.group(2) or match.group(3)
+                        if val:
+                            key = int(val)
+                            if key not in zindex_values:
+                                zindex_values[key] = []
+                            zindex_values[key].append(f"{os.path.basename(filepath)}:{i}")
+        except (IOError, UnicodeDecodeError):
+            continue
+
+    total_uses = sum(len(v) for v in zindex_values.values())
+    distinct = len(zindex_values)
+
+    if distinct == 0:
+        print("  No z-index usage found")
+        return
+
+    print(f"  {total_uses} total uses across {distinct} distinct values: {sorted(zindex_values.keys())}")
+
+    if distinct > 6:
+        print(f"  WARNING: {distinct} distinct z-index values is excessive — define a z-index scale in your design tokens")
+    elif distinct > 3:
+        print(f"  Consider documenting your z-index scale for consistency")
+    else:
+        print(f"  Z-index usage looks manageable")
+
 def main():
     parser = argparse.ArgumentParser(description="Audit design system quality")
     parser.add_argument("--dir", default=".", help="Project directory")
@@ -547,6 +641,8 @@ def main():
     audit_responsive(args.dir)
     audit_state_handling(args.dir)
     audit_dark_mode(globals_path)
+    audit_class_conflicts(args.dir)
+    audit_zindex(args.dir)
 
 if __name__ == "__main__":
     main()
