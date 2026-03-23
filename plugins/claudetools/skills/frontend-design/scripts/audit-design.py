@@ -347,17 +347,44 @@ def audit_responsive(project_dir):
     files = [f for f in files if not _is_build_path(f)]
 
     small_fonts = 0
+    responsive_files = 0
+    files_with_breakpoints = set()
+    fixed_widths = 0
+    overflow_hidden = 0
+    touch_targets_small = 0
+
+    breakpoint_re = re.compile(r'\b(?:sm|md|lg|xl|2xl):')
+    fixed_width_re = re.compile(r'\bw-\[\d{4,}px\]|\bwidth:\s*\d{4,}px')
+    overflow_re = re.compile(r'\boverflow-hidden\b')
+    small_interactive_re = re.compile(r'(?:w-[456]|h-[456])\b')
+
     for filepath in files:
         try:
             with open(filepath) as f:
                 content = f.read()
                 small_fonts += len(re.findall(r'text-xs\b', content))
+
+                if breakpoint_re.search(content):
+                    files_with_breakpoints.add(filepath)
+
+                fixed_widths += len(fixed_width_re.findall(content))
+                overflow_hidden += len(overflow_re.findall(content))
+
+                # Check for small interactive elements
+                for i, line in enumerate(content.split('\n'), 1):
+                    if small_interactive_re.search(line):
+                        if re.search(r'button|Button|<a |<Link|onClick|href|role="button"', line, re.IGNORECASE):
+                            touch_targets_small += 1
         except (IOError, UnicodeDecodeError):
             continue
 
-    # Check for viewport meta in HTML files
+    responsive_files = len(files_with_breakpoints)
+    total_files = len(files)
+
+    # Check for viewport meta in layout/HTML files
     html_files = globmod.glob(os.path.join(project_dir, "**", "*.html"), recursive=True)
     html_files += globmod.glob(os.path.join(project_dir, "**/layout.tsx"), recursive=True)
+    html_files += globmod.glob(os.path.join(project_dir, "**/layout.jsx"), recursive=True)
     html_files = [f for f in html_files if not _is_build_path(f)]
     has_viewport = False
     for filepath in html_files:
@@ -369,8 +396,53 @@ def audit_responsive(project_dir):
         except (IOError, UnicodeDecodeError):
             continue
 
-    print(f"  Small fonts (text-xs): {small_fonts} instance(s)")
-    print(f"  Viewport meta: {'present' if has_viewport else 'missing — may cause mobile scaling issues'}")
+    # Check for container queries (modern responsive pattern)
+    css_files = globmod.glob(os.path.join(project_dir, "**", "*.css"), recursive=True)
+    css_files = [f for f in css_files if not _is_build_path(f)]
+    container_queries = 0
+    for filepath in css_files + files:
+        try:
+            with open(filepath) as f:
+                container_queries += len(re.findall(r'@container|container-type', f.read()))
+        except (IOError, UnicodeDecodeError):
+            continue
+
+    # Check for mobile-safe viewport units (svh/dvh vs vh)
+    unsafe_vh = 0
+    safe_vh = 0
+    for filepath in files + css_files:
+        try:
+            with open(filepath) as f:
+                content = f.read()
+                unsafe_vh += len(re.findall(r'100vh\b', content))
+                safe_vh += len(re.findall(r'100[sd]vh\b', content))
+        except (IOError, UnicodeDecodeError):
+            continue
+
+    # Report
+    print(f"  Viewport meta: {'present' if has_viewport else 'MISSING — mobile scaling broken'}")
+
+    if total_files > 0:
+        pct = round(100 * responsive_files / total_files)
+        print(f"  Responsive breakpoints: {responsive_files}/{total_files} files use sm:/md:/lg: ({pct}%)")
+        if pct < 20:
+            print(f"    LOW — consider adding responsive variants to layout components")
+    else:
+        print(f"  Responsive breakpoints: no component files found")
+
+    if container_queries > 0:
+        print(f"  Container queries: {container_queries} usage(s) — modern responsive pattern")
+
+    print(f"  Small fonts (text-xs): {small_fonts} instance(s){' — may be unreadable on mobile' if small_fonts > 10 else ''}")
+
+    if fixed_widths > 0:
+        print(f"  Fixed widths (>999px): {fixed_widths} instance(s) — may overflow on mobile")
+
+    if touch_targets_small > 0:
+        print(f"  Small touch targets: {touch_targets_small} interactive element(s) with w-4/5/6 — min 44px recommended")
+
+    if unsafe_vh > 0 and safe_vh == 0:
+        print(f"  Viewport units: {unsafe_vh} uses of 100vh — use 100svh/100dvh to avoid mobile address bar issues")
 
 def audit_state_handling(project_dir):
     """Check component state handling coverage."""

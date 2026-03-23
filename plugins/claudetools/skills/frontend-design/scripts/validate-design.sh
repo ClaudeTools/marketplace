@@ -139,6 +139,54 @@ else
   check PASS "Icon usage" ""
 fi
 
+# Check 9: Responsive design patterns
+# Check for mobile-first responsive classes (min-width breakpoints)
+HAS_RESPONSIVE=0
+RESPONSIVE_FILES=$(grep -rl 'sm:\|md:\|lg:\|xl:\|2xl:' "$PROJECT_DIR" --include="*.tsx" --include="*.jsx" --include="*.vue" --include="*.svelte" --include="*.astro" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next --exclude-dir=build --exclude-dir=out 2>/dev/null | wc -l | tr -d '[:space:]')
+RESPONSIVE_FILES=${RESPONSIVE_FILES:-0}
+
+# Check for Container queries (modern responsive pattern)
+CONTAINER_QUERIES=$(grep -rn '@container\|container-type' "$PROJECT_DIR" --include="*.css" --include="*.tsx" --include="*.jsx" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next 2>/dev/null | wc -l | tr -d '[:space:]')
+CONTAINER_QUERIES=${CONTAINER_QUERIES:-0}
+
+# Check for viewport meta tag
+HAS_VIEWPORT=0
+LAYOUT_FILES=$(find "$PROJECT_DIR" \( -name "layout.tsx" -o -name "layout.jsx" -o -name "index.html" -o -name "app.html" \) -not -path "*/node_modules/*" -not -path "*/.next/*" 2>/dev/null)
+for lf in $LAYOUT_FILES; do
+  if grep -q 'viewport' "$lf" 2>/dev/null; then
+    HAS_VIEWPORT=1
+    break
+  fi
+done
+
+# Check for min-height: 100vh or min-h-screen (proper mobile viewport)
+MOBILE_VH=$(grep -rn 'min-h-screen\|min-height:\s*100[svd]vh\|min-h-\[100[svd]vh\]' "$PROJECT_DIR" --include="*.tsx" --include="*.jsx" --include="*.css" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next 2>/dev/null | wc -l | tr -d '[:space:]')
+MOBILE_VH=${MOBILE_VH:-0}
+
+# Check for touch target sizes (min 44px/48px)
+SMALL_TOUCH=$(grep -rn 'w-6\b\|h-6\b\|w-5\b\|h-5\b\|w-4\b\|h-4\b' "$PROJECT_DIR" --include="*.tsx" --include="*.jsx" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.next 2>/dev/null | grep -c 'button\|Button\|<a \|<Link\|onClick\|href' || echo 0)
+SMALL_TOUCH=$(echo "$SMALL_TOUCH" | tr -d '[:space:]')
+SMALL_TOUCH=${SMALL_TOUCH:-0}
+
+# Report responsive findings
+if [ "$RESPONSIVE_FILES" -gt 0 ]; then
+  check PASS "Responsive breakpoints" ""
+else
+  check WARN "Responsive breakpoints" "No Tailwind responsive prefixes (sm: md: lg:) found — add responsive variants"
+fi
+
+if [ "$HAS_VIEWPORT" -eq 1 ]; then
+  check PASS "Viewport meta" ""
+else
+  check WARN "Viewport meta" "No viewport meta tag found in layout — mobile scaling may be broken"
+fi
+
+if [ "$SMALL_TOUCH" -gt 3 ] 2>/dev/null; then
+  check WARN "Touch targets" "$SMALL_TOUCH small interactive elements (w-4/5/6 on buttons/links) — ensure min 44px touch targets on mobile"
+else
+  check PASS "Touch targets" ""
+fi
+
 echo ""
 echo "Summary: $PASS passed, $WARN warnings, $FAIL failures"
 exit 0
