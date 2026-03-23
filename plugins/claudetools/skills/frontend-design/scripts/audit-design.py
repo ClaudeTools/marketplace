@@ -28,8 +28,62 @@ def contrast_ratio(c1,c2):
     l1,l2=relative_luminance(c1),relative_luminance(c2)
     return (max(l1,l2)+0.05)/(min(l1,l2)+0.05)
 
+def _extract_hsl_tokens(css_block):
+    """Extract HSL tokens from a CSS block and convert to hex colors."""
+    tokens = {}
+    for match in re.finditer(r'--([a-z-]+):\s*(\d+\.?\d*)\s+(\d+\.?\d*)%\s+(\d+\.?\d*)%', css_block):
+        name, h, s, l = match.group(1), float(match.group(2)), float(match.group(3)), float(match.group(4))
+        r, g, b = colorsys.hls_to_rgb(h/360, l/100, s/100)
+        tokens[name] = '#{:02x}{:02x}{:02x}'.format(int(r*255), int(g*255), int(b*255))
+    return tokens
+
+def _check_contrast_pairs(tokens, mode_label):
+    """Run contrast checks on semantic foreground/background pairs for a given mode."""
+    fg_tokens = {k:v for k,v in tokens.items() if "foreground" in k}
+
+    if not fg_tokens:
+        print(f"  No foreground tokens found — skipping contrast check")
+        return
+
+    print(f"  Contrast Matrix (semantic pairs):")
+    failures = 0
+    tested = 0
+    unmatched = []
+    for fg_name, fg_color in fg_tokens.items():
+        # Determine the matching background token
+        if fg_name == "foreground":
+            bg_name = "background"
+        else:
+            # e.g., "primary-foreground" → "primary", "card-foreground" → "card"
+            bg_name = fg_name.replace("-foreground", "")
+
+        if bg_name in tokens:
+            bg_color = tokens[bg_name]
+            ratio = contrast_ratio(fg_color, bg_color)
+            level = "AAA" if ratio >= 7 else "AA" if ratio >= 4.5 else "AA-lg" if ratio >= 3 else "FAIL"
+            print(f"    {fg_name} on {bg_name}: {ratio:.1f}:1 ({level})")
+            tested += 1
+            if level == "FAIL":
+                failures += 1
+        else:
+            unmatched.append(fg_name)
+
+    if failures == 0:
+        print(f"    All {tested} pairs pass WCAG AA!")
+    else:
+        print(f"    {failures}/{tested} pair(s) fail WCAG AA")
+
+    for u in unmatched:
+        print(f"    INFO: {u} has no matching background token '{u.replace('-foreground', '')}'")
+
+    # Check brand contrast
+    if "brand" in tokens and "brand-foreground" in tokens:
+        ratio = contrast_ratio(tokens["brand"], tokens["brand-foreground"])
+        level = "PASS" if ratio >= 4.5 else "FAIL"
+        print(f"    Brand contrast: {ratio:.1f}:1 ({level})")
+
 def audit_globals(filepath):
-    """Parse globals.css and audit all token pairs for contrast."""
+    """Parse globals.css and audit all token pairs for contrast, per mode."""
     if not os.path.exists(filepath):
         print(f"File not found: {filepath}")
         return
@@ -37,64 +91,34 @@ def audit_globals(filepath):
     with open(filepath) as f:
         content = f.read()
 
-    # Extract HSL tokens (shadcn format: "H S% L%")
-    tokens = {}
-    for match in re.finditer(r'--([a-z-]+):\s*(\d+\.?\d*)\s+(\d+\.?\d*)%\s+(\d+\.?\d*)%', content):
-        name, h, s, l = match.group(1), float(match.group(2)), float(match.group(3)), float(match.group(4))
-        r, g, b = colorsys.hls_to_rgb(h/360, l/100, s/100)
-        tokens[name] = '#{:02x}{:02x}{:02x}'.format(int(r*255), int(g*255), int(b*255))
+    # Parse :root and .dark blocks separately
+    root_match = re.search(r':root\s*\{([^}]+)\}', content)
+    dark_match = re.search(r'\.dark\s*\{([^}]+)\}', content)
 
-    if not tokens:
+    root_tokens = _extract_hsl_tokens(root_match.group(1)) if root_match else {}
+    dark_tokens = _extract_hsl_tokens(dark_match.group(1)) if dark_match else {}
+
+    total = len(set(list(root_tokens.keys()) + list(dark_tokens.keys())))
+    if total == 0:
         print("No HSL tokens found in globals.css")
         return
 
-    print(f"Found {len(tokens)} tokens")
+    print(f"Found {len(root_tokens)} light-mode tokens, {len(dark_tokens)} dark-mode tokens ({total} unique)")
     print()
 
-    # Check foreground/background combinations using semantic pairing
-    # X-foreground pairs with X (e.g., primary-foreground on primary)
-    # foreground (bare) pairs with background (bare)
-    fg_tokens = {k:v for k,v in tokens.items() if "foreground" in k}
+    # Light Mode
+    if root_tokens:
+        print("Light Mode (:root)")
+        _check_contrast_pairs(root_tokens, "Light Mode")
+        print()
 
-    if fg_tokens:
-        print("Contrast Matrix (semantic pairs):")
-        failures = 0
-        tested = 0
-        unmatched = []
-        for fg_name, fg_color in fg_tokens.items():
-            # Determine the matching background token
-            if fg_name == "foreground":
-                bg_name = "background"
-            else:
-                # e.g., "primary-foreground" → "primary", "card-foreground" → "card"
-                bg_name = fg_name.replace("-foreground", "")
-
-            if bg_name in tokens:
-                bg_color = tokens[bg_name]
-                ratio = contrast_ratio(fg_color, bg_color)
-                level = "AAA" if ratio >= 7 else "AA" if ratio >= 4.5 else "AA-lg" if ratio >= 3 else "FAIL"
-                print(f"  {fg_name} on {bg_name}: {ratio:.1f}:1 ({level})")
-                tested += 1
-                if level == "FAIL":
-                    failures += 1
-            else:
-                unmatched.append(fg_name)
-
-        if failures == 0:
-            print(f"  All {tested} pairs pass WCAG AA!")
-        else:
-            print(f"  {failures}/{tested} pair(s) fail WCAG AA")
-
-        for u in unmatched:
-            print(f"  INFO: {u} has no matching background token '{u.replace('-foreground', '')}'")
-    else:
-        print("No foreground tokens found — skipping contrast check")
-
-    # Check brand contrast
-    if "brand" in tokens and "brand-foreground" in tokens:
-        ratio = contrast_ratio(tokens["brand"], tokens["brand-foreground"])
-        level = "PASS" if ratio >= 4.5 else "FAIL"
-        print(f"\nBrand contrast: {ratio:.1f}:1 ({level})")
+    # Dark Mode
+    if dark_tokens:
+        print("Dark Mode (.dark)")
+        _check_contrast_pairs(dark_tokens, "Dark Mode")
+    elif root_tokens:
+        print("Dark Mode (.dark)")
+        print("  No .dark block found — dark mode not configured")
 
 def audit_spacing(project_dir, grid):
     """Check Tailwind spacing classes for grid compliance."""
@@ -499,19 +523,69 @@ def audit_dark_mode(globals_path):
         print("  No :root block found")
         return
 
-    root_tokens = set(re.findall(r'--([\w-]+):', root_match.group(1)))
+    root_token_names = set(re.findall(r'--([\w-]+):', root_match.group(1)))
 
     if not dark_match:
-        print(f"  Dark mode: not configured ({len(root_tokens)} tokens in :root, no .dark block)")
+        print(f"  Dark mode: not configured ({len(root_token_names)} tokens in :root, no .dark block)")
         return
 
-    dark_tokens = set(re.findall(r'--([\w-]+):', dark_match.group(1)))
-    missing = root_tokens - dark_tokens
+    dark_token_names = set(re.findall(r'--([\w-]+):', dark_match.group(1)))
+    missing = root_token_names - dark_token_names
 
-    print(f"  {len(root_tokens)} tokens in :root, {len(dark_tokens)} in .dark, {len(missing)} missing from .dark")
+    # Extract HSL values for side-by-side comparison
+    root_hsl = _extract_hsl_tokens(root_match.group(1))
+    dark_hsl = _extract_hsl_tokens(dark_match.group(1))
+
+    # Also extract raw HSL strings for display
+    root_raw = {}
+    for m in re.finditer(r'--([\w-]+):\s*([^;]+);', root_match.group(1)):
+        root_raw[m.group(1)] = m.group(2).strip()
+    dark_raw = {}
+    for m in re.finditer(r'--([\w-]+):\s*([^;]+);', dark_match.group(1)):
+        dark_raw[m.group(1)] = m.group(2).strip()
+
+    print(f"  {len(root_token_names)} tokens in :root, {len(dark_token_names)} in .dark, {len(missing)} missing from .dark")
+
+    # Side-by-side value comparison for tokens present in both modes
+    shared = sorted(root_token_names & dark_token_names)
+    if shared:
+        print(f"\n  Side-by-side comparison ({len(shared)} shared tokens):")
+        for token in shared:
+            light_val = root_raw.get(token, "?")
+            dark_val = dark_raw.get(token, "?")
+            changed = " *" if light_val != dark_val else ""
+            print(f"    --{token}: {light_val}  |  {dark_val}{changed}")
+
+    # Run contrast checks on the dark mode palette
+    if dark_hsl:
+        print(f"\n  Dark Mode Contrast Checks:")
+        fg_tokens = {k:v for k,v in dark_hsl.items() if "foreground" in k}
+        if fg_tokens:
+            failures = 0
+            tested = 0
+            for fg_name, fg_color in fg_tokens.items():
+                bg_name = "background" if fg_name == "foreground" else fg_name.replace("-foreground", "")
+                if bg_name in dark_hsl:
+                    bg_color = dark_hsl[bg_name]
+                    ratio = contrast_ratio(fg_color, bg_color)
+                    level = "AAA" if ratio >= 7 else "AA" if ratio >= 4.5 else "AA-lg" if ratio >= 3 else "FAIL"
+                    print(f"    {fg_name} on {bg_name}: {ratio:.1f}:1 ({level})")
+                    tested += 1
+                    if level == "FAIL":
+                        failures += 1
+            if failures == 0:
+                print(f"    All {tested} dark mode pairs pass WCAG AA!")
+            else:
+                print(f"    {failures}/{tested} dark mode pair(s) fail WCAG AA")
+        else:
+            print(f"    No foreground tokens in .dark — skipping contrast check")
+
+    # Report missing tokens
     if missing:
+        print(f"\n  Missing from .dark ({len(missing)}):")
         for token in sorted(missing)[:10]:
-            print(f"    --{token}")
+            light_val = root_raw.get(token, "?")
+            print(f"    --{token} (light value: {light_val})")
         if len(missing) > 10:
             print(f"    ... and {len(missing) - 10} more")
 
@@ -630,6 +704,23 @@ def audit_unused_tokens(project_dir, globals_path):
         print("  No tokens defined")
         return
 
+    # Determine which mode(s) each token is defined in
+    root_match = re.search(r':root\s*\{([^}]+)\}', content)
+    dark_match = re.search(r'\.dark\s*\{([^}]+)\}', content)
+    root_defined = set(re.findall(r'--([\w-]+)\s*:', root_match.group(1))) if root_match else set()
+    dark_defined = set(re.findall(r'--([\w-]+)\s*:', dark_match.group(1))) if dark_match else set()
+
+    def _token_scope(name):
+        in_root = name in root_defined
+        in_dark = name in dark_defined
+        if in_root and in_dark:
+            return "both"
+        elif in_root:
+            return ":root"
+        elif in_dark:
+            return ".dark"
+        return "other"
+
     # Scan all component and CSS files for token references
     extensions = ["*.tsx", "*.jsx", "*.ts", "*.js", "*.vue", "*.svelte", "*.astro", "*.css"]
     files = []
@@ -669,7 +760,8 @@ def audit_unused_tokens(project_dir, globals_path):
     print(f"  {len(defined_tokens)} defined, {len(referenced_tokens)} referenced, {len(unused)} unused")
     if unused:
         for token in sorted(unused)[:15]:
-            print(f"    --{token}")
+            scope = _token_scope(token)
+            print(f"    --{token}  [{scope}]")
         if len(unused) > 15:
             print(f"    ... and {len(unused) - 15} more")
         print(f"  Consider removing unused tokens or adding references")

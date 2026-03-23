@@ -50,6 +50,21 @@ else
   check WARN "Design tokens" "No globals.css found"
 fi
 
+# Check 1b: Dark mode token parity
+if [ -n "$GLOBALS" ]; then
+  if grep -q '\.dark' "$GLOBALS" 2>/dev/null; then
+    ROOT_TOKENS=$(sed -n '/:root/,/}/p' "$GLOBALS" 2>/dev/null | grep -c '\-\-' || echo 0)
+    DARK_TOKENS=$(sed -n '/\.dark/,/}/p' "$GLOBALS" 2>/dev/null | grep -c '\-\-' || echo 0)
+    if [ "$ROOT_TOKENS" -eq "$DARK_TOKENS" ]; then
+      check PASS "Dark mode tokens" ""
+    else
+      check WARN "Dark mode parity" ":root has $ROOT_TOKENS tokens but .dark has $DARK_TOKENS — missing overrides will fall back to light values"
+    fi
+  else
+    check WARN "Dark mode" "No .dark block in globals.css — dark mode is not configured"
+  fi
+fi
+
 # Check 2: Font count (distinct font families, not weight variants)
 FONT_FAMILIES=""
 # Extract distinct font-family values from CSS usage declarations only.

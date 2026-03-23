@@ -297,12 +297,37 @@ def cmd_audit(args):
     failures = [r for r in results if r["level"] == "FAIL"]
     passes = [r for r in results if r["level"] != "FAIL"]
 
-    print(f"Accessibility Audit: {len(passes)} pass, {len(failures)} fail")
+    print(f"Light Mode Accessibility Audit: {len(passes)} pass, {len(failures)} fail")
     if failures:
         print("\nFAILURES:")
         for f in failures:
             print(f"  {f['fg']} ({f['fg_color']}) on {f['bg']} ({f['bg_color']}): {f['ratio']}:1 — {f['level']}")
     print(f"\nAll pairs: {len(results)} checked")
+
+    cvd_issues = audit_color_blindness(palette)
+    if cvd_issues:
+        print("\nColor blindness issues (light mode):")
+        for issue in cvd_issues:
+            print(issue)
+
+    # Dark mode audit
+    dark_palette = generate_dark_mode(args.brand, args.bg, args.fg)
+    dark_results = audit_palette(dark_palette)
+    dark_failures = [r for r in dark_results if r["level"] == "FAIL"]
+    dark_passes = [r for r in dark_results if r["level"] != "FAIL"]
+
+    print(f"\nDark Mode Accessibility Audit: {len(dark_passes)} pass, {len(dark_failures)} fail")
+    if dark_failures:
+        print("\nFAILURES:")
+        for f in dark_failures:
+            print(f"  {f['fg']} ({f['fg_color']}) on {f['bg']} ({f['bg_color']}): {f['ratio']}:1 — {f['level']}")
+    print(f"\nAll pairs: {len(dark_results)} checked")
+
+    dark_cvd_issues = audit_color_blindness(dark_palette)
+    if dark_cvd_issues:
+        print("\nColor blindness issues (dark mode):")
+        for issue in dark_cvd_issues:
+            print(issue)
 
 def cmd_shades(args):
     scale = generate_shade_scale(args.color)
