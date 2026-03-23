@@ -52,9 +52,17 @@ Write 3-5 sentences of context for the generation agent:
 - Current codebase state
 - If first message: note "No prior conversation context."
 
-### Step 3: Spawn the generation agent
+### Step 3: Load reference materials
 
-Use the Agent tool to spawn a general-purpose agent with this prompt (fill in `{CONVERSATION_SUMMARY}`, `{RAW_INPUT}`, and `{MODE}` — one of `execute`, `plan`, or `task`):
+Before spawning the agent, read these 4 files and store their contents (you will embed them in the agent prompt so the agent does not need to read files outside the project):
+- ${CLAUDE_SKILL_DIR}/references/xml-template.md
+- ${CLAUDE_SKILL_DIR}/references/prompting-principles.md
+- ${CLAUDE_SKILL_DIR}/references/prompt-chaining.md
+- ${CLAUDE_SKILL_DIR}/examples/before-after.md
+
+### Step 4: Spawn the generation agent
+
+Use the Agent tool to spawn a general-purpose agent with this prompt. Fill in `{CONVERSATION_SUMMARY}`, `{RAW_INPUT}`, `{MODE}`, and `{REFERENCE_MATERIALS}` (the concatenated contents of the 4 files from Step 3):
 
 ---
 
@@ -65,6 +73,7 @@ You are a prompt engineering specialist. Transform a raw user request into a str
 - Create tasks, todo items, or persistent state of any kind
 - Execute the prompt you generate
 - Make changes to the codebase
+- Read files outside the current project directory — all reference materials are provided inline below, and codebase-pilot handles project navigation
 
 **CRITICAL: Match your output to the input quality.** Read the raw input (including file contents if a path is provided) and assess its quality before deciding your approach:
 - **Comprehensive input** (detailed spec with code examples, schemas, verification criteria, implementation order): Preserve all detail. Wrap in XML structure without compressing or stripping content. A well-written 1700-line spec should produce a proportionally detailed prompt, not a 200-line summary.
@@ -91,12 +100,10 @@ Extract the TYPECHECK, TEST, and BUILD commands. Use these exact commands in ver
 
 Then use the codebase-pilot CLI to gather structural context: run `node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js map` for the project overview. For any file paths or function/class names mentioned in the raw input, run `node .../cli.js find-symbol "<name>"` to locate them and `node .../cli.js file-overview "<path>"` to understand their structure. Use REAL paths from these commands in your output — do not invent file paths.
 
-**Step 2: Read prompting references**
-Read these files for the XML template, transformation rules, and examples:
-- ${CLAUDE_SKILL_DIR}/references/xml-template.md
-- ${CLAUDE_SKILL_DIR}/references/prompting-principles.md
-- ${CLAUDE_SKILL_DIR}/references/prompt-chaining.md
-- ${CLAUDE_SKILL_DIR}/examples/before-after.md
+**Step 2: Apply prompting references**
+The following reference materials have been provided inline — use them directly (do NOT read files outside the project directory):
+
+{REFERENCE_MATERIALS}
 
 **Step 3: Classify the input**
 Determine:
@@ -296,7 +303,7 @@ If the agent returns "Phase 1 of N":
 
 ## Reference files
 
-Read by the generation agent, not loaded into main context:
+Read by the main conversation in Step 3 and embedded in the agent prompt (the agent does not read these files directly):
 - XML template: [references/xml-template.md](references/xml-template.md)
 - Prompting principles: [references/prompting-principles.md](references/prompting-principles.md)
 - Prompt chaining: [references/prompt-chaining.md](references/prompt-chaining.md)
