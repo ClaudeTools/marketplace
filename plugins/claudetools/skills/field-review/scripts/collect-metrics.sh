@@ -61,7 +61,7 @@ if [ -f "$HOOKS_JSON" ]; then
   # List hook event types
   grep -o '"event"[[:space:]]*:[[:space:]]*"[^"]*"' "$HOOKS_JSON" 2>/dev/null \
     | grep -o '"[^"]*"$' | tr -d '"' | sort | uniq -c | sort -rn \
-    | while read -r count event; do echo "  $event: $count hooks"; done
+    | while read -r count event; do echo "  $event: $count hooks"; done || true
 else
   echo "hooks.json not found"
 fi
@@ -69,10 +69,10 @@ fi
 # ── Validator inventory ──────────────────────────────────────────────
 echo ""
 echo "=== VALIDATORS ==="
-if [ -d "${_plugin_root}/scripts/validators" ]; then
-  ls -1 "${_plugin_root}/scripts/validators/"*.sh 2>/dev/null | while read -r f; do
+if [ -d "${_versioned_root}/scripts/validators" ]; then
+  ls -1 "${_versioned_root}/scripts/validators/"*.sh 2>/dev/null | while read -r f; do
     echo "  $(basename "$f" .sh)"
-  done
+  done || true
 else
   echo "no validators directory"
 fi
@@ -80,11 +80,11 @@ fi
 # ── Skill inventory ─────────────────────────────────────────────────
 echo ""
 echo "=== SKILLS ==="
-if [ -d "${_plugin_root}/skills" ]; then
-  ls -1d "${_plugin_root}/skills/"*/ 2>/dev/null | while read -r d; do
+if [ -d "${_versioned_root}/skills" ]; then
+  ls -1d "${_versioned_root}/skills/"*/ 2>/dev/null | while read -r d; do
     name=$(basename "$d")
     echo "  $name"
-  done
+  done || true
 else
   echo "no skills directory"
 fi
@@ -128,7 +128,7 @@ sqlite3 -separator '|' "$METRICS_DB" "
   echo "avg_churn: $churn"
   echo "avg_tasks_completed: $tasks"
   echo "avg_duration_min: $dur"
-done
+done || true
 
 echo ""
 echo "=== HOOK OUTCOMES (last ${days} days) ==="
@@ -146,7 +146,7 @@ sqlite3 -separator '|' "$METRICS_DB" "
   ORDER BY total DESC;
 " 2>/dev/null | while IFS='|' read -r name total blocks warns allows block_pct fp_pct; do
   echo "  $name: total=$total block=$blocks($block_pct%) warn=$warns allow=$allows fp_rate=${fp_pct:-n/a}%"
-done
+done || true
 
 echo ""
 echo "=== TOP FAILING TOOLS (last ${days} days) ==="
@@ -163,7 +163,7 @@ sqlite3 -separator '|' "$METRICS_DB" "
   LIMIT 10;
 " 2>/dev/null | while IFS='|' read -r tool failures total pct; do
   echo "  $tool: $failures failures / $total total ($pct%)"
-done
+done || true
 
 echo ""
 echo "=== THRESHOLD STATUS ==="
@@ -174,7 +174,7 @@ sqlite3 -separator '|' "$METRICS_DB" "
   ORDER BY metric_name;
 " 2>/dev/null | while IFS='|' read -r metric default current status; do
   echo "  $metric: $current (default: $default) [$status]"
-done
+done || true
 
 # ── Recent error events from JSONL ───────────────────────────────────
 if [ -f "$EVENTS_FILE" ]; then
@@ -184,7 +184,7 @@ if [ -f "$EVENTS_FILE" ]; then
     tool=$(echo "$line" | grep -o '"tool":"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"')
     error_class=$(echo "$line" | grep -o '"error_class":"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"')
     [ -n "$tool" ] && echo "  $tool: $error_class"
-  done
+  done || true
 fi
 
 echo ""
