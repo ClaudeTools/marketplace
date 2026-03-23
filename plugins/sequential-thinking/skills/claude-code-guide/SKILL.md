@@ -1,7 +1,7 @@
 ---
 name: claude-code-guide
-description: Best practices reference for building Claude Code extensions — skills, hooks, agents, slash commands, scripts, MCP servers, CLAUDE.md, memory, and task systems. Use when creating, reviewing, or debugging any Claude Code extension component.
-argument-hint: "[what you're building: skill | hook | agent | script | mcp-server | claude-md]"
+description: Best practices reference for building Claude Code extensions — skills, hooks, agents, plugins, slash commands, scripts, MCP servers, CLAUDE.md, memory, and task systems. Use when creating, reviewing, or debugging any Claude Code extension component.
+argument-hint: "[what you're building: skill | hook | agent | plugin | script | mcp-server | claude-md]"
 ---
 
 # Claude Code Extension Guide
@@ -20,11 +20,12 @@ Read the argument the user provided (or infer from context) and load only the re
 | Prompts or instructions for Claude | `references/prompting-guide.md` |
 | CLAUDE.md project instructions | `references/claude-md-guide.md` |
 | An MCP server | `references/mcp-servers-guide.md` |
+| A plugin (bundling hooks + skills + agents for marketplace) | `references/plugins-guide.md` |
 | Memory or task system integration | `references/memory-task-guide.md` |
 
 If the user's intent spans multiple types (e.g., "build a skill with hooks"), load both relevant references.
 
-If the user says something generic like "how do extensions work" or "help me build a plugin", start with this file's universal principles below, then ask what they want to build.
+If the user says something generic like "how do extensions work" or "help me build an extension", start with this file's universal principles below, then ask what they want to build.
 
 ---
 
@@ -156,7 +157,7 @@ These span multiple extension types. Each type-specific guide has additional got
 
 4. **Stdin consumption order**: Hook scripts MUST call `hook_init` (which reads stdin) before sourcing any library that might read from stdin. Move `source lib/hook-input.sh && hook_init` to the very top of the script, before any other sourcing.
 
-5. **Exit code semantics vary by hook type**: In `PreToolUse`, exit 0 always — communicate block/allow via JSON stdout. In `Stop`, the exit code itself is the signal (0=allow, 1=warn, 2=block).
+5. **Exit code semantics vary by hook type**: In `PreToolUse`, always exit 0 — communicate block/allow via JSON stdout. In `Stop`, the exit code itself is the signal (0=allow, 1=warn, 2=block). See the hooks-guide.md exit codes section for the full breakdown including validator return codes.
 
 6. **Matcher is a regex**: The `matcher` field in hooks.json is a regular expression, not a simple string. `"matcher": "Read|Edit|Write"` matches any of those three tools. An absent matcher matches all tools for that event.
 
@@ -179,6 +180,12 @@ bash ${CLAUDE_SKILL_DIR}/scripts/validate-hook.sh /path/to/hook-script.sh
 
 # Validate an agent definition
 bash ${CLAUDE_SKILL_DIR}/scripts/validate-agent.sh /path/to/agent.md
+
+# Validate a plugin directory
+bash ${CLAUDE_SKILL_DIR}/scripts/validate-plugin.sh /path/to/plugin-directory
+
+# Validate an MCP server directory
+bash ${CLAUDE_SKILL_DIR}/scripts/validate-mcp.sh /path/to/mcp-server-directory
 ```
 
 Each validator checks structure, conventions, safety patterns, and outputs PASS/FAIL/WARN for every check.

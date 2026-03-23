@@ -107,6 +107,26 @@ Signals that a script is needed:
 - Batch processing: "for each item..."
 - Calculations or comparisons
 - If the agent reinvents similar logic across test runs — bundle it
+- Precision matters (exact field mapping, arithmetic, pixel-perfect formatting)
+- External tools or APIs with specific calling conventions
+- Output could be large — scripts handle file I/O without context bloat
+
+### Script design patterns
+
+The most common and highest-value script type is a **validation script** — the agent generates output, the script checks it, the agent fixes issues. This generate-validate-fix loop is more reliable than instructions alone.
+
+Other patterns:
+- **Extraction scripts** — parse complex inputs (PDFs, forms, schemas) into structured JSON the agent can work with
+- **Transformation scripts** — convert formats, clean data, normalise structures. More reliable than inline transformation for large datasets.
+- **Generation scripts** — produce files in specific formats (charts, styled documents). The agent provides data; the script handles formatting.
+
+### Script interface requirements
+
+- **`--help` is the interface contract** — the agent reads it to learn invocation. Include: description, all flags, 2-3 usage examples, exit codes.
+- **Structured I/O** — accept JSON in, produce JSON out. Send data to stdout, diagnostics to stderr.
+- **Helpful errors** — say what went wrong + what was expected + suggestion to fix.
+- **Idempotent operations** — "create if not exists" is safer than "create and fail on duplicate."
+- **Declare dependencies inline** — PEP 723 for Python, npm specifiers for Node. Scripts should run with `uv run` or `npx` without separate install steps.
 
 ### Wiring resources into SKILL.md
 
@@ -240,17 +260,23 @@ Different skill types need different writing strategies:
 
 Run scripts, call APIs, produce files. Need precise step sequences, script bundling, and validation loops.
 
+Writing strategy: heavy on numbered workflow steps, validation scripts at every output point, structured I/O between steps. The SKILL.md is primarily a workflow router — most logic lives in scripts.
+
 Example: `field-review` — collects metrics via script, structures a report, optionally submits telemetry.
 
 ### Knowledge-applying skills
 
 Apply domain expertise to analysis, review, or writing. Need domain context in references, gotchas sections, and decision frameworks.
 
+Writing strategy: conditional reference loading drives the workflow. SKILL.md acts as a router to the right reference file based on context. Gotchas section is the highest-value content — non-obvious facts prevent real mistakes.
+
 Example: `claude-code-guide` (this skill) — routes to reference files based on what the user is building.
 
 ### Workflow-automating skills
 
 Multi-step processes with conditional branches. Need clear decision trees, progressive disclosure, and state tracking.
+
+Writing strategy: explicit decision trees with numbered branches. Progressive disclosure — load complexity only when needed. State tracking via scripts or task system. Delegation to subagents for independent subtasks.
 
 Example: `prompt-improver` — branches on mode (execute/plan/task), delegates to subagent, validates output, then executes or presents.
 

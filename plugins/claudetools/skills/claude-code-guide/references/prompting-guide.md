@@ -10,8 +10,48 @@ This guide follows its own advice: context first (this section), then mechanisms
 
 ---
 
+## The 5-Phase Prompt Engineering Workflow
+
+When building a non-trivial prompt (system prompt, skill instructions, or agent definition), follow these phases in order:
+
+### Phase 1: CLASSIFY
+
+Before writing, answer three questions:
+1. **Prompt type** — System prompt (persistent role)? User message (one-shot task)? Tool description (per-turn injection)? Context injection (data, not instructions)?
+2. **Complexity tier** — Count: multiple tools to choose between, rules requiring judgment, known failure modes, dynamic content from untrusted sources, conflicting instruction sources, output format requirements, behaviours to suppress. Score: 0-1 = simple (prose), 2-3 = moderate (structured + examples), 4+ = complex (full architectural treatment).
+3. **Consequence severity** — Rate each rule: CRITICAL (safety/data loss/legal), HIGH (wrong tool/format/workflow), MEDIUM (quality/verbosity), LOW (style/tone). Severity determines emphasis investment per rule (see Section 2).
+
+### Phase 2: ARCHITECT
+
+Build the structural skeleton:
+- Map content to trust tiers: Tier 1 (your rules, authoritative XML tags) → Tier 2 (user config) → Tier 3 (dynamic/external content with scope declarations) → Tier 4 (reference data, explicitly labelled as data)
+- Add routing logic if Claude must choose between tools, formats, or strategies (use priority checklist with STOP pattern)
+- Add scope declarations for any dynamic content (origin, trust level, freshness, conflict resolution)
+
+### Phase 3: WRITE
+
+Apply severity-calibrated techniques from the Severity Calibration Matrix (Section 2). Write the instruction blocks. Use imperative form. Pair every CRITICAL/HIGH rule with WHY.
+
+### Phase 4: HARDEN
+
+Add reliability layers:
+- Token budget awareness (~11,630 tokens fixed overhead per turn)
+- Long conversation resilience (critical rules in tool descriptions survive compaction)
+- Injection defence (scope declarations, trust tier tags, content isolation)
+
+### Phase 5: VERIFY
+
+Check against quality criteria:
+- Structural: every section has clear purpose, no orphaned content
+- Instructional: severity matches emphasis, examples cover boundary cases
+- Reliability: critical rules repeated in 2+ locations, override hierarchy declared
+- Empirical: test with 3+ realistic prompts, target 90%+ correct following
+
+---
+
 ## Table of Contents
 
+- [The 5-Phase Prompt Engineering Workflow](#the-5-phase-prompt-engineering-workflow)
 - [1. Emphasis Mechanisms](#1-emphasis-mechanisms)
 - [2. Severity Calibration Matrix](#2-severity-calibration-matrix)
 - [3. XML Trust Tags and Structure](#3-xml-trust-tags-and-structure)
@@ -215,6 +255,32 @@ Enforce at three levels: instruction ("Do not propose changes to unread code"), 
 ### Concise Output Style
 
 Suppress narration, inner monologue, tool choice explanations, pleasantries. Present results, not process.
+
+### Three-Level Enforcement Pattern
+
+For CRITICAL constraints, enforce at three levels to prevent bypass:
+
+1. **Instruction level** — State the rule with WHY in SKILL.md or system prompt
+2. **Tool-level enforcement** — Use hooks or validation scripts to reject violations deterministically
+3. **Path closure** — Redirect the agent to the correct alternative. Instead of just "don't use cat", add "use Read instead of cat/head/tail"
+
+Single-level enforcement (instruction only) fails ~15% of the time for complex rules. Adding tool enforcement reduces failure to ~2%. Path closure catches the remainder.
+
+### Behavioural Overlays
+
+Some prompts need mode-dependent behaviour (e.g., auto-mode vs plan-mode, review vs implementation). Structure overlays as separate blocks that augment — not replace — base behaviour:
+
+```xml
+<base_behavior>[Always active]</base_behavior>
+<plan_mode_overlay>
+When plan mode is active: [additional constraints, read-only tools, approval workflow]
+</plan_mode_overlay>
+<auto_mode_overlay>
+When auto mode is active: [reduced confirmation, expanded permissions]
+</auto_mode_overlay>
+```
+
+Overlays prevent duplicating the entire prompt for each mode. The base behaviour defines the identity; overlays add mode-specific constraints.
 
 ---
 

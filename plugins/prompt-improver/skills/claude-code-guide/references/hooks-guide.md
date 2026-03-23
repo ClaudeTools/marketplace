@@ -102,7 +102,7 @@ Claude Code supports these hook events. The hooks.json in this plugin uses most 
 | `SessionStart` | When a new session begins | Build codebase index, inject session context, check stale docs |
 | `SessionEnd` | When the session closes | Cleanup temp files, finalize metrics, persist session state |
 | `SubagentStart` | When a subagent is spawned | Index codebase for subagent context |
-| `SubagentStop` | When a subagent completes | Verify subagent output quality |
+| `SubagentStop` | When a subagent completes | Verify subagent output quality. Input JSON includes the subagent's final output and metadata. Hook can inspect quality, flag issues, or log results. See `verify-subagent-independently.sh` for a real implementation. |
 
 ### Turn lifecycle events
 
@@ -184,13 +184,34 @@ exit 1   # warn
 
 ### Exit codes
 
-| Code | PreToolUse behavior | Stop behavior |
-|---|---|---|
-| 0 | Allow (always exit 0; use JSON for block) | Allow the agent to stop |
-| 1 | Warn (output systemMessage JSON) | Warn — show stderr to agent, agent continues |
-| 2 | Block (output block JSON, then exit 0) | Block — agent must address findings before stopping |
+Exit code semantics differ between hook event types:
 
-For PreToolUse hooks, the script always exits 0. Block/allow decisions are communicated via JSON stdout. This is a critical distinction from Stop hooks.
+**PreToolUse hooks — always exit 0:**
+
+PreToolUse hooks communicate decisions via JSON on stdout, not exit codes. The script itself always exits 0.
+
+| Decision | JSON output | Exit code |
+|---|---|---|
+| Allow | (none needed) | 0 |
+| Warn | `{"systemMessage": "..."}` | 0 |
+| Block | `{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "block", ...}}` | 0 |
+
+**Stop hooks — exit code IS the signal:**
+
+| Exit code | Behavior |
+|---|---|
+| 0 | Allow the agent to stop |
+| 1 | Warn — stderr shown to agent, agent continues |
+| 2 | Block — agent must address findings before stopping |
+
+**Validator return codes (internal convention):**
+
+Validator functions sourced by dispatchers return 0/1/2 internally. The dispatcher translates these into the appropriate output format:
+- Return 0 → allow, continue to next validator
+- Return 1 → emit warning (systemMessage JSON for PreToolUse, stderr for Stop)
+- Return 2 → block (block JSON for PreToolUse, exit 2 for Stop)
+
+Do not confuse validator return codes with hook exit codes. The dispatcher always exits 0 for PreToolUse regardless of which validator return code triggered.
 
 ---
 
