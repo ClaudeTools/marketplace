@@ -8,7 +8,7 @@
 #   3. [was read]           — read before compaction → allow (content compacted out)
 #   4. (no state)           — never read or externally modified → allow silently
 #
-# Exit 0 always — never blocks, uses systemMessage for guidance.
+# Exit 2 = block redundant full-file re-reads. Exit 0 = allow.
 
 set -euo pipefail
 
@@ -130,11 +130,12 @@ fi
 # State 1: File unchanged since last read → check range overlap
 if [ "$HAS_COVERING" = "true" ]; then
   if [ "$REQ_OFFSET" -le 1 ] 2>/dev/null && [ "$REQ_LIMIT" -ge 2000 ] 2>/dev/null; then
-    jq -nc --arg b "$BASENAME" --arg h "$SYMBOL_HINTS" \
-      '{"systemMessage": ("\u0027" + $b + "\u0027 is unchanged and already in your context window. Do NOT re-read it. Use your existing knowledge. If you need a specific section, use offset and limit." + $h)}'
+    # Full-file re-read of unchanged file — hard block to save context
+    echo "'${BASENAME}' is unchanged and already in context. Use offset/limit to read a specific section.${SYMBOL_HINTS}" >&2
+    exit 2
   else
     jq -nc --arg b "$BASENAME" --argjson s "$REQ_OFFSET" --argjson e "$REQ_END" --arg h "$SYMBOL_HINTS" \
-      '{"systemMessage": ("Lines " + ($s|tostring) + "-" + ($e|tostring) + " of \u0027" + $b + "\u0027 are already in your context (read earlier, file unchanged). Use your existing knowledge." + $h)}'
+      '{"systemMessage": ("Lines " + ($s|tostring) + "-" + ($e|tostring) + " of \u0027" + $b + "\u0027 are already in context. Use your existing knowledge." + $h)}'
   fi
   exit 0
 fi
