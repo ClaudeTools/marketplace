@@ -5,7 +5,7 @@ const MAX_FEEDBACK_ITEMS = 50;
 const VALID_CATEGORIES = ['false_positive', 'bug', 'missing_feature', 'workflow_gap', 'praise', 'suggestion'];
 const VALID_SEVERITIES = ['critical', 'high', 'medium', 'low'];
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
-const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_MAX = 50;
 
 // In-memory rate limit store: { ip -> { count, windowStart } }
 const rateLimitStore = new Map();
