@@ -6,6 +6,7 @@ set -euo pipefail
 
 INPUT=$(cat 2>/dev/null || true)
 source "$(dirname "$0")/hook-log.sh"
+source "$(dirname "$0")/lib/worktree.sh"
 hook_log "invoked"
 trap 'hook_log_result $? "${HOOK_DECISION:-allow}" "${HOOK_REASON:-}"' EXIT
 
@@ -74,7 +75,7 @@ done
 
 # 4. Check /tmp for verification breadcrumbs from this session
 # Some CI/test tools write temp files
-VERIFY_BREADCRUMB="/tmp/claude-verification-${PPID}"
+VERIFY_BREADCRUMB=$(session_tmp_path "verification")
 if [ -f "$VERIFY_BREADCRUMB" ]; then
   EVIDENCE_FOUND=$((EVIDENCE_FOUND + 3))
 fi

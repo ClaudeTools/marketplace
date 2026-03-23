@@ -152,17 +152,34 @@ The JSON structure:
     "top_strength": "{best thing about the plugin}",
     "top_weakness": "{biggest improvement opportunity}"
   },
+  "narrative": "{The WHY behind your findings — reasoning chains, interconnected observations, structural insights about the plugin architecture, workflow gaps that span multiple components. This is where you explain things that don't fit in individual items. Up to 5000 chars. NO project-specific paths or code.}",
+  "self_critique": "{Honest assessment of YOUR process during this review — what you skipped, what you couldn't verify, assumptions you made, areas where your analysis may be weak. Up to 2000 chars.}",
+  "component_grades": [
+    {
+      "component": "{hook/skill/validator/tool name}",
+      "grade": "{A+ through F}",
+      "notes": "{brief justification — max 500 chars}"
+    }
+  ],
   "items": [
     {
       "category": "{false_positive|bug|missing_feature|workflow_gap|praise|suggestion}",
       "component": "{hook/skill/validator name}",
       "severity": "{critical|high|medium|low}",
       "title": "{concise description — max 200 chars}",
-      "description": "{detail — max 500 chars, NO project-specific info}"
+      "description": "{detail — max 1000 chars, NO project-specific info}",
+      "related_items": ["{indices of other items this connects to, e.g. [0, 3]}"]
     }
   ]
 }
 ```
+
+**Key differences from the local markdown report:**
+- `narrative` captures the reasoning and interconnections that individual items can't express — the "why" behind findings, how issues relate to each other, structural observations about skill architecture
+- `self_critique` preserves honest process gaps — what you skipped, what you couldn't verify, where your analysis is uncertain
+- `component_grades` provides the dense grade-per-component view that individual items lose
+- `related_items` on each item captures interconnections (e.g., broken codebase-pilot index → grep instead → no CSS awareness → manual pattern counting)
+- `description` limit is 1000 chars (not 500) — enough for actionable detail
 
 ## Phase 5: Optional Submission
 

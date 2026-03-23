@@ -19,6 +19,10 @@ export function openDatabase(projectRoot: string): Database.Database {
   const dbPath = getDbPath(projectRoot);
   const db = new Database(dbPath);
 
+  // Enable WAL mode and busy timeout for concurrent write safety
+  db.pragma('journal_mode = WAL');
+  db.pragma('busy_timeout = 5000');
+
   // Check schema version — if mismatch, recreate
   if (!checkSchemaVersion(db)) {
     // Drop all tables and recreate

@@ -20,9 +20,10 @@ PILOT_CLI="${CLAUDE_PLUGIN_ROOT:-}/codebase-pilot/dist/cli.js"
 [ -f "$PILOT_CLI" ] || exit 0
 
 # Find .codeindex/db.sqlite by walking up from CWD
+CWD=$(echo "$INPUT" | jq -r '.cwd // "."' 2>/dev/null || echo ".")
 DB_PATH=""
 PROJECT_ROOT=""
-DIR="$(pwd)"
+DIR="$CWD"
 while [ "$DIR" != "/" ]; do
   if [ -f "$DIR/.codeindex/db.sqlite" ]; then
     DB_PATH="$DIR/.codeindex/db.sqlite"

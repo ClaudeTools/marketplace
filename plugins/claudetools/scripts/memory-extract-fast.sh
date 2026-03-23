@@ -37,7 +37,11 @@ emit_candidate() {
   local desc="$2"
   # Escape for JSON: backslashes, quotes, newlines
   desc=$(printf '%s' "$desc" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr '\n' ' ' | head -c 200)
-  echo "{\"type\":\"$ctype\",\"description\":\"$desc\",\"source\":\"stop-extract\",\"session_id\":\"$SESSION_ID\",\"timestamp\":\"$TIMESTAMP\"}" >> "$CANDIDATES_FILE"
+  # flock to prevent interleaved writes from concurrent sessions
+  (
+    flock -w 1 200 || true
+    echo "{\"type\":\"$ctype\",\"description\":\"$desc\",\"source\":\"stop-extract\",\"session_id\":\"$SESSION_ID\",\"timestamp\":\"$TIMESTAMP\"}" >> "$CANDIDATES_FILE"
+  ) 200>"${CANDIDATES_FILE}.lock"
 }
 
 # --- Extract user corrections ---

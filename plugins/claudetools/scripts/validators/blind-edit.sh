@@ -27,9 +27,10 @@ validate_blind_edit() {
   esac
 
   # Find session reads tracking file
+  # Source worktree lib (safe to re-source due to guard)
+  source "$(dirname "${BASH_SOURCE[0]}")/../lib/worktree.sh"
   local SESSION_ID
-  SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)
-  [ -z "$SESSION_ID" ] && SESSION_ID="$PPID"
+  SESSION_ID=$(get_session_id "$INPUT")
 
   local READS_FILE="/tmp/codebase-pilot-reads-${SESSION_ID}.jsonl"
 
@@ -45,7 +46,7 @@ validate_blind_edit() {
   fi
 
   # Also check session-ids file for cross-session reads (continued sessions)
-  local PROJECT_ROOT="${CODEBASE_PILOT_PROJECT_ROOT:-$(pwd)}"
+  local PROJECT_ROOT="${CODEBASE_PILOT_PROJECT_ROOT:-$(get_worktree_root)}"
   local SESSION_IDS_FILE="$PROJECT_ROOT/.codeindex/session-ids"
   if [ -f "$SESSION_IDS_FILE" ]; then
     while IFS= read -r sid; do

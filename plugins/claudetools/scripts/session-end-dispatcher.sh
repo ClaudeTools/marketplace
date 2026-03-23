@@ -41,6 +41,13 @@ run_async_validator() {
   emit_validator_event "session-end-dispatcher" "$name" "$decision" "$_duration_ms" "$output" 2>/dev/null || true
 }
 
+# --- Agent mesh deregister (on graceful session close) ---
+MESH_CLI="$(dirname "$SCRIPT_DIR")/agent-mesh/cli.js"
+if [[ -f "$MESH_CLI" ]]; then
+  _MESH_SID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)
+  [[ -n "$_MESH_SID" ]] && node "$MESH_CLI" deregister --id "$_MESH_SID" 2>/dev/null || true
+fi
+
 # Emit session end telemetry — include subagents (they have distinct metrics)
 _sid=$(hook_get_field '.session_id' 2>/dev/null || echo "unknown")
 _agent_type=$(hook_get_field '.agent_type' 2>/dev/null || echo "main")

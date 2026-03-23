@@ -8,6 +8,7 @@ set -euo pipefail
 source "$(dirname "$0")/hook-log.sh"
 source "$(dirname "$0")/lib/ensure-db.sh"
 source "$(dirname "$0")/lib/adaptive-weights.sh"
+source "$(dirname "$0")/lib/worktree.sh"
 
 INPUT=$(cat 2>/dev/null || true)
 MODEL_FAMILY=$(detect_model_family)
@@ -24,10 +25,11 @@ hook_log "memory-consolidate: starting"
 # --- Locate memory directory ---
 # Check common locations for the user's memory directory
 MEMORY_DIR=""
-CWD_SLUG=$(pwd | tr '/' '-')
+REPO_ROOT=$(get_repo_root)
+CWD_SLUG=$(echo "$REPO_ROOT" | tr '/' '-')
 for dir in \
   "$HOME/.claude/projects/${CWD_SLUG}/memory" \
-  "$HOME/.claude/projects/-home-$(whoami)-projects-$(basename "$(pwd)")/memory" \
+  "$HOME/.claude/projects/-home-$(whoami)-projects-$(basename "$REPO_ROOT")/memory" \
   "$HOME/.claude/memory"; do
   if [[ -d "$dir" ]]; then
     MEMORY_DIR="$dir"

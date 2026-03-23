@@ -7,6 +7,7 @@ set -euo pipefail
 
 source "$(dirname "$0")/hook-log.sh"
 source "$(dirname "$0")/lib/detect-project.sh"
+source "$(dirname "$0")/lib/worktree.sh"
 
 # Read hook input from stdin
 INPUT=$(cat)
@@ -22,13 +23,15 @@ STATE_FILE="/tmp/claude-precompact-${session_id}.json"
 
 hook_log "archiving state to ${STATE_FILE}"
 
+CWD=$(echo "$INPUT" | jq -r '.cwd // "."' 2>/dev/null || echo ".")
+
 # Git info (safe defaults if not in a git repo)
-git_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-uncommitted_count=$(git status --short 2>/dev/null | wc -l | tr -d ' ')
-modified_files=$(git diff --name-only 2>/dev/null | jq -R -s 'split("\n") | map(select(length > 0))' 2>/dev/null || echo '[]')
+git_branch=$(git -C "$CWD" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+uncommitted_count=$(git -C "$CWD" status --short 2>/dev/null | wc -l | tr -d ' ')
+modified_files=$(git -C "$CWD" diff --name-only 2>/dev/null | jq -R -s 'split("\n") | map(select(length > 0))' 2>/dev/null || echo '[]')
 
 # Recent commits — last 3 subjects as JSON array
-recent_commits=$(git log --oneline -3 --format='%s' 2>/dev/null | jq -R -s 'split("\n") | map(select(length > 0))' 2>/dev/null || echo '[]')
+recent_commits=$(git -C "$CWD" log --oneline -3 --format='%s' 2>/dev/null | jq -R -s 'split("\n") | map(select(length > 0))' 2>/dev/null || echo '[]')
 
 # Active tasks from ~/.claude/tasks/
 active_tasks='[]'
@@ -51,7 +54,7 @@ timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Session reads from codebase-pilot — merge ALL session reads files
 session_reads='[]'
-SESSION_IDS_FILE="$(pwd)/.codeindex/session-ids"
+SESSION_IDS_FILE="$(get_worktree_root)/.codeindex/session-ids"
 if [ -f "$SESSION_IDS_FILE" ]; then
   ALL_READS=""
   while IFS= read -r sid; do

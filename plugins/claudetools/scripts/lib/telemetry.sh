@@ -60,15 +60,19 @@ _telemetry_ensure_init() {
   _TELEMETRY_EVENTS_FILE="${log_dir}/events.jsonl"
 
   # Log rotation at 10MB (cross-platform stat)
-  if [ -f "$_TELEMETRY_EVENTS_FILE" ]; then
-    local size
-    size=$(stat -f%z "$_TELEMETRY_EVENTS_FILE" 2>/dev/null \
-           || stat -c%s "$_TELEMETRY_EVENTS_FILE" 2>/dev/null \
-           || echo 0)
-    if [ "$size" -gt 10485760 ]; then
-      mv -f "$_TELEMETRY_EVENTS_FILE" "${_TELEMETRY_EVENTS_FILE}.1" 2>/dev/null || true
+  # Wrapped in flock to prevent concurrent rotation races
+  (
+    flock -n 200 || true
+    if [ -f "$_TELEMETRY_EVENTS_FILE" ]; then
+      local size
+      size=$(stat -f%z "$_TELEMETRY_EVENTS_FILE" 2>/dev/null \
+             || stat -c%s "$_TELEMETRY_EVENTS_FILE" 2>/dev/null \
+             || echo 0)
+      if [ "$size" -gt 10485760 ]; then
+        mv -f "$_TELEMETRY_EVENTS_FILE" "${_TELEMETRY_EVENTS_FILE}.1" 2>/dev/null || true
+      fi
     fi
-  fi
+  ) 200>"${_TELEMETRY_EVENTS_FILE}.lock"
 
   export _TELEMETRY_INSTALL_ID _TELEMETRY_VERSION _TELEMETRY_OS _TELEMETRY_EVENTS_FILE
 }
@@ -162,7 +166,9 @@ emit_session_start() {
   fi
 
   # Memory file count
-  local memory_dir="$HOME/.claude/projects/$(pwd | sed 's|^/|-|' | tr '/' '-')/memory"
+  # Source worktree lib for stable repo root (safe to re-source due to guard)
+  source "$(dirname "${BASH_SOURCE[0]}")/worktree.sh"
+  local memory_dir="$HOME/.claude/projects/$(get_repo_root | sed 's|^/|-|' | tr '/' '-')/memory"
   memory_count=0
   if [ -d "$memory_dir" ]; then
     memory_count=$(find "$memory_dir" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ' || echo "0")

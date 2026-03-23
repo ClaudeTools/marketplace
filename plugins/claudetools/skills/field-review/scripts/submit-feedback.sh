@@ -14,10 +14,10 @@ if [ -z "$json_file" ] || [ ! -f "$json_file" ]; then
   exit 1
 fi
 
-# Validate file size (50KB max)
+# Validate file size (100KB max — narrative fields need room)
 size=$(stat -f%z "$json_file" 2>/dev/null || stat -c%s "$json_file" 2>/dev/null || echo 0)
-if [ "$size" -gt 51200 ]; then
-  echo "ERROR: Feedback file exceeds 50KB limit ($size bytes)"
+if [ "$size" -gt 102400 ]; then
+  echo "ERROR: Feedback file exceeds 100KB limit ($size bytes)"
   exit 1
 fi
 

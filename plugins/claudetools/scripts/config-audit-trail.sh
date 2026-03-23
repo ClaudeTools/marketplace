@@ -25,8 +25,12 @@ AUDIT_LOG="$LOGS_DIR/config-changes.jsonl"
 ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Append audit entry as JSON line (use jq for safe construction)
-jq -n --arg ts "$ts" --arg src "$source_name" --arg f "$file_path" \
-  '{timestamp: $ts, source: $src, file: $f}' >> "$AUDIT_LOG"
+# flock to prevent interleaved writes from concurrent sessions
+(
+  flock -w 1 200 || true
+  jq -n --arg ts "$ts" --arg src "$source_name" --arg f "$file_path" \
+    '{timestamp: $ts, source: $src, file: $f}' >> "$AUDIT_LOG"
+) 200>"${AUDIT_LOG}.lock"
 
 hook_log "config change recorded source=${source_name} file=${file_path}"
 

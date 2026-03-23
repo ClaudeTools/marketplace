@@ -5,6 +5,9 @@
 # Returns: 0 = evidence found or not a code project, 2 = block (no verification evidence)
 
 validate_ran_checks() {
+  # Source worktree lib (safe to re-source due to guard)
+  source "$(dirname "${BASH_SOURCE[0]}")/../lib/worktree.sh"
+
   local CWD
   CWD=$(hook_get_field '.cwd' || true)
   [ -z "$CWD" ] && CWD="."
@@ -65,7 +68,8 @@ validate_ran_checks() {
   done
 
   # 4. Check /tmp for verification breadcrumbs from this session
-  local VERIFY_BREADCRUMB="/tmp/claude-verification-${PPID}"
+  local VERIFY_BREADCRUMB
+  VERIFY_BREADCRUMB=$(session_tmp_path "verification")
   if [ -f "$VERIFY_BREADCRUMB" ]; then
     EVIDENCE_FOUND=$((EVIDENCE_FOUND + 3))
   fi

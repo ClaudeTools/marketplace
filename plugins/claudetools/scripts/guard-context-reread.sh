@@ -26,7 +26,8 @@ if [ -z "$FILE_PATH" ] || [ ! -f "$FILE_PATH" ]; then
 fi
 
 # Find session IDs file
-PROJECT_ROOT="${CODEBASE_PILOT_PROJECT_ROOT:-$(pwd)}"
+CWD=$(echo "$INPUT" | jq -r '.cwd // "."' 2>/dev/null || echo ".")
+PROJECT_ROOT="${CODEBASE_PILOT_PROJECT_ROOT:-$CWD}"
 SESSION_IDS_FILE="$PROJECT_ROOT/.codeindex/session-ids"
 
 if [ ! -f "$SESSION_IDS_FILE" ]; then

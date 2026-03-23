@@ -31,4 +31,10 @@ jq -nc \
   '{"path":$p,"ts":$t,"event":"edit"}' \
   >> "$READS_FILE" 2>/dev/null || true
 
+# --- Agent mesh file tracking ---
+MESH_CLI="$(dirname "$(dirname "$0")")/agent-mesh/cli.js"
+if [[ -f "$MESH_CLI" ]]; then
+  node "$MESH_CLI" track-file --id "$SESSION_ID" --file "$FILE_PATH" 2>/dev/null &
+fi
+
 exit 0

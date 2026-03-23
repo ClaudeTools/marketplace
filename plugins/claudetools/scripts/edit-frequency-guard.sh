@@ -13,6 +13,7 @@ source "$(dirname "$0")/hook-log.sh"
 source "$(dirname "$0")/lib/ensure-db.sh"
 ensure_metrics_db 2>/dev/null || true
 source "$(dirname "$0")/lib/adaptive-weights.sh"
+source "$(dirname "$0")/lib/worktree.sh"
 MODEL_FAMILY=$(detect_model_family)
 hook_log "invoked"
 trap 'hook_log_result $? "${HOOK_DECISION:-allow}" "${HOOK_REASON:-}"' EXIT
@@ -35,8 +36,8 @@ case "$FILE_PATH" in
     ;;
 esac
 
-# Track edit counts in a temp file keyed by parent process (session)
-COUNTER_FILE="/tmp/claude-edit-counts-${PPID}"
+# Track edit counts in a temp file keyed by session
+COUNTER_FILE=$(session_tmp_path "edit-counts")
 
 # Initialize counter file if it doesn't exist
 if [ ! -f "$COUNTER_FILE" ]; then

@@ -9,6 +9,7 @@ set -euo pipefail
 source "$(dirname "$0")/hook-log.sh"
 source "$(dirname "$0")/lib/ensure-db.sh"
 source "$(dirname "$0")/lib/adaptive-weights.sh"
+source "$(dirname "$0")/lib/worktree.sh"
 
 # sqlite3 required — skip silently if missing
 if ! command -v sqlite3 &>/dev/null; then
@@ -32,7 +33,7 @@ fi
 ensure_metrics_db || exit 0
 
 # --- Batch insert: append to spool file, flush when threshold reached ---
-SPOOL_DIR="/tmp/claude-outcome-spool-${PPID}"
+SPOOL_DIR=$(session_tmp_path "outcome-spool")
 mkdir -p "$SPOOL_DIR" 2>/dev/null || true
 SPOOL_FILE="$SPOOL_DIR/pending.sql"
 LOCK_FILE="$SPOOL_DIR/flush.lock"

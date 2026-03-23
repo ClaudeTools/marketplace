@@ -1,6 +1,6 @@
 const MAX_LINES = 100;
 const MAX_BODY_BYTES = 1_000_000; // 1MB
-const MAX_FEEDBACK_BYTES = 51_200; // 50KB per feedback report
+const MAX_FEEDBACK_BYTES = 102_400; // 100KB per feedback report (narrative fields need room)
 const MAX_FEEDBACK_ITEMS = 50;
 const VALID_CATEGORIES = ['false_positive', 'bug', 'missing_feature', 'workflow_gap', 'praise', 'suggestion'];
 const VALID_SEVERITIES = ['critical', 'high', 'medium', 'low'];
@@ -231,10 +231,10 @@ async function handlePostFeedback(request, env) {
   }
 
   try {
-    // Insert the report
+    // Insert the report (with narrative and self-critique fields)
     const reportResult = await env.TELEMETRY_DB.prepare(
-      `INSERT INTO feedback_reports (ts, install_id, plugin_version, project_type, project_size, overall_grade, model_family, os, review_type, report_json)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO feedback_reports (ts, install_id, plugin_version, project_type, project_size, overall_grade, model_family, os, review_type, report_json, narrative, self_critique)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
       .bind(
         body.ts,
@@ -246,7 +246,9 @@ async function handlePostFeedback(request, env) {
         body.model_family ?? null,
         body.os ?? null,
         body.review_type ?? 'manual',
-        JSON.stringify(body.report_summary ?? {})
+        JSON.stringify(body.report_summary ?? {}),
+        (body.narrative ?? '').slice(0, 5000),
+        (body.self_critique ?? '').slice(0, 2000)
       )
       .run();
 
@@ -255,10 +257,10 @@ async function handlePostFeedback(request, env) {
       return jsonResponse({ error: 'Failed to create report' }, 500);
     }
 
-    // Batch insert items
+    // Batch insert items (description limit raised to 1000, with related_items)
     const itemStmt = env.TELEMETRY_DB.prepare(
-      `INSERT INTO feedback_items (report_id, category, component, severity, title, description)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO feedback_items (report_id, category, component, severity, title, description, related_items)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
     );
     const itemBatch = body.items.map((item) =>
       itemStmt.bind(
@@ -267,12 +269,34 @@ async function handlePostFeedback(request, env) {
         item.component,
         item.severity ?? null,
         item.title.slice(0, 200),
-        (item.description ?? '').slice(0, 500)
+        (item.description ?? '').slice(0, 1000),
+        JSON.stringify(item.related_items ?? [])
       )
     );
     await env.TELEMETRY_DB.batch(itemBatch);
 
-    return jsonResponse({ report_id: reportId, items_accepted: body.items.length });
+    // Insert component grades if provided
+    if (Array.isArray(body.component_grades) && body.component_grades.length > 0) {
+      const gradeStmt = env.TELEMETRY_DB.prepare(
+        `INSERT INTO feedback_component_grades (report_id, component, grade, notes)
+         VALUES (?, ?, ?, ?)`
+      );
+      const gradeBatch = body.component_grades.map((g) =>
+        gradeStmt.bind(
+          reportId,
+          g.component ?? '',
+          g.grade ?? '',
+          (g.notes ?? '').slice(0, 500)
+        )
+      );
+      await env.TELEMETRY_DB.batch(gradeBatch);
+    }
+
+    return jsonResponse({
+      report_id: reportId,
+      items_accepted: body.items.length,
+      grades_accepted: body.component_grades?.length ?? 0,
+    });
   } catch (err) {
     return jsonResponse({ error: 'Database error', detail: err.message }, 500);
   }
@@ -333,7 +357,7 @@ async function handleGetFeedback(request, env) {
     }
     const issueResult = await stmt.all();
 
-    // Component average grades
+    // Component breakdown from items
     const componentResult = await env.TELEMETRY_DB.prepare(
       `SELECT fi.component,
               COUNT(DISTINCT fi.report_id) as review_count,
@@ -351,12 +375,38 @@ async function handleGetFeedback(request, env) {
       .bind(`-${safeDays}`)
       .all();
 
+    // Component grades from dedicated table
+    const gradesResult = await env.TELEMETRY_DB.prepare(
+      `SELECT g.component, g.grade, COUNT(*) as count, g.notes
+       FROM feedback_component_grades g
+       JOIN feedback_reports fr ON g.report_id = fr.id
+       WHERE fr.ts >= datetime('now', ? || ' days')
+       GROUP BY g.component, g.grade
+       ORDER BY count DESC
+       LIMIT 50`
+    )
+      .bind(`-${safeDays}`)
+      .all();
+
+    // Recent narratives (the rich reasoning — most recent 5)
+    const narrativeResult = await env.TELEMETRY_DB.prepare(
+      `SELECT ts, overall_grade, narrative, self_critique, plugin_version, project_type
+       FROM feedback_reports
+       WHERE ts >= datetime('now', ? || ' days') AND narrative IS NOT NULL AND narrative != ''
+       ORDER BY ts DESC
+       LIMIT 5`
+    )
+      .bind(`-${safeDays}`)
+      .all();
+
     return jsonResponse({
       window_days: safeDays,
       summary: summaryResult.results[0] ?? { total_reports: 0, unique_installs: 0 },
       grade_distribution: gradeResult.results,
       top_issues: issueResult.results,
       component_breakdown: componentResult.results,
+      component_grades: gradesResult.results,
+      recent_narratives: narrativeResult.results,
     });
   } catch (err) {
     return jsonResponse({ error: 'Database error', detail: err.message }, 500);

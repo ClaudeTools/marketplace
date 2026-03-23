@@ -6,16 +6,19 @@
 
 source "$(dirname "$0")/hook-log.sh"
 source "$(dirname "$0")/lib/detect-project.sh"
+source "$(dirname "$0")/lib/worktree.sh"
 
 INPUT=$(cat)
 
 hook_log "inject-prompt-context started"
 
+CWD=$(echo "$INPUT" | jq -r '.cwd // "."' 2>/dev/null || echo ".")
+
 # --- Git section ---
-if git rev-parse --is-inside-work-tree &>/dev/null; then
-  branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null)
-  uncommitted=$(git status --short 2>/dev/null | wc -l | tr -d ' ')
-  commits=$(git log --oneline -3 --no-decorate 2>/dev/null)
+if git -C "$CWD" rev-parse --is-inside-work-tree &>/dev/null; then
+  branch=$(git -C "$CWD" symbolic-ref --short HEAD 2>/dev/null || git -C "$CWD" rev-parse --short HEAD 2>/dev/null)
+  uncommitted=$(git -C "$CWD" status --short 2>/dev/null | wc -l | tr -d ' ')
+  commits=$(git -C "$CWD" log --oneline -3 --no-decorate 2>/dev/null)
 
   if [ -n "$branch" ]; then
     echo "[git] branch: ${branch} | uncommitted: ${uncommitted}"
@@ -42,7 +45,7 @@ if [ -d "$task_dir" ]; then
 fi
 
 # --- Recent failures section ---
-failure_log="/tmp/claude-failures-${PPID}.jsonl"
+failure_log="$(session_tmp_path "failures").jsonl"
 if [ -f "$failure_log" ]; then
   cutoff=$(date -v-5M +%s 2>/dev/null || date -d '5 minutes ago' +%s 2>/dev/null)
   if [ -n "$cutoff" ]; then
@@ -156,6 +159,18 @@ if command -v sqlite3 &>/dev/null; then
       fi
     fi
   fi
+fi
+
+# --- Agent mesh inbox ---
+MESH_CLI="$(dirname "$(dirname "$0")")/agent-mesh/cli.js"
+if [[ -f "$MESH_CLI" ]]; then
+  _MESH_SID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)
+  [[ -z "$_MESH_SID" ]] && _MESH_SID="$$"
+  MESSAGES=$(node "$MESH_CLI" inbox --id "$_MESH_SID" --ack 2>/dev/null || true)
+  if [[ -n "$MESSAGES" ]]; then
+    echo "[agent-mesh] $MESSAGES"
+  fi
+  node "$MESH_CLI" heartbeat --id "$_MESH_SID" 2>/dev/null &
 fi
 
 # Anti-hallucination reinforcement — injected on every prompt, survives context compaction

@@ -8,6 +8,14 @@
   - `find-usages "<name>"` — find all files that import a symbol
   - `file-overview "<path>"` — list symbols in a file, grouped by kind
   - `related-files "<path>"` — find files connected via imports
+- **agent-mesh** (via Bash): `node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js <command>`
+  - `list` — show other active agents in this repo
+  - `send --to "<name>" --message "<text>"` — message another agent
+  - `inbox --id "$SESSION_ID"` — check for messages
+  - `lock --file "<path>" --id "$SESSION_ID"` — advisory lock on a file
+  - `unlock --file "<path>" --id "$SESSION_ID"` — release lock
+  - `context --set "<key>" "<value>"` — share a decision
+  - `who --file "<path>"` — check who's working on a file
 ### MCP Tools Available
 - **task-system**: task_create, task_update, task_query, task_decompose, task_progress
 </available_tools>

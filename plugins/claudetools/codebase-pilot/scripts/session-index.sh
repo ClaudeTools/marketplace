@@ -64,14 +64,29 @@ mkdir -p "$INDEX_DIR" 2>/dev/null || true
 # Determine hook event type
 HOOK_EVENT=$(echo "$INPUT" | jq -r '.hook_event_name // empty' 2>/dev/null || true)
 
-# On SessionStart: fresh session-ids file (prevents unbounded growth across sessions)
+# On SessionStart: prune stale sessions and append ours atomically
 # On SubagentStart: append to existing file
 if [ "$HOOK_EVENT" = "SessionStart" ] || [ "$HOOK_EVENT" = "WorktreeCreate" ]; then
-  echo "$SESSION_ID" > "$INDEX_DIR/session-ids" 2>/dev/null || true
+  (
+    flock -w 2 200 || true
+    # Keep existing valid session IDs, add ours
+    tmp_ids=$(mktemp)
+    if [ -f "$INDEX_DIR/session-ids" ]; then
+      # Keep lines that aren't our session ID
+      grep -vxF "$SESSION_ID" "$INDEX_DIR/session-ids" > "$tmp_ids" 2>/dev/null || true
+    fi
+    echo "$SESSION_ID" >> "$tmp_ids"
+    mv "$tmp_ids" "$INDEX_DIR/session-ids"
+  ) 200>"$INDEX_DIR/session-ids.lock"
   : > "/tmp/codebase-pilot-reads-${SESSION_ID}.jsonl" 2>/dev/null || true
 else
   if ! grep -qxF "$SESSION_ID" "$INDEX_DIR/session-ids" 2>/dev/null; then
-    echo "$SESSION_ID" >> "$INDEX_DIR/session-ids" 2>/dev/null || true
+    (
+      flock -w 2 200 || true
+      if ! grep -qxF "$SESSION_ID" "$INDEX_DIR/session-ids" 2>/dev/null; then
+        echo "$SESSION_ID" >> "$INDEX_DIR/session-ids"
+      fi
+    ) 200>"$INDEX_DIR/session-ids.lock"
   fi
 fi
 
@@ -228,5 +243,29 @@ fi
 
 echo ""
 echo "Use codebase-pilot tools: find_symbol, find_usages, file_overview, related_files, navigate for code navigation."
+
+# --- Agent mesh registration ---
+MESH_CLI="$PLUGIN_ROOT/agent-mesh/cli.js"
+if [[ -f "$MESH_CLI" ]]; then
+  AGENT_NAME="${AGENT_MESH_NAME:-agent-${SESSION_ID}}"
+  BRANCH=$(git -C "$PROJECT_ROOT" branch --show-current 2>/dev/null || echo "unknown")
+  node "$MESH_CLI" register \
+    --id "$SESSION_ID" \
+    --name "$AGENT_NAME" \
+    --worktree "$PROJECT_ROOT" \
+    --branch "$BRANCH" \
+    --pid "$$" 2>/dev/null || true
+
+  # Deregister on Ctrl+C / SIGTERM (hooks don't fire on ungraceful exit)
+  _mesh_cleanup() { node "$MESH_CLI" deregister --id "$SESSION_ID" 2>/dev/null || true; }
+  trap _mesh_cleanup EXIT INT TERM
+
+  OTHERS=$(node "$MESH_CLI" list --exclude "$SESSION_ID" --brief 2>/dev/null || true)
+  if [[ -n "$OTHERS" ]]; then
+    echo ""
+    echo "[agent-mesh] Other agents active in this repo:"
+    echo "$OTHERS"
+  fi
+fi
 
 exit 0

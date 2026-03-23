@@ -17,13 +17,17 @@ run_memory_consolidate() {
 
   # --- Locate memory directory ---
   # Check common locations for the user's memory directory
+  # Source worktree lib (safe to re-source due to guard)
+  source "$(dirname "${BASH_SOURCE[0]}")/../lib/worktree.sh"
   local MEMORY_DIR=""
+  local REPO_ROOT
+  REPO_ROOT=$(get_repo_root)
   local CWD_SLUG
-  CWD_SLUG=$(pwd | tr '/' '-')
+  CWD_SLUG=$(echo "$REPO_ROOT" | tr '/' '-')
   local dir
   for dir in \
     "$HOME/.claude/projects/${CWD_SLUG}/memory" \
-    "$HOME/.claude/projects/-home-$(whoami)-projects-$(basename "$(pwd)")/memory" \
+    "$HOME/.claude/projects/-home-$(whoami)-projects-$(basename "$REPO_ROOT")/memory" \
     "$HOME/.claude/memory"; do
     if [[ -d "$dir" ]]; then
       MEMORY_DIR="$dir"

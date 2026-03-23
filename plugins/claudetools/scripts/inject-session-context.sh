@@ -9,6 +9,7 @@ source "$(dirname "$0")/hook-log.sh"
 source "$(dirname "$0")/lib/ensure-db.sh"
 source "$(dirname "$0")/lib/adaptive-weights.sh"
 source "$(dirname "$0")/lib/telemetry.sh" 2>/dev/null || true
+source "$(dirname "$0")/lib/worktree.sh"
 
 # Read session_id and create timestamp marker for task counting
 INPUT=$(cat 2>/dev/null || true)
@@ -42,7 +43,7 @@ fi
 ensure_metrics_db || exit 0
 
 # --- Bulk reindex memory files into DB (ensures FTS is populated) ---
-MEMORY_DIR="$HOME/.claude/projects/$(pwd | sed 's|^/|-|' | tr '/' '-')/memory"
+MEMORY_DIR="$HOME/.claude/projects/$(get_repo_root | sed 's|^/|-|' | tr '/' '-')/memory"
 if [ -d "$MEMORY_DIR" ]; then
   INDEXED=0
   for memfile in "$MEMORY_DIR"/*.md; do

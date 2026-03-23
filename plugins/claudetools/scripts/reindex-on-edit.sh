@@ -21,7 +21,8 @@ case "$FILE_PATH" in
     ;;
 esac
 
-PROJECT_ROOT="${CODEBASE_PILOT_PROJECT_ROOT:-$(pwd)}"
+CWD=$(echo "$INPUT" | jq -r '.cwd // "."' 2>/dev/null || echo ".")
+PROJECT_ROOT="${CODEBASE_PILOT_PROJECT_ROOT:-$CWD}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLI="$SCRIPT_DIR/../codebase-pilot/dist/cli.js"
 
