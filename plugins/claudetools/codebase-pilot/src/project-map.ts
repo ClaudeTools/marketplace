@@ -22,16 +22,34 @@ interface TopExport {
 
 export function generateProjectMap(projectRoot: string, existingDb?: Database.Database): string {
   const ownDb = !existingDb;
-  const db = existingDb ?? new Database(getDbPath(projectRoot), { readonly: true });
+  let db: Database.Database;
+  if (existingDb) {
+    db = existingDb;
+  } else {
+    const dbPath = getDbPath(projectRoot);
+    try {
+      db = new Database(dbPath, { readonly: true });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return `# ${path.basename(projectRoot)}\n\nCould not open index database: ${msg}`;
+    }
+  }
 
   const projectName = path.basename(projectRoot);
 
   // Language breakdown
-  const languages = db
-    .prepare(
-      "SELECT language, COUNT(*) as count FROM files GROUP BY language ORDER BY count DESC"
-    )
-    .all() as LanguageStat[];
+  let languages: LanguageStat[];
+  try {
+    languages = db
+      .prepare(
+        "SELECT language, COUNT(*) as count FROM files GROUP BY language ORDER BY count DESC"
+      )
+      .all() as LanguageStat[];
+  } catch (err) {
+    if (ownDb) try { db.close(); } catch { /* ignore */ }
+    const msg = err instanceof Error ? err.message : String(err);
+    return `# ${projectName}\n\nIndex query failed: ${msg}. Run \`codebase-pilot index\` to rebuild.`;
+  }
 
   // Total file count
   const totalFiles = db

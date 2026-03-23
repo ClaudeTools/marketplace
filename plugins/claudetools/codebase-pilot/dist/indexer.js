@@ -18,6 +18,8 @@ const IGNORED_DIRS = [
     "vendor",
     "target",
 ];
+/** Skip indexing if a project has more source files than this */
+const MAX_SOURCE_FILES = 10_000;
 const FILE_PATTERNS = [
     "**/*.ts",
     "**/*.tsx",
@@ -128,20 +130,43 @@ export function indexSingleFile(projectRoot, relPath) {
 }
 export function indexProject(projectRoot) {
     const startTime = Date.now();
-    const db = openDatabase(projectRoot);
+    // Validate project root exists
+    if (!fs.existsSync(projectRoot)) {
+        throw new Error(`Project root does not exist: ${projectRoot}`);
+    }
+    // Find all source files (wrapped to catch glob permission/fs errors)
+    let files;
+    try {
+        files = glob.sync(FILE_PATTERNS, {
+            cwd: projectRoot,
+            ignore: IGNORED_DIRS.flatMap((d) => [`${d}/**`, `**/${d}/**`]),
+            nodir: true,
+            absolute: false,
+        });
+    }
+    catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`File discovery failed: ${msg}`);
+    }
+    // Guard against enormous repos that would overwhelm memory/time
+    if (files.length > MAX_SOURCE_FILES) {
+        throw new Error(`Project has ${files.length} source files (limit: ${MAX_SOURCE_FILES}). ` +
+            `Indexing skipped to avoid resource exhaustion.`);
+    }
+    let db;
+    try {
+        db = openDatabase(projectRoot);
+    }
+    catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`Database open failed: ${msg}`);
+    }
     const stmts = prepareStatements(db);
     let indexedFiles = 0;
     let skippedFiles = 0;
     let removedFiles = 0;
     let totalSymbols = 0;
     let totalImports = 0;
-    // Find all source files
-    const files = glob.sync(FILE_PATTERNS, {
-        cwd: projectRoot,
-        ignore: IGNORED_DIRS.flatMap((d) => [`${d}/**`, `**/${d}/**`]),
-        nodir: true,
-        absolute: false,
-    });
     // Track which files we've seen (for detecting deletions)
     const seenPaths = new Set();
     // Index each file (in a transaction for performance)
@@ -256,7 +281,17 @@ export function indexProject(projectRoot) {
             }
         }
     });
-    indexAll();
+    try {
+        indexAll();
+    }
+    catch (err) {
+        try {
+            db.close();
+        }
+        catch { /* ignore close error */ }
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`Index transaction failed: ${msg}`);
+    }
     db.close();
     return {
         totalFiles: files.length,

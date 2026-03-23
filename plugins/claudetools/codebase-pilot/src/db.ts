@@ -12,38 +12,67 @@ export function getDbPath(projectRoot: string): string {
 
 export function openDatabase(projectRoot: string): Database.Database {
   const dbDir = path.join(projectRoot, DB_DIR);
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
+  try {
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Cannot create index directory ${dbDir}: ${msg}`);
   }
 
   const dbPath = getDbPath(projectRoot);
-  const db = new Database(dbPath);
+  let db: Database.Database;
+  try {
+    db = new Database(dbPath);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Cannot open database ${dbPath}: ${msg}`);
+  }
 
   // Enable WAL mode and busy timeout for concurrent write safety
-  db.pragma('journal_mode = WAL');
-  db.pragma('busy_timeout = 5000');
+  try {
+    db.pragma('journal_mode = WAL');
+    db.pragma('busy_timeout = 5000');
+  } catch {
+    // WAL mode may fail on some filesystems (e.g., network mounts) — continue with default journal
+  }
 
   // Check schema version — if mismatch, recreate
-  if (!checkSchemaVersion(db)) {
-    // Drop all tables and recreate
-    db.exec(`
-      DROP TABLE IF EXISTS imports;
-      DROP TABLE IF EXISTS symbols;
-      DROP TABLE IF EXISTS files;
-      DROP TABLE IF EXISTS meta;
-    `);
-    // FTS table needs special handling
-    try {
-      db.exec("DROP TABLE IF EXISTS symbols_fts");
-    } catch {
-      // FTS table might not exist
+  try {
+    if (!checkSchemaVersion(db)) {
+      // Drop all tables and recreate
+      db.exec(`
+        DROP TABLE IF EXISTS imports;
+        DROP TABLE IF EXISTS symbols;
+        DROP TABLE IF EXISTS files;
+        DROP TABLE IF EXISTS meta;
+      `);
+      // FTS table needs special handling
+      try {
+        db.exec("DROP TABLE IF EXISTS symbols_fts");
+      } catch {
+        // FTS table might not exist
+      }
+      // Drop triggers
+      db.exec(`
+        DROP TRIGGER IF EXISTS symbols_ai;
+        DROP TRIGGER IF EXISTS symbols_ad;
+        DROP TRIGGER IF EXISTS symbols_au;
+      `);
     }
-    // Drop triggers
-    db.exec(`
-      DROP TRIGGER IF EXISTS symbols_ai;
-      DROP TRIGGER IF EXISTS symbols_ad;
-      DROP TRIGGER IF EXISTS symbols_au;
-    `);
+  } catch (err) {
+    // Schema check failed (corrupt DB) — delete and recreate from scratch
+    try { db.close(); } catch { /* ignore */ }
+    try { fs.unlinkSync(dbPath); } catch { /* ignore */ }
+    try {
+      db = new Database(dbPath);
+      db.pragma('journal_mode = WAL');
+      db.pragma('busy_timeout = 5000');
+    } catch (innerErr) {
+      const msg = innerErr instanceof Error ? innerErr.message : String(innerErr);
+      throw new Error(`Cannot recreate database after corruption: ${msg}`);
+    }
   }
 
   initializeSchema(db);

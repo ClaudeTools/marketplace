@@ -3,12 +3,37 @@ import Database from "better-sqlite3";
 import { getDbPath } from "./db.js";
 export function generateProjectMap(projectRoot, existingDb) {
     const ownDb = !existingDb;
-    const db = existingDb ?? new Database(getDbPath(projectRoot), { readonly: true });
+    let db;
+    if (existingDb) {
+        db = existingDb;
+    }
+    else {
+        const dbPath = getDbPath(projectRoot);
+        try {
+            db = new Database(dbPath, { readonly: true });
+        }
+        catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            return `# ${path.basename(projectRoot)}\n\nCould not open index database: ${msg}`;
+        }
+    }
     const projectName = path.basename(projectRoot);
     // Language breakdown
-    const languages = db
-        .prepare("SELECT language, COUNT(*) as count FROM files GROUP BY language ORDER BY count DESC")
-        .all();
+    let languages;
+    try {
+        languages = db
+            .prepare("SELECT language, COUNT(*) as count FROM files GROUP BY language ORDER BY count DESC")
+            .all();
+    }
+    catch (err) {
+        if (ownDb)
+            try {
+                db.close();
+            }
+            catch { /* ignore */ }
+        const msg = err instanceof Error ? err.message : String(err);
+        return `# ${projectName}\n\nIndex query failed: ${msg}. Run \`codebase-pilot index\` to rebuild.`;
+    }
     // Total file count
     const totalFiles = db
         .prepare("SELECT COUNT(*) as n FROM files")
