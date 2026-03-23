@@ -41,6 +41,17 @@ case "$_model" in
 esac
 echo "model_family: $_model_family"
 
+# ── Recent changes (CHANGELOG) ───────────────────────────────────────
+CHANGELOG="${_versioned_root}/CHANGELOG.md"
+echo ""
+echo "=== RECENT CHANGES ==="
+if [ -f "$CHANGELOG" ]; then
+  # Show the last 3 version entries (up to 60 lines)
+  head -60 "$CHANGELOG" | tail -n +3
+else
+  echo "No CHANGELOG.md found — version history unavailable"
+fi
+
 # ── Hook inventory ───────────────────────────────────────────────────
 echo ""
 echo "=== HOOK INVENTORY ==="

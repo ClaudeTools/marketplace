@@ -28,9 +28,9 @@ Run the metrics collection script to get quantitative context:
 bash ${CLAUDE_SKILL_DIR}/scripts/collect-metrics.sh ${DAYS:-30}
 ```
 
-Read the output carefully. This is your evidence base — hook outcomes, failure rates, threshold status. Note anything surprising: hooks with high block rates, tools that fail often, thresholds that have been modified.
+Read the output carefully. This is your evidence base — hook outcomes, failure rates, threshold status, and a changelog showing what recently changed in the plugin. Note anything surprising: hooks with high block rates, tools that fail often, thresholds that have been modified, or new features you haven't tried yet.
 
-If the script reports no metrics.db or no sqlite3, that's fine — proceed with qualitative observations from your experience.
+If the script reports no metrics.db or no sqlite3, that's fine — proceed with qualitative observations from your experience. The changelog section shows recent version changes so you can comment on new features, regressions, or improvements you've noticed.
 
 ## Phase 2: Reflection
 
