@@ -43,15 +43,6 @@
         ]
       },
       {
-        "matcher": "Edit|Write|Bash|NotebookEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-worktree-isolation.sh"
-          }
-        ]
-      },
-      {
         "matcher": "Edit|Write",
         "hooks": [
           {
