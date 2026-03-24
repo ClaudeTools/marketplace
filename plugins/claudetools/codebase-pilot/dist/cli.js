@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { indexProject, indexSingleFile } from "./indexer.js";
-import { handleProjectMap, handleFindSymbol, handleFindUsages, handleFileOverview, handleRelatedFiles, handleNavigate, } from "./handlers.js";
+import { handleProjectMap, handleFindSymbol, handleFindUsages, handleFileOverview, handleRelatedFiles, handleNavigate, handleDeadCode, handleChangeImpact, handleContextBudget, handleApiSurface, handleCircularDeps, handleDoctor, } from "./handlers.js";
 const USAGE_TEXT = `Usage: codebase-pilot <command> [options]
 
 Commands:
@@ -12,6 +12,12 @@ Commands:
   file-overview <path>     List all symbols defined in a file
   related-files <path>     Find files connected via imports
   navigate <query>         Query-driven search across symbols, paths, and imports
+  dead-code                Find exported symbols never imported anywhere
+  change-impact <symbol>   Show what breaks if a symbol changes
+  context-budget           Rank files by import count (most-imported first)
+  api-surface              List all exported symbols across the project
+  circular-deps            Find circular import chains
+  doctor                   Health check — SQLite, grammars, index freshness
 
 Options:
   --kind <kind>            Filter find-symbol by kind
@@ -130,6 +136,35 @@ function runNavigate() {
     setProjectEnv();
     process.stdout.write(handleNavigate({ query }) + "\n");
 }
+function runDeadCode() {
+    setProjectEnv();
+    process.stdout.write(handleDeadCode() + "\n");
+}
+function runChangeImpact() {
+    const symbol = getArg(1);
+    if (!symbol) {
+        process.stderr.write("Error: symbol name required\n" + USAGE_TEXT + "\n");
+        process.exit(1);
+    }
+    setProjectEnv();
+    process.stdout.write(handleChangeImpact({ symbol }) + "\n");
+}
+function runContextBudget() {
+    setProjectEnv();
+    process.stdout.write(handleContextBudget() + "\n");
+}
+function runApiSurface() {
+    setProjectEnv();
+    process.stdout.write(handleApiSurface() + "\n");
+}
+function runCircularDeps() {
+    setProjectEnv();
+    process.stdout.write(handleCircularDeps() + "\n");
+}
+function runDoctor() {
+    setProjectEnv();
+    process.stdout.write(handleDoctor() + "\n");
+}
 switch (command) {
     case "index":
         runIndex();
@@ -154,6 +189,24 @@ switch (command) {
         break;
     case "navigate":
         runNavigate();
+        break;
+    case "dead-code":
+        runDeadCode();
+        break;
+    case "change-impact":
+        runChangeImpact();
+        break;
+    case "context-budget":
+        runContextBudget();
+        break;
+    case "api-surface":
+        runApiSurface();
+        break;
+    case "circular-deps":
+        runCircularDeps();
+        break;
+    case "doctor":
+        runDoctor();
         break;
     default:
         if (command) {

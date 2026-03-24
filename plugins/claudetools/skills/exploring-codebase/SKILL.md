@@ -33,6 +33,10 @@ Before running commands, determine the right mode based on the user's intent:
 | "Find all queries on the transactions table" | **find-queries** | `find-queries.sh` script |
 | "Compare schema.sql vs types.ts for mismatches" | **diff-schema** | `diff-schema.sh` script |
 | Free-form question about the codebase | **navigate** | `navigate` (query-driven search) |
+| "Are there any security issues?" / "Scan for vulnerabilities" | **security-scan** | `security-scan.sh` script |
+| "Find unused exports" / "What code is dead?" | **dead-code** | `dead-code` CLI command |
+| "What breaks if I change X?" / "Impact of modifying Y" | **change-impact** | `change-impact` CLI command |
+| "Which functions are too long?" / "Show complex code" | **complexity-report** | `complexity-report.sh` script |
 
 ## Mode: map
 
@@ -182,6 +186,64 @@ bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/diff-schema.sh "sch
 Shows fields only in file 1, only in file 2, and in both. Catches schema parity bugs between database definitions and application types.
 
 **When to use:** "Compare the DB schema to the TypeScript types", "Are there column mismatches between these two files?"
+
+## Mode: security-scan
+
+AST-aware security scanning — finds hardcoded secrets, SQL injection, insecure crypto, console.log in production, and unvalidated redirects.
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/security-scan.sh
+```
+
+Flags:
+- `--all` — show medium/low severity findings (default: only critical/high)
+- `--json` — output as JSON
+
+Output grouped by severity: CRITICAL, HIGH, MEDIUM, LOW.
+
+**When to use:** "Are there security issues?", "Scan for hardcoded secrets", "Check for SQL injection"
+
+## Mode: dead-code
+
+Find exported symbols that are never imported anywhere in the project.
+
+```bash
+node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js dead-code
+```
+
+Or via the shell wrapper:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/dead-code.sh
+```
+
+**When to use:** "Find unused exports", "What code can I safely delete?", "Show dead code"
+
+## Mode: change-impact
+
+Show what files break if a symbol changes — separates direct importers from test files.
+
+```bash
+node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js change-impact "handleAuth"
+```
+
+Or via the shell wrapper:
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/change-impact.sh "handleAuth"
+```
+
+**When to use:** "What breaks if I change X?", "Impact analysis for refactoring Y", "Show blast radius"
+
+## Mode: complexity-report
+
+Find functions over a line threshold, flagging deeply nested code.
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/complexity-report.sh --threshold 30
+```
+
+Default threshold is 50 lines. Uses the codebase-pilot index to find functions with line ranges, then checks nesting depth in source.
+
+**When to use:** "Which functions are too long?", "Show complex code", "Find refactoring candidates"
 
 ## Context Awareness
 

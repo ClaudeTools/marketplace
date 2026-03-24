@@ -455,4 +455,341 @@ export function handleRelatedFiles(args) {
     }
     return lines.join("\n");
 }
+// --- Dead code: exported symbols never imported anywhere ---
+export function handleDeadCode() {
+    const db = getDatabase();
+    if (!db)
+        return dbErrorMessage();
+    const start = Date.now();
+    // Get all exported symbols
+    const exported = db
+        .prepare(`SELECT s.name, s.kind, f.path, s.line
+       FROM symbols s JOIN files f ON s.file_id = f.id
+       WHERE s.exported = 1
+       ORDER BY f.path, s.line`)
+        .all();
+    // Get all imported symbol names
+    const allImports = db
+        .prepare(`SELECT DISTINCT symbols FROM imports WHERE symbols IS NOT NULL AND symbols != ''`)
+        .all();
+    const importedNames = new Set();
+    for (const row of allImports) {
+        for (const sym of row.symbols.split(",")) {
+            const trimmed = sym.trim().replace(/^\* as /, "");
+            if (trimmed)
+                importedNames.add(trimmed);
+        }
+    }
+    // Filter exported symbols not in any import list
+    const dead = exported.filter((s) => !importedNames.has(s.name));
+    const elapsed = Date.now() - start;
+    log("dead_code", `found ${dead.length} unreferenced exports`, elapsed);
+    if (dead.length === 0) {
+        return "No dead exports found — all exported symbols are imported somewhere.";
+    }
+    const lines = [`${dead.length} exported symbol(s) never imported:`, ""];
+    let currentFile = "";
+    for (const d of dead) {
+        if (d.path !== currentFile) {
+            if (currentFile)
+                lines.push("");
+            lines.push(`  ${d.path}`);
+            currentFile = d.path;
+        }
+        lines.push(`    L${d.line} ${d.kind} ${d.name}`);
+    }
+    return lines.join("\n");
+}
+// --- Change impact: what breaks if I change this symbol? ---
+export function handleChangeImpact(args) {
+    const db = getDatabase();
+    if (!db)
+        return dbErrorMessage();
+    const start = Date.now();
+    // Find the symbol's file
+    const symbolRow = db
+        .prepare(`SELECT s.name, f.path FROM symbols s
+       JOIN files f ON s.file_id = f.id
+       WHERE s.name = ?
+       LIMIT 1`)
+        .get(args.symbol);
+    if (!symbolRow) {
+        return `Symbol "${args.symbol}" not found in index`;
+    }
+    // Find all files that import from the symbol's file
+    const basename = symbolRow.path.replace(/\.(ts|tsx|js|jsx|mjs|cjs|py)$/, "");
+    const safeBasename = escapeLike(path.basename(basename));
+    const importers = db
+        .prepare(`SELECT DISTINCT f.path, i.symbols
+       FROM imports i JOIN files f ON i.file_id = f.id
+       WHERE i.source LIKE ? ESCAPE '\\'
+          OR i.source LIKE ? ESCAPE '\\'
+       ORDER BY f.path`)
+        .all(`%${safeBasename}`, `%/${escapeLike(basename)}`);
+    // Separate test files from direct importers
+    const testPattern = /\.(test|spec)\.|__tests__\//;
+    const directImporters = [];
+    const testFiles = [];
+    for (const imp of importers) {
+        if (testPattern.test(imp.path)) {
+            testFiles.push(imp.path);
+        }
+        else {
+            directImporters.push(imp.path);
+        }
+    }
+    const elapsed = Date.now() - start;
+    log("change_impact", `${args.symbol}: ${importers.length} importers`, elapsed);
+    const lines = [
+        `Change impact for "${args.symbol}" (defined in ${symbolRow.path}):`,
+        "",
+        `Direct importers (${directImporters.length}):`,
+    ];
+    for (const f of directImporters)
+        lines.push(`  ${f}`);
+    lines.push("", `Test files (${testFiles.length}):`);
+    for (const f of testFiles)
+        lines.push(`  ${f}`);
+    lines.push("", `Total impact: ${importers.length} file(s)`);
+    return lines.join("\n");
+}
+// --- Context budget: rank files by importance (most-imported first) ---
+export function handleContextBudget() {
+    const db = getDatabase();
+    if (!db)
+        return dbErrorMessage();
+    const start = Date.now();
+    const results = db
+        .prepare(`SELECT i.source, COUNT(*) as import_count
+       FROM imports i
+       GROUP BY i.source
+       ORDER BY import_count DESC
+       LIMIT 20`)
+        .all();
+    const elapsed = Date.now() - start;
+    log("context_budget", `ranked ${results.length} sources`, elapsed);
+    if (results.length === 0) {
+        return "No import data found. Run `codebase-pilot index` first.";
+    }
+    const lines = ["Most-imported sources (read these first):", ""];
+    for (const r of results) {
+        lines.push(`  [${r.import_count}x] ${r.source}`);
+    }
+    return lines.join("\n");
+}
+// --- API surface: all exported symbols ---
+export function handleApiSurface() {
+    const db = getDatabase();
+    if (!db)
+        return dbErrorMessage();
+    const start = Date.now();
+    const results = db
+        .prepare(`SELECT s.name, s.kind, s.signature, f.path, s.line
+       FROM symbols s JOIN files f ON s.file_id = f.id
+       WHERE s.exported = 1
+       ORDER BY f.path, s.line`)
+        .all();
+    const elapsed = Date.now() - start;
+    log("api_surface", `found ${results.length} exports`, elapsed);
+    if (results.length === 0) {
+        return "No exported symbols found.";
+    }
+    const lines = [`${results.length} exported symbol(s):`, ""];
+    let currentFile = "";
+    for (const r of results) {
+        if (r.path !== currentFile) {
+            if (currentFile)
+                lines.push("");
+            lines.push(`  ${r.path}`);
+            currentFile = r.path;
+        }
+        const sig = r.signature ? ` — ${r.signature}` : "";
+        lines.push(`    L${r.line} ${r.kind} ${r.name}${sig}`);
+    }
+    return lines.join("\n");
+}
+// --- Circular deps: find circular import chains ---
+export function handleCircularDeps() {
+    const db = getDatabase();
+    if (!db)
+        return dbErrorMessage();
+    const start = Date.now();
+    // Build adjacency list: file path → imported sources
+    const allImports = db
+        .prepare(`SELECT f.path, i.source
+       FROM imports i JOIN files f ON i.file_id = f.id`)
+        .all();
+    // Build file path set for resolving import sources
+    const allFiles = db
+        .prepare(`SELECT path FROM files`)
+        .all();
+    const fileSet = new Set(allFiles.map((f) => f.path));
+    // Build adjacency map
+    const graph = new Map();
+    for (const imp of allImports) {
+        const targets = graph.get(imp.path) ?? [];
+        const resolved = resolveImportSource(imp.source, imp.path, fileSet);
+        if (resolved) {
+            targets.push(resolved);
+        }
+        graph.set(imp.path, targets);
+    }
+    // DFS cycle detection
+    const cycles = [];
+    const visited = new Set();
+    const inStack = new Set();
+    function dfs(node, chain) {
+        if (cycles.length >= 20)
+            return;
+        if (inStack.has(node)) {
+            const cycleStart = chain.indexOf(node);
+            if (cycleStart !== -1) {
+                cycles.push([...chain.slice(cycleStart), node]);
+            }
+            return;
+        }
+        if (visited.has(node))
+            return;
+        visited.add(node);
+        inStack.add(node);
+        chain.push(node);
+        for (const dep of graph.get(node) ?? []) {
+            dfs(dep, chain);
+        }
+        chain.pop();
+        inStack.delete(node);
+    }
+    for (const file of graph.keys()) {
+        dfs(file, []);
+    }
+    const elapsed = Date.now() - start;
+    log("circular_deps", `found ${cycles.length} cycles`, elapsed);
+    if (cycles.length === 0) {
+        return "No circular import chains found.";
+    }
+    const lines = [`${cycles.length} circular import chain(s):`, ""];
+    for (let i = 0; i < cycles.length; i++) {
+        lines.push(`  Cycle ${i + 1}: ${cycles[i].join(" → ")}`);
+    }
+    return lines.join("\n");
+}
+function resolveImportSource(source, importerPath, fileSet) {
+    if (!source.startsWith(".") && !source.startsWith("/"))
+        return null;
+    const importerDir = path.dirname(importerPath);
+    const resolved = path.normalize(path.join(importerDir, source));
+    const extensions = ["", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".py"];
+    for (const ext of extensions) {
+        if (fileSet.has(resolved + ext))
+            return resolved + ext;
+    }
+    for (const ext of [".ts", ".js", ".tsx", ".jsx"]) {
+        const indexPath = path.join(resolved, "index" + ext);
+        if (fileSet.has(indexPath))
+            return indexPath;
+    }
+    return null;
+}
+// --- Doctor: health check ---
+export function handleDoctor() {
+    const lines = ["codebase-pilot doctor", ""];
+    let overallStatus = "OK";
+    // 1. SQLite check
+    try {
+        const testDb = new Database(":memory:");
+        testDb.close();
+        lines.push("  [OK] SQLite (better-sqlite3) loads correctly");
+    }
+    catch (err) {
+        lines.push(`  [FAIL] SQLite: ${err instanceof Error ? err.message : err}`);
+        lines.push("    Fix: npm rebuild better-sqlite3");
+        overallStatus = "BROKEN";
+    }
+    // 2. Grammar check — verify grammar packages exist in node_modules
+    const codebasePilotRoot = path.resolve(__dirname, "..");
+    const grammars = [
+        { name: "TypeScript", pkg: "tree-sitter-typescript" },
+        { name: "JavaScript", pkg: "tree-sitter-javascript" },
+        { name: "Python", pkg: "tree-sitter-python" },
+    ];
+    for (const g of grammars) {
+        const pkgPath = path.join(codebasePilotRoot, "node_modules", g.pkg);
+        if (fs.existsSync(pkgPath)) {
+            lines.push(`  [OK] Grammar: ${g.name}`);
+        }
+        else {
+            lines.push(`  [WARN] Grammar: ${g.name} — not installed`);
+            if (overallStatus === "OK")
+                overallStatus = "DEGRADED";
+        }
+    }
+    // Check WASM grammars
+    const wasmsDir = path.join(codebasePilotRoot, "node_modules", "tree-sitter-wasms", "out");
+    if (fs.existsSync(wasmsDir)) {
+        try {
+            const wasmFiles = fs.readdirSync(wasmsDir).filter((f) => f.endsWith(".wasm"));
+            lines.push(`  [OK] WASM grammars: ${wasmFiles.length} available`);
+        }
+        catch {
+            lines.push("  [WARN] WASM grammars directory exists but unreadable");
+        }
+    }
+    else {
+        lines.push("  [INFO] WASM grammars: not installed (run download-grammars.sh for extra languages)");
+    }
+    // 3. Index check
+    const projectRoot = getProjectRoot();
+    const dbPath = getDbPath(projectRoot);
+    if (fs.existsSync(dbPath)) {
+        lines.push(`  [OK] Index exists at ${dbPath}`);
+        // 4. Freshness check
+        try {
+            const db = getDatabase();
+            if (db) {
+                const fileCount = db.prepare("SELECT COUNT(*) as cnt FROM files").get().cnt;
+                lines.push(`  [OK] Index contains ${fileCount} files`);
+                const staleFiles = db
+                    .prepare(`SELECT path, modified_at FROM files
+             ORDER BY modified_at DESC LIMIT 5`)
+                    .all();
+                let staleCount = 0;
+                for (const f of staleFiles) {
+                    try {
+                        const absPath = path.join(projectRoot, f.path);
+                        const fileMtime = Math.floor(fs.statSync(absPath).mtimeMs / 1000);
+                        if (fileMtime > f.modified_at)
+                            staleCount++;
+                    }
+                    catch { /* file may be deleted */ }
+                }
+                if (staleCount > 0) {
+                    lines.push(`  [WARN] ${staleCount} of ${staleFiles.length} sampled files modified since last index`);
+                    lines.push("    Fix: codebase-pilot index");
+                    if (overallStatus === "OK")
+                        overallStatus = "DEGRADED";
+                }
+                else {
+                    lines.push("  [OK] Index appears fresh");
+                }
+            }
+        }
+        catch (err) {
+            lines.push(`  [WARN] Could not check freshness: ${err instanceof Error ? err.message : err}`);
+        }
+    }
+    else {
+        lines.push(`  [FAIL] No index found at ${dbPath}`);
+        lines.push("    Fix: codebase-pilot index");
+        overallStatus = "BROKEN";
+    }
+    lines.push("");
+    lines.push(`Overall: ${overallStatus}`);
+    if (overallStatus === "DEGRADED") {
+        lines.push("  Some features may be unavailable. Run the suggested fixes above.");
+    }
+    else if (overallStatus === "BROKEN") {
+        lines.push("  Core functionality unavailable. Run the suggested fixes above.");
+    }
+    return lines.join("\n");
+}
 //# sourceMappingURL=handlers.js.map

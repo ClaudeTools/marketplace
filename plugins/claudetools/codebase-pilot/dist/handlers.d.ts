@@ -45,4 +45,12 @@ export declare function handleFileOverview(args: {
 export declare function handleRelatedFiles(args: {
     path: string;
 }): string;
+export declare function handleDeadCode(): string;
+export declare function handleChangeImpact(args: {
+    symbol: string;
+}): string;
+export declare function handleContextBudget(): string;
+export declare function handleApiSurface(): string;
+export declare function handleCircularDeps(): string;
+export declare function handleDoctor(): string;
 //# sourceMappingURL=handlers.d.ts.map
