@@ -13,6 +13,6 @@ export interface SingleFileStats {
     durationMs: number;
     deleted: boolean;
 }
-export declare function indexSingleFile(projectRoot: string, relPath: string): SingleFileStats;
-export declare function indexProject(projectRoot: string): IndexStats;
+export declare function indexSingleFile(projectRoot: string, relPath: string): Promise<SingleFileStats>;
+export declare function indexProject(projectRoot: string): Promise<IndexStats>;
 //# sourceMappingURL=indexer.d.ts.map

@@ -43,10 +43,10 @@ function setProjectEnv() {
         process.env.CODEBASE_PILOT_PROJECT_ROOT = root;
     }
 }
-function runIndex() {
+async function runIndex() {
     const pathArg = getArg(1) ?? process.cwd();
     try {
-        const stats = indexProject(pathArg);
+        const stats = await indexProject(pathArg);
         const summary = [
             `Indexed ${stats.indexedFiles} files (${stats.skippedFiles} unchanged, ${stats.removedFiles} removed)`,
             `${stats.totalSymbols} symbols, ${stats.totalImports} imports in ${stats.durationMs}ms`,
@@ -109,7 +109,7 @@ function runRelatedFiles() {
     setProjectEnv();
     process.stdout.write(handleRelatedFiles({ path: filePath }) + "\n");
 }
-function runIndexFile() {
+async function runIndexFile() {
     const filePath = getArg(1);
     if (!filePath) {
         process.stderr.write("Error: file path required\n" + USAGE_TEXT + "\n");
@@ -119,7 +119,7 @@ function runIndexFile() {
     if (!process.env.CODEBASE_PILOT_PROJECT_ROOT) {
         process.env.CODEBASE_PILOT_PROJECT_ROOT = projectRoot;
     }
-    const stats = indexSingleFile(projectRoot, filePath);
+    const stats = await indexSingleFile(projectRoot, filePath);
     if (stats.deleted) {
         process.stderr.write(`Removed ${filePath} from index (${stats.durationMs}ms)\n`);
     }
@@ -136,83 +136,66 @@ function runNavigate() {
     setProjectEnv();
     process.stdout.write(handleNavigate({ query }) + "\n");
 }
-function runDeadCode() {
-    setProjectEnv();
-    process.stdout.write(handleDeadCode() + "\n");
-}
-function runChangeImpact() {
-    const symbol = getArg(1);
-    if (!symbol) {
-        process.stderr.write("Error: symbol name required\n" + USAGE_TEXT + "\n");
-        process.exit(1);
+async function main() {
+    switch (command) {
+        case "index":
+            await runIndex();
+            break;
+        case "index-file":
+            await runIndexFile();
+            break;
+        case "map":
+            runMap();
+            break;
+        case "find-symbol":
+            runFindSymbol();
+            break;
+        case "find-usages":
+            runFindUsages();
+            break;
+        case "file-overview":
+            runFileOverview();
+            break;
+        case "related-files":
+            runRelatedFiles();
+            break;
+        case "navigate":
+            runNavigate();
+            break;
+        case "dead-code":
+            setProjectEnv();
+            process.stdout.write(handleDeadCode() + "\n");
+            break;
+        case "change-impact":
+            setProjectEnv();
+            process.stdout.write(handleChangeImpact({ symbol: getArg(1) ?? "" }) + "\n");
+            break;
+        case "context-budget":
+            setProjectEnv();
+            process.stdout.write(handleContextBudget() + "\n");
+            break;
+        case "api-surface":
+            setProjectEnv();
+            process.stdout.write(handleApiSurface() + "\n");
+            break;
+        case "circular-deps":
+            setProjectEnv();
+            process.stdout.write(handleCircularDeps() + "\n");
+            break;
+        case "doctor":
+            setProjectEnv();
+            process.stdout.write(handleDoctor() + "\n");
+            break;
+        default:
+            if (command) {
+                process.stderr.write(`Unknown command: ${command}\n`);
+            }
+            process.stderr.write(USAGE_TEXT + "\n");
+            process.exit(1);
     }
-    setProjectEnv();
-    process.stdout.write(handleChangeImpact({ symbol }) + "\n");
 }
-function runContextBudget() {
-    setProjectEnv();
-    process.stdout.write(handleContextBudget() + "\n");
-}
-function runApiSurface() {
-    setProjectEnv();
-    process.stdout.write(handleApiSurface() + "\n");
-}
-function runCircularDeps() {
-    setProjectEnv();
-    process.stdout.write(handleCircularDeps() + "\n");
-}
-function runDoctor() {
-    setProjectEnv();
-    process.stdout.write(handleDoctor() + "\n");
-}
-switch (command) {
-    case "index":
-        runIndex();
-        break;
-    case "index-file":
-        runIndexFile();
-        break;
-    case "map":
-        runMap();
-        break;
-    case "find-symbol":
-        runFindSymbol();
-        break;
-    case "find-usages":
-        runFindUsages();
-        break;
-    case "file-overview":
-        runFileOverview();
-        break;
-    case "related-files":
-        runRelatedFiles();
-        break;
-    case "navigate":
-        runNavigate();
-        break;
-    case "dead-code":
-        runDeadCode();
-        break;
-    case "change-impact":
-        runChangeImpact();
-        break;
-    case "context-budget":
-        runContextBudget();
-        break;
-    case "api-surface":
-        runApiSurface();
-        break;
-    case "circular-deps":
-        runCircularDeps();
-        break;
-    case "doctor":
-        runDoctor();
-        break;
-    default:
-        if (command) {
-            process.stderr.write(`Unknown command: ${command}\n`);
-        }
-        process.stderr.write(USAGE_TEXT + "\n");
-        process.exit(1);
-}
+main().catch((err) => {
+    process.stderr.write(`codebase-pilot error: ${err instanceof Error ? err.message : String(err)}\n`);
+    process.exit(1);
+});
 //# sourceMappingURL=cli.js.map

@@ -37,6 +37,22 @@ const FILE_PATTERNS = [
   "**/*.mjs",
   "**/*.cjs",
   "**/*.py",
+  "**/*.go",
+  "**/*.rs",
+  "**/*.java",
+  "**/*.kt",
+  "**/*.kts",
+  "**/*.rb",
+  "**/*.cs",
+  "**/*.php",
+  "**/*.swift",
+  "**/*.c",
+  "**/*.h",
+  "**/*.cpp",
+  "**/*.hpp",
+  "**/*.cc",
+  "**/*.cxx",
+  "**/*.sh",
 ];
 
 export interface IndexStats {
@@ -56,7 +72,7 @@ export interface SingleFileStats {
   deleted: boolean;
 }
 
-export function indexSingleFile(projectRoot: string, relPath: string): SingleFileStats {
+export async function indexSingleFile(projectRoot: string, relPath: string): Promise<SingleFileStats> {
   const startTime = Date.now();
   const db = openDatabase(projectRoot);
   // Wait up to 3s for concurrent writes (e.g. rapid sequential edits)
@@ -69,6 +85,23 @@ export function indexSingleFile(projectRoot: string, relPath: string): SingleFil
   let totalSymbols = 0;
   let totalImports = 0;
   let deleted = false;
+
+  // Parse outside the transaction (parseFile is async for WASM languages)
+  let parseResult: { language: string; result: import("./parser.js").ParseResult; stat: fs.Stats } | null = null;
+
+  if (fileExists) {
+    const language = detectLanguage(relPath);
+    if (language) {
+      const stat = fs.statSync(absPath);
+      const source = fs.readFileSync(absPath, "utf-8");
+      try {
+        const result = await parseFile(source, language);
+        parseResult = { language, result, stat };
+      } catch {
+        // Skip files that fail to parse
+      }
+    }
+  }
 
   const reindex = db.transaction(() => {
     const existing = stmts.getFile.get(relPath) as
@@ -86,20 +119,11 @@ export function indexSingleFile(projectRoot: string, relPath: string): SingleFil
       return;
     }
 
-    const stat = fs.statSync(absPath);
+    if (!parseResult) return;
+
+    const { language, result, stat } = parseResult;
     const mtimeMs = Math.floor(stat.mtimeMs);
     const size = stat.size;
-
-    const language = detectLanguage(relPath);
-    if (!language) return;
-
-    const source = fs.readFileSync(absPath, "utf-8");
-    let result;
-    try {
-      result = parseFile(source, language);
-    } catch {
-      return;
-    }
 
     // Upsert file record
     if (existing) {
@@ -173,7 +197,7 @@ export function indexSingleFile(projectRoot: string, relPath: string): SingleFil
   };
 }
 
-export function indexProject(projectRoot: string): IndexStats {
+export async function indexProject(projectRoot: string): Promise<IndexStats> {
   const startTime = Date.now();
 
   // Validate project root exists
@@ -221,58 +245,79 @@ export function indexProject(projectRoot: string): IndexStats {
   // Track which files we've seen (for detecting deletions)
   const seenPaths = new Set<string>();
 
-  // Index each file (in a transaction for performance)
+  // Pre-parse all files that need updating (async parsing happens outside the transaction)
+  interface ParsedFile {
+    relPath: string;
+    language: string;
+    result: import("./parser.js").ParseResult;
+    mtimeMs: number;
+    size: number;
+  }
+
+  const parsedFiles: ParsedFile[] = [];
+  const unchangedFiles: { relPath: string; existingId: number }[] = [];
+
+  for (const relPath of files) {
+    seenPaths.add(relPath);
+    const absPath = path.join(projectRoot, relPath);
+
+    let stat;
+    try {
+      stat = fs.statSync(absPath);
+    } catch {
+      continue;
+    }
+    if (!stat.isFile()) continue;
+
+    const mtimeMs = Math.floor(stat.mtimeMs);
+    const size = stat.size;
+
+    // Check if file is already indexed and unchanged
+    const existing = stmts.getFile.get(relPath) as
+      | { id: number; modified_at: number; size: number }
+      | undefined;
+
+    if (existing && existing.modified_at === mtimeMs && existing.size === size) {
+      unchangedFiles.push({ relPath, existingId: existing.id });
+      continue;
+    }
+
+    const language = detectLanguage(relPath);
+    if (!language) {
+      skippedFiles++;
+      continue;
+    }
+
+    // Read and parse the file (await for WASM languages)
+    const source = fs.readFileSync(absPath, "utf-8");
+    try {
+      const result = await parseFile(source, language);
+      parsedFiles.push({ relPath, language, result, mtimeMs, size });
+    } catch {
+      skippedFiles++;
+    }
+  }
+
+  // Now run the synchronous transaction with pre-parsed results
   const indexAll = db.transaction(() => {
-    for (const relPath of files) {
-      seenPaths.add(relPath);
-      const absPath = path.join(projectRoot, relPath);
+    // Count unchanged files
+    for (const { existingId } of unchangedFiles) {
+      skippedFiles++;
+      const count = db
+        .prepare("SELECT COUNT(*) as n FROM symbols WHERE file_id = ?")
+        .get(existingId) as { n: number };
+      totalSymbols += count.n;
+      const impCount = db
+        .prepare("SELECT COUNT(*) as n FROM imports WHERE file_id = ?")
+        .get(existingId) as { n: number };
+      totalImports += impCount.n;
+    }
 
-      let stat;
-      try {
-        stat = fs.statSync(absPath);
-      } catch {
-        continue;
-      }
-      if (!stat.isFile()) continue;
-
-      const mtimeMs = Math.floor(stat.mtimeMs);
-      const size = stat.size;
-
-      // Check if file is already indexed and unchanged
+    // Insert/update parsed files
+    for (const { relPath, language, result, mtimeMs, size } of parsedFiles) {
       const existing = stmts.getFile.get(relPath) as
         | { id: number; modified_at: number; size: number }
         | undefined;
-
-      if (existing && existing.modified_at === mtimeMs && existing.size === size) {
-        skippedFiles++;
-        // Count existing symbols for stats
-        const count = db
-          .prepare("SELECT COUNT(*) as n FROM symbols WHERE file_id = ?")
-          .get(existing.id) as { n: number };
-        totalSymbols += count.n;
-        const impCount = db
-          .prepare("SELECT COUNT(*) as n FROM imports WHERE file_id = ?")
-          .get(existing.id) as { n: number };
-        totalImports += impCount.n;
-        continue;
-      }
-
-      const language = detectLanguage(relPath);
-      if (!language) {
-        skippedFiles++;
-        continue;
-      }
-
-      // Read and parse the file
-      const source = fs.readFileSync(absPath, "utf-8");
-      let result;
-      try {
-        result = parseFile(source, language);
-      } catch (err) {
-        // Skip files that fail to parse
-        skippedFiles++;
-        continue;
-      }
 
       // Upsert file record
       if (existing) {

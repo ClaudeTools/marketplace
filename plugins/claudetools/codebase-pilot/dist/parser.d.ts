@@ -16,8 +16,7 @@ export interface ParseResult {
     imports: ExtractedImport[];
 }
 export type SymbolKind = "function" | "class" | "interface" | "type" | "enum" | "variable" | "method" | "property";
-type SupportedLanguage = "typescript" | "tsx" | "javascript" | "jsx" | "python";
+export type SupportedLanguage = "typescript" | "tsx" | "javascript" | "jsx" | "python" | "go" | "rust" | "java" | "kotlin" | "ruby" | "c_sharp" | "php" | "swift" | "c" | "cpp" | "bash";
 export declare function detectLanguage(filePath: string): SupportedLanguage | null;
-export declare function parseFile(source: string, language: SupportedLanguage): ParseResult;
-export {};
+export declare function parseFile(source: string, language: SupportedLanguage): Promise<ParseResult>;
 //# sourceMappingURL=parser.d.ts.map

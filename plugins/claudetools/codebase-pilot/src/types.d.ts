@@ -12,3 +12,9 @@ declare module "tree-sitter-javascript" {
   const language: Language;
   export default language;
 }
+
+declare module "tree-sitter-python" {
+  import type { Language } from "tree-sitter";
+  const language: Language;
+  export default language;
+}

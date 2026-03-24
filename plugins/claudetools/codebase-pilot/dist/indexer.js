@@ -28,8 +28,24 @@ const FILE_PATTERNS = [
     "**/*.mjs",
     "**/*.cjs",
     "**/*.py",
+    "**/*.go",
+    "**/*.rs",
+    "**/*.java",
+    "**/*.kt",
+    "**/*.kts",
+    "**/*.rb",
+    "**/*.cs",
+    "**/*.php",
+    "**/*.swift",
+    "**/*.c",
+    "**/*.h",
+    "**/*.cpp",
+    "**/*.hpp",
+    "**/*.cc",
+    "**/*.cxx",
+    "**/*.sh",
 ];
-export function indexSingleFile(projectRoot, relPath) {
+export async function indexSingleFile(projectRoot, relPath) {
     const startTime = Date.now();
     const db = openDatabase(projectRoot);
     // Wait up to 3s for concurrent writes (e.g. rapid sequential edits)
@@ -40,6 +56,22 @@ export function indexSingleFile(projectRoot, relPath) {
     let totalSymbols = 0;
     let totalImports = 0;
     let deleted = false;
+    // Parse outside the transaction (parseFile is async for WASM languages)
+    let parseResult = null;
+    if (fileExists) {
+        const language = detectLanguage(relPath);
+        if (language) {
+            const stat = fs.statSync(absPath);
+            const source = fs.readFileSync(absPath, "utf-8");
+            try {
+                const result = await parseFile(source, language);
+                parseResult = { language, result, stat };
+            }
+            catch {
+                // Skip files that fail to parse
+            }
+        }
+    }
     const reindex = db.transaction(() => {
         const existing = stmts.getFile.get(relPath);
         if (!fileExists) {
@@ -52,20 +84,11 @@ export function indexSingleFile(projectRoot, relPath) {
             }
             return;
         }
-        const stat = fs.statSync(absPath);
+        if (!parseResult)
+            return;
+        const { language, result, stat } = parseResult;
         const mtimeMs = Math.floor(stat.mtimeMs);
         const size = stat.size;
-        const language = detectLanguage(relPath);
-        if (!language)
-            return;
-        const source = fs.readFileSync(absPath, "utf-8");
-        let result;
-        try {
-            result = parseFile(source, language);
-        }
-        catch {
-            return;
-        }
         // Upsert file record
         if (existing) {
             stmts.deleteSymbolsByFile.run(existing.id);
@@ -128,7 +151,7 @@ export function indexSingleFile(projectRoot, relPath) {
         deleted,
     };
 }
-export function indexProject(projectRoot) {
+export async function indexProject(projectRoot) {
     const startTime = Date.now();
     // Validate project root exists
     if (!fs.existsSync(projectRoot)) {
@@ -169,53 +192,60 @@ export function indexProject(projectRoot) {
     let totalImports = 0;
     // Track which files we've seen (for detecting deletions)
     const seenPaths = new Set();
-    // Index each file (in a transaction for performance)
+    const parsedFiles = [];
+    const unchangedFiles = [];
+    for (const relPath of files) {
+        seenPaths.add(relPath);
+        const absPath = path.join(projectRoot, relPath);
+        let stat;
+        try {
+            stat = fs.statSync(absPath);
+        }
+        catch {
+            continue;
+        }
+        if (!stat.isFile())
+            continue;
+        const mtimeMs = Math.floor(stat.mtimeMs);
+        const size = stat.size;
+        // Check if file is already indexed and unchanged
+        const existing = stmts.getFile.get(relPath);
+        if (existing && existing.modified_at === mtimeMs && existing.size === size) {
+            unchangedFiles.push({ relPath, existingId: existing.id });
+            continue;
+        }
+        const language = detectLanguage(relPath);
+        if (!language) {
+            skippedFiles++;
+            continue;
+        }
+        // Read and parse the file (await for WASM languages)
+        const source = fs.readFileSync(absPath, "utf-8");
+        try {
+            const result = await parseFile(source, language);
+            parsedFiles.push({ relPath, language, result, mtimeMs, size });
+        }
+        catch {
+            skippedFiles++;
+        }
+    }
+    // Now run the synchronous transaction with pre-parsed results
     const indexAll = db.transaction(() => {
-        for (const relPath of files) {
-            seenPaths.add(relPath);
-            const absPath = path.join(projectRoot, relPath);
-            let stat;
-            try {
-                stat = fs.statSync(absPath);
-            }
-            catch {
-                continue;
-            }
-            if (!stat.isFile())
-                continue;
-            const mtimeMs = Math.floor(stat.mtimeMs);
-            const size = stat.size;
-            // Check if file is already indexed and unchanged
+        // Count unchanged files
+        for (const { existingId } of unchangedFiles) {
+            skippedFiles++;
+            const count = db
+                .prepare("SELECT COUNT(*) as n FROM symbols WHERE file_id = ?")
+                .get(existingId);
+            totalSymbols += count.n;
+            const impCount = db
+                .prepare("SELECT COUNT(*) as n FROM imports WHERE file_id = ?")
+                .get(existingId);
+            totalImports += impCount.n;
+        }
+        // Insert/update parsed files
+        for (const { relPath, language, result, mtimeMs, size } of parsedFiles) {
             const existing = stmts.getFile.get(relPath);
-            if (existing && existing.modified_at === mtimeMs && existing.size === size) {
-                skippedFiles++;
-                // Count existing symbols for stats
-                const count = db
-                    .prepare("SELECT COUNT(*) as n FROM symbols WHERE file_id = ?")
-                    .get(existing.id);
-                totalSymbols += count.n;
-                const impCount = db
-                    .prepare("SELECT COUNT(*) as n FROM imports WHERE file_id = ?")
-                    .get(existing.id);
-                totalImports += impCount.n;
-                continue;
-            }
-            const language = detectLanguage(relPath);
-            if (!language) {
-                skippedFiles++;
-                continue;
-            }
-            // Read and parse the file
-            const source = fs.readFileSync(absPath, "utf-8");
-            let result;
-            try {
-                result = parseFile(source, language);
-            }
-            catch (err) {
-                // Skip files that fail to parse
-                skippedFiles++;
-                continue;
-            }
             // Upsert file record
             if (existing) {
                 stmts.deleteSymbolsByFile.run(existing.id);

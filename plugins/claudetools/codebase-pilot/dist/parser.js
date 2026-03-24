@@ -2,10 +2,14 @@ import Parser from "tree-sitter";
 import TypeScriptLang from "tree-sitter-typescript";
 import JavaScriptLang from "tree-sitter-javascript";
 import PythonLang from "tree-sitter-python";
+import path from "node:path";
+import fs from "node:fs";
 const { typescript: TSLang, tsx: TSXLang } = TypeScriptLang;
-const parsers = new Map();
-function getParser(language) {
-    let parser = parsers.get(language);
+// Native languages use the fast native tree-sitter path
+const NATIVE_LANGUAGES = new Set(["typescript", "tsx", "javascript", "jsx", "python"]);
+const nativeParsers = new Map();
+function getNativeParser(language) {
+    let parser = nativeParsers.get(language);
     if (parser)
         return parser;
     parser = new Parser();
@@ -24,9 +28,36 @@ function getParser(language) {
             parser.setLanguage(PythonLang);
             break;
     }
-    parsers.set(language, parser);
+    nativeParsers.set(language, parser);
     return parser;
 }
+let WasmParserClass = null;
+let wasmInitialized = false;
+const wasmLanguageCache = new Map();
+async function initWasm() {
+    if (WasmParserClass && wasmInitialized)
+        return WasmParserClass;
+    const mod = await import("web-tree-sitter");
+    WasmParserClass = mod.Parser;
+    await WasmParserClass.init();
+    wasmInitialized = true;
+    return WasmParserClass;
+}
+async function getWasmLanguage(language) {
+    const cached = wasmLanguageCache.get(language);
+    if (cached)
+        return cached;
+    const grammarPath = path.join(__dirname, "..", "grammars", `tree-sitter-${language}.wasm`);
+    if (!fs.existsSync(grammarPath)) {
+        throw new Error(`WASM grammar not found: ${grammarPath}`);
+    }
+    await initWasm();
+    const { Language } = await import("web-tree-sitter");
+    const lang = await Language.load(grammarPath);
+    wasmLanguageCache.set(language, lang);
+    return lang;
+}
+// ── Language detection ──────────────────────────────────────────────
 export function detectLanguage(filePath) {
     if (filePath.endsWith(".ts"))
         return "typescript";
@@ -38,10 +69,40 @@ export function detectLanguage(filePath) {
         return "jsx";
     if (filePath.endsWith(".py"))
         return "python";
+    if (filePath.endsWith(".go"))
+        return "go";
+    if (filePath.endsWith(".rs"))
+        return "rust";
+    if (filePath.endsWith(".java"))
+        return "java";
+    if (filePath.endsWith(".kt") || filePath.endsWith(".kts"))
+        return "kotlin";
+    if (filePath.endsWith(".rb"))
+        return "ruby";
+    if (filePath.endsWith(".cs"))
+        return "c_sharp";
+    if (filePath.endsWith(".php"))
+        return "php";
+    if (filePath.endsWith(".swift"))
+        return "swift";
+    if (filePath.endsWith(".c") || filePath.endsWith(".h"))
+        return "c";
+    if (filePath.endsWith(".cpp") || filePath.endsWith(".hpp") || filePath.endsWith(".cc") || filePath.endsWith(".cxx"))
+        return "cpp";
+    if (filePath.endsWith(".sh") || filePath.endsWith(".bash"))
+        return "bash";
     return null;
 }
-export function parseFile(source, language) {
-    const parser = getParser(language);
+// ── Main parse entry point (now async) ──────────────────────────────
+export async function parseFile(source, language) {
+    if (NATIVE_LANGUAGES.has(language)) {
+        return parseNative(source, language);
+    }
+    return parseWasm(source, language);
+}
+// ── Native parsing (unchanged logic) ────────────────────────────────
+function parseNative(source, language) {
+    const parser = getNativeParser(language);
     const tree = parser.parse(source);
     const root = tree.rootNode;
     if (language === "python") {
@@ -68,7 +129,6 @@ export function parseFile(source, language) {
         }
         // Handle export { ... } from '...' (re-exports)
         if (isExported && !targetNode) {
-            // export { foo } from './bar' — the source is on the export_statement
             const source = node.childForFieldName("source");
             if (source) {
                 const imp = extractReexport(node, source);
@@ -84,6 +144,207 @@ export function parseFile(source, language) {
     }
     return { symbols, imports };
 }
+// ── WASM parsing ────────────────────────────────────────────────────
+async function parseWasm(source, language) {
+    const ParserClass = await initWasm();
+    const lang = await getWasmLanguage(language);
+    const parser = new ParserClass();
+    parser.setLanguage(lang);
+    const tree = parser.parse(source);
+    if (!tree) {
+        parser.delete();
+        return { symbols: [], imports: [] };
+    }
+    try {
+        return extractGenericSymbols(tree.rootNode);
+    }
+    finally {
+        tree.delete();
+        parser.delete();
+    }
+}
+// ── Generic symbol extractor for WASM-parsed languages ──────────────
+// Node types that commonly represent functions across languages
+const FUNCTION_NODE_TYPES = new Set([
+    "function_declaration", "function_definition", "function_item",
+    "method_declaration", "method_definition", "func_literal",
+    "function_signature_item",
+]);
+// Node types for classes/structs
+const CLASS_NODE_TYPES = new Set([
+    "class_declaration", "class_definition", "struct_item",
+    "type_declaration", "struct_declaration", "struct_specifier",
+    "class_specifier",
+]);
+// Node types for interfaces/traits/protocols
+const INTERFACE_NODE_TYPES = new Set([
+    "interface_declaration", "trait_item", "protocol_declaration",
+]);
+// Node types for variables/constants
+const VARIABLE_NODE_TYPES = new Set([
+    "variable_declaration", "const_declaration", "const_item",
+    "short_var_declaration", "assignment", "static_item",
+    "let_declaration",
+]);
+// Node types for imports
+const IMPORT_NODE_TYPES = new Set([
+    "import_declaration", "use_declaration", "require",
+    "import_statement", "include_directive",
+]);
+function extractGenericSymbols(root) {
+    const symbols = [];
+    const imports = [];
+    function walk(node, depth) {
+        // Only process top-level and one level deep (class members)
+        if (depth > 1)
+            return;
+        for (let i = 0; i < node.childCount; i++) {
+            const child = node.child(i);
+            if (!child)
+                continue;
+            const type = child.type;
+            if (FUNCTION_NODE_TYPES.has(type)) {
+                const sym = extractGenericFunction(child);
+                if (sym)
+                    symbols.push(sym);
+            }
+            else if (CLASS_NODE_TYPES.has(type)) {
+                const sym = extractGenericClass(child);
+                if (sym)
+                    symbols.push(sym);
+            }
+            else if (INTERFACE_NODE_TYPES.has(type)) {
+                const sym = extractGenericInterface(child);
+                if (sym)
+                    symbols.push(sym);
+            }
+            else if (VARIABLE_NODE_TYPES.has(type)) {
+                const sym = extractGenericVariable(child);
+                if (sym)
+                    symbols.push(sym);
+            }
+            else if (IMPORT_NODE_TYPES.has(type)) {
+                const imp = extractGenericImport(child);
+                if (imp)
+                    imports.push(imp);
+            }
+            else if (type === "impl_item" || type === "impl_declaration") {
+                // Rust impl blocks — extract methods as children
+                walk(child, depth);
+            }
+            else if (type === "declaration_list" || type === "block") {
+                // Some languages wrap top-level in a block
+                if (depth === 0)
+                    walk(child, depth);
+            }
+        }
+    }
+    walk(root, 0);
+    return { symbols, imports };
+}
+function getNameText(node) {
+    // Try common field names for the declaration's name
+    const nameNode = node.childForFieldName("name")
+        ?? node.childForFieldName("declarator");
+    if (nameNode) {
+        // For C/C++ declarators, the name might be nested
+        if (nameNode.type === "function_declarator" || nameNode.type === "pointer_declarator") {
+            const inner = nameNode.childForFieldName("declarator");
+            return inner?.text ?? nameNode.text;
+        }
+        return nameNode.text;
+    }
+    return null;
+}
+function extractGenericFunction(node) {
+    const name = getNameText(node);
+    if (!name)
+        return null;
+    const params = node.childForFieldName("parameters")
+        ?? node.childForFieldName("formal_parameters");
+    let sig = name;
+    if (params)
+        sig += params.text.length < 120 ? params.text : "(...)";
+    return {
+        name,
+        kind: "function",
+        line: node.startPosition.row + 1,
+        endLine: node.endPosition.row + 1,
+        signature: sig,
+        exported: true, // Conservative default for non-JS languages
+        children: [],
+    };
+}
+function extractGenericClass(node) {
+    const name = getNameText(node);
+    if (!name)
+        return null;
+    const children = [];
+    const body = node.childForFieldName("body")
+        ?? node.childForFieldName("field_declaration_list");
+    if (body) {
+        for (let i = 0; i < body.childCount; i++) {
+            const member = body.child(i);
+            if (!member)
+                continue;
+            if (FUNCTION_NODE_TYPES.has(member.type)) {
+                const m = extractGenericFunction(member);
+                if (m) {
+                    m.kind = "method";
+                    m.exported = false;
+                    children.push(m);
+                }
+            }
+        }
+    }
+    return {
+        name,
+        kind: "class",
+        line: node.startPosition.row + 1,
+        endLine: node.endPosition.row + 1,
+        signature: name,
+        exported: true,
+        children,
+    };
+}
+function extractGenericInterface(node) {
+    const name = getNameText(node);
+    if (!name)
+        return null;
+    return {
+        name,
+        kind: "interface",
+        line: node.startPosition.row + 1,
+        endLine: node.endPosition.row + 1,
+        signature: name,
+        exported: true,
+        children: [],
+    };
+}
+function extractGenericVariable(node) {
+    const name = getNameText(node);
+    if (!name || name.length > 80)
+        return null;
+    return {
+        name,
+        kind: "variable",
+        line: node.startPosition.row + 1,
+        endLine: node.endPosition.row + 1,
+        signature: node.text.replace(/\n/g, " ").slice(0, 120),
+        exported: true,
+        children: [],
+    };
+}
+function extractGenericImport(node) {
+    const text = node.text;
+    if (!text)
+        return null;
+    // Best-effort: extract the import path/module from the node text
+    const pathMatch = text.match(/["']([^"']+)["']/);
+    const source = pathMatch?.[1] ?? text.replace(/\n/g, " ").slice(0, 120);
+    return { source, symbols: [] };
+}
+// ── Native TS/JS symbol extraction (unchanged) ─────────────────────
 function extractSymbol(node, exported) {
     switch (node.type) {
         case "function_declaration":
@@ -246,7 +507,6 @@ function extractEnum(node, exported) {
     };
 }
 function extractVariable(node, exported) {
-    // lexical_declaration contains variable_declarator children
     const declarator = node.namedChildren.find((c) => c.type === "variable_declarator");
     if (!declarator)
         return null;
@@ -255,7 +515,6 @@ function extractVariable(node, exported) {
         return null;
     const value = declarator.childForFieldName("value");
     const typeAnnotation = declarator.childForFieldName("type");
-    // Detect if it's an arrow function
     let kind = "variable";
     if (value?.type === "arrow_function" || value?.type === "function") {
         kind = "function";
@@ -324,7 +583,6 @@ function extractImport(node) {
         return null;
     const source = sourceNode.text.replace(/^['"]|['"]$/g, "");
     const symbols = [];
-    // Walk import clause to find named imports
     for (let i = 0; i < node.namedChildCount; i++) {
         const child = node.namedChild(i);
         if (!child)
@@ -335,11 +593,9 @@ function extractImport(node) {
                 if (!importChild)
                     continue;
                 if (importChild.type === "identifier") {
-                    // Default import
                     symbols.push(importChild.text);
                 }
                 else if (importChild.type === "named_imports") {
-                    // { foo, bar as baz }
                     for (let k = 0; k < importChild.namedChildCount; k++) {
                         const specifier = importChild.namedChild(k);
                         if (specifier?.type === "import_specifier") {
@@ -350,7 +606,6 @@ function extractImport(node) {
                     }
                 }
                 else if (importChild.type === "namespace_import") {
-                    // * as ns
                     const name = importChild.childForFieldName("name");
                     if (name)
                         symbols.push("* as " + name.text);
@@ -363,7 +618,6 @@ function extractImport(node) {
 function extractReexport(node, sourceNode) {
     const source = sourceNode.text.replace(/^['"]|['"]$/g, "");
     const symbols = [];
-    // export { foo, bar } from './baz'
     for (let i = 0; i < node.namedChildCount; i++) {
         const child = node.namedChild(i);
         if (child?.type === "export_clause") {
