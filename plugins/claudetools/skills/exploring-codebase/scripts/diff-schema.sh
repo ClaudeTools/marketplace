@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # diff-schema.sh — Compare type/schema definitions across two files
 # Usage: diff-schema.sh <file1> <file2> [project-root]
-# Compares column/field names between SQL schemas, TypeScript interfaces, or mixed
+# Supports: SQL DDL, TypeScript/JS interfaces, Python dataclasses/pydantic, Go structs,
+#           Rust structs, Prisma models, GraphQL types, Protobuf messages, JSON Schema, Zod schemas
 set -uo pipefail
 
 FILE1="${1:?Usage: diff-schema.sh <file1> <file2>}"
 FILE2="${2:?Usage: diff-schema.sh <file1> <file2>}"
 PROJECT="${3:-$(pwd)}"
 
-# Resolve relative paths
 [[ "$FILE1" != /* ]] && FILE1="$PROJECT/$FILE1"
 [[ "$FILE2" != /* ]] && FILE2="$PROJECT/$FILE2"
 
@@ -21,50 +21,106 @@ REL2=$(realpath --relative-to="$PROJECT" "$FILE2" 2>/dev/null || basename "$FILE
 echo "=== Schema Diff: $REL1 vs $REL2 ==="
 echo ""
 
-# Extract field names from TypeScript interfaces/types
-extract_ts_fields() {
-  local file="$1"
-  grep -oP '^\s*\K\w+(?=\s*[?:]|\s*:)' "$file" 2>/dev/null | \
-    grep -vE '^(export|import|const|let|var|function|class|interface|type|enum|if|else|for|while|return|async|await|from|default)$' | \
-    sort -u
-}
+# --- Extractors by file type ---
 
-# Extract column names from SQL CREATE TABLE
 extract_sql_columns() {
-  local file="$1"
-  grep -iP '^\s+\w+\s+(TEXT|INTEGER|REAL|BLOB|VARCHAR|INT|BIGINT|BOOLEAN|TIMESTAMP|DATE|NUMERIC|SERIAL|UUID)' "$file" 2>/dev/null | \
-    grep -oP '^\s*\K\w+' | \
+  grep -iP '^\s+\w+\s+(TEXT|INTEGER|REAL|BLOB|VARCHAR|INT|BIGINT|BOOLEAN|TIMESTAMP|DATE|NUMERIC|SERIAL|UUID|JSONB?|FLOAT|DOUBLE|DECIMAL|CHAR|SMALLINT|BYTEA|ARRAY|MONEY|INET|CIDR|MACADDR|POINT|INTERVAL|TIME|ENUM)' "$1" 2>/dev/null | \
+    grep -oP '^\s*\K\w+' | sort -u
+}
+
+extract_ts_fields() {
+  # TypeScript/JS interface, type, class, Zod schema fields
+  grep -oP '^\s*\K\w+(?=\s*[?:]|\s*:)' "$1" 2>/dev/null | \
+    grep -vE '^(export|import|const|let|var|function|class|interface|type|enum|if|else|for|while|return|async|await|from|default|extends|implements|readonly|static|public|private|protected|abstract|override|declare|module|namespace|require)$' | \
     sort -u
 }
 
-# Detect file type and extract fields
-extract_fields() {
+extract_python_fields() {
+  # Python dataclass fields, pydantic model fields, Django model fields
+  grep -oP '^\s+\K\w+(?=\s*[=:]|\s*:\s*\w)' "$1" 2>/dev/null | \
+    grep -vE '^(self|cls|def|class|return|if|else|for|while|import|from|pass|raise|try|except|finally|with|as|yield|lambda|assert|True|False|None|and|or|not|in|is|__\w+__)$' | \
+    sort -u
+}
+
+extract_go_fields() {
+  # Go struct fields
+  grep -oP '^\s+\K[A-Z]\w*(?=\s+\w)' "$1" 2>/dev/null | sort -u
+}
+
+extract_rust_fields() {
+  # Rust struct fields
+  grep -oP '^\s+\Kpub\s+\K?\w+(?=\s*:)' "$1" 2>/dev/null | sort -u
+  grep -oP '^\s+\K\w+(?=\s*:)' "$1" 2>/dev/null | \
+    grep -vE '^(pub|fn|let|mut|use|mod|impl|struct|enum|trait|where|type|const|static|extern|unsafe|async|await|self|super|crate)$' | \
+    sort -u
+}
+
+extract_prisma_fields() {
+  # Prisma model fields
+  grep -oP '^\s+\K\w+(?=\s+\w)' "$1" 2>/dev/null | \
+    grep -vE '^(model|enum|type|generator|datasource|@@|@)' | sort -u
+}
+
+extract_graphql_fields() {
+  # GraphQL type/input fields
+  grep -oP '^\s+\K\w+(?=\s*[(:])' "$1" 2>/dev/null | \
+    grep -vE '^(type|input|enum|union|scalar|interface|query|mutation|subscription|schema|directive|extend|fragment)$' | \
+    sort -u
+}
+
+extract_proto_fields() {
+  # Protobuf message fields
+  grep -oP '^\s+(optional|required|repeated)?\s*\w+\s+\K\w+(?=\s*=)' "$1" 2>/dev/null | sort -u
+}
+
+extract_java_fields() {
+  # Java/Kotlin class fields
+  grep -oP '^\s+(private|protected|public|val|var)\s+\w+\s+\K\w+' "$1" 2>/dev/null | sort -u
+}
+
+extract_json_schema_fields() {
+  # JSON Schema properties
+  grep -oP '"properties"\s*:\s*\{[^}]*' "$1" 2>/dev/null | grep -oP '"\K\w+(?="\s*:)' | sort -u
+}
+
+# --- Detect and extract ---
+detect_and_extract() {
   local file="$1"
   local ext="${file##*.}"
   case "$ext" in
-    sql)  extract_sql_columns "$file" ;;
-    ts|tsx|js|jsx) extract_ts_fields "$file" ;;
+    sql)      extract_sql_columns "$file" ;;
+    ts|tsx|js|jsx|mjs|cjs) extract_ts_fields "$file" ;;
+    py)       extract_python_fields "$file" ;;
+    go)       extract_go_fields "$file" ;;
+    rs)       extract_rust_fields "$file" ;;
+    prisma)   extract_prisma_fields "$file" ;;
+    graphql|gql) extract_graphql_fields "$file" ;;
+    proto)    extract_proto_fields "$file" ;;
+    java|kt)  extract_java_fields "$file" ;;
+    json)     extract_json_schema_fields "$file" ;;
     *)
-      # Try both and use whichever returns more
-      local sql_fields ts_fields
-      sql_fields=$(extract_sql_columns "$file")
-      ts_fields=$(extract_ts_fields "$file")
-      sql_count=$(echo "$sql_fields" | grep -c '.' || echo 0)
-      ts_count=$(echo "$ts_fields" | grep -c '.' || echo 0)
-      if [ "$sql_count" -gt "$ts_count" ]; then
-        echo "$sql_fields"
-      else
-        echo "$ts_fields"
-      fi
+      # Try all extractors, use whichever returns most
+      local best="" best_count=0
+      for extractor in extract_sql_columns extract_ts_fields extract_python_fields extract_prisma_fields extract_graphql_fields extract_proto_fields; do
+        local result count
+        result=$($extractor "$file" 2>/dev/null)
+        count=$(echo "$result" | grep -c '.' 2>/dev/null || echo 0)
+        if [ "$count" -gt "$best_count" ]; then
+          best="$result"
+          best_count="$count"
+        fi
+      done
+      echo "$best"
       ;;
   esac
 }
 
-FIELDS1=$(extract_fields "$FILE1")
-FIELDS2=$(extract_fields "$FILE2")
+FIELDS1=$(detect_and_extract "$FILE1")
+FIELDS2=$(detect_and_extract "$FILE2")
 
 if [ -z "$FIELDS1" ] && [ -z "$FIELDS2" ]; then
   echo "Could not extract fields from either file."
+  echo "Supported formats: SQL, TypeScript/JS, Python, Go, Rust, Prisma, GraphQL, Protobuf, Java/Kotlin, JSON Schema"
   exit 1
 fi
 
