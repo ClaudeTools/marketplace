@@ -2,11 +2,14 @@ title: claudetools
 description: >-
   Zero-config guardrails, skills, and agent pipelines for Claude Code.
 
-remote_theme: just-the-docs/just-the-docs
+url: "https://claudetools.github.io"
+baseurl: "/marketplace"
+
+remote_theme: just-the-docs/just-the-docs@v0.10.0
 
 color_scheme: dark
 
-logo: "/assets/images/logo-light.png"
+logo: "/marketplace/assets/images/logo-light.png"
 
 search_enabled: true
 search:
