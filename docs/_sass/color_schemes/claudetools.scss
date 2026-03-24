@@ -1,0 +1,33 @@
+// claudetools dark theme — inspired by Next.js/Vercel docs aesthetic
+// Near-black backgrounds, subtle borders, green accent (#7BCC2E brand)
+
+@import "./dark";
+
+// Background
+$body-background-color: #0a0a0a;
+$sidebar-color: #0a0a0a;
+$search-background-color: #141414;
+$table-background-color: #111111;
+$code-background-color: #141414;
+$feedback-color: #141414;
+
+// Text
+$body-text-color: #ededed;
+$body-heading-color: #ffffff;
+$search-result-preview-color: #a1a1a1;
+
+// Links — brand green
+$link-color: #7BCC2E;
+
+// Borders — very subtle
+$border-color: #1f1f1f;
+
+// Navigation
+$nav-child-link-color: #a1a1a1;
+$sidebar-color: #0a0a0a;
+
+// Code
+$code-font-size: 13px;
+
+// Buttons
+$btn-primary-color: #7BCC2E;
