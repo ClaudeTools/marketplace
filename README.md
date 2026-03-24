@@ -1,171 +1,228 @@
 <p align="center">
-  <h1 align="center">claudetools</h1>
-  <p align="center">
-    <strong>Make Claude Code reliable.</strong>
-    <br />
-    <em>Deterministic guardrails, self-learning quality gates, and structured workflows.</em>
-  </p>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/img/logo-banner-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/img/logo-banner.svg">
+    <img alt="claudetools" src="assets/img/logo-banner.svg" width="420">
+  </picture>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Claude_Code-Plugin-7C3AED?style=flat-square" alt="Claude Code Plugin">
-  <img src="https://img.shields.io/badge/version-3.1.0-blue?style=flat-square" alt="v3.1.0">
-  <a href="LICENSE.txt"><img src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square" alt="MIT License"></a>
+  <strong>Zero-config guardrails, skills, and agent pipelines for Claude Code</strong>
 </p>
 
----
+<p align="center">
+  <a href="https://github.com/ClaudeTools/marketplace"><img src="https://img.shields.io/badge/version-6.0.0-7BCC2E?style=for-the-badge" alt="Version"></a>&nbsp;
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="License"></a>&nbsp;
+  <a href="https://code.claude.com/docs/en/plugins"><img src="https://img.shields.io/badge/Claude_Code-plugin-7BCC2E?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik04IDZMNCAxMkw4IDE4IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIvPjxsaW5lIHgxPSIxMCIgeTE9IjE4IiB4Mj0iMTYiIHkyPSIxOCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4=" alt="Claude Code"></a>
+</p>
 
-### The problem
+<br>
 
-You ask Claude to build something. It says "done." You check -- the function is empty, the tests were not run, and the "fix" was a guess.
+<p align="center">
+  <a href="#install">Install</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
+  <a href="#skills">Skills</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
+  <a href="#hooks">Hooks</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
+  <a href="#agents">Agents</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
+  <a href="#codebase-pilot">Codebase Pilot</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
+  <a href="#configuration">Configuration</a>
+</p>
 
-### The fix
+<br>
 
-```
-/plugin marketplace add owenob1/claude-code
-/plugin install claudetools@owenob1-skills
-```
+<!-- TODO: Add GIF demo here -->
+<!-- <p align="center"><img src="assets/img/demo.gif" alt="claudetools in action" width="720"></p> -->
 
-Zero config. Works immediately. Adapts over time.
-
----
-
-## What you get
-
-### Guardrails (install and forget)
-
-Every Claude Code session automatically gets:
-
-- **40+ checks** on every tool call -- stubs blocked, tests enforced, git workflow protected
-- **Codebase auto-indexed** -- tree-sitter maps your project so agents know where things are
-- **Permission acceleration** -- safe commands (tests, linting, reads) auto-approved, no dialog fatigue
-- **Context preservation** -- critical state survives conversation compaction
-- **Self-learning** -- guardrails tune themselves based on your session patterns
-
-### Skills (structured workflows)
-
-| Skill | Invoke | What it does |
-|:---|:---|:---|
-| **prompt-improver** | `/prompt-improver <task>` | Transforms rough ideas into structured XML prompts, then executes |
-| **code-review** | `/code-review` | 4-pass review: correctness, security, performance, maintainability |
-| **debug-investigator** | `/debug-investigator <error>` | Evidence-based debugging: REPRODUCE, OBSERVE, HYPOTHESIZE, VERIFY, FIX, CONFIRM |
-| **tune-thresholds** | `/tune-thresholds` | Analyse session metrics, recommend guardrail threshold adjustments |
-| **session-dashboard** | `/session-dashboard` | Health report: failure trends, edit churn, token efficiency |
-
-### Agents (specialised subagents)
-
-| Agent | Model | Access | Purpose |
-|:---|:---|:---|:---|
-| **code-reviewer** | Sonnet | Read-only | Structured code quality review |
-| **test-writer** | Sonnet | Full | Generate and run tests following project patterns |
-| **researcher** | Sonnet | Read-only | Research external APIs and docs before implementation |
-| **architect** | Opus | Read-only | Architecture analysis and planning |
-
----
-
-## What it catches
-
-**Code quality**
-
-| Claude tries to... | Result |
-|:---|:---|
-| Write a TODO or empty function | Blocked |
-| Say "done" without running tests | Blocked |
-| Fix a bug without reading the error | Flagged |
-| Guess at an API without checking docs | Flagged |
-| Edit the same file 3+ times (guessing) | Warned, suggest rewrite |
-| Write mocks in production code | Warned |
-| Fail the same tool 3 times | Blocked, forced rethink |
-
-**Git and safety**
-
-| Claude tries to... | Result |
-|:---|:---|
-| Work directly on main/master | Blocked |
-| Force push, git reset --hard | Blocked |
-| git add -A or git add . | Blocked |
-| Finish task with uncommitted changes | Blocked |
-| Read .env (debugging) | Allowed |
-| Edit .env, credentials, keys | Blocked |
-| rm -rf on broad paths | Blocked |
-| Deploy without verifying | Flagged |
-
----
-
-## How it works
-
-Most guardrails are prompts -- the model can ignore them. claudetools uses shell scripts that run outside the model. It cannot talk its way past `exit 2`.
-
-| Layer | Count | Speed | Purpose |
-|:---|:---|:---|:---|
-| Shell scripts | 35+ | Instant | Mechanical checks: stubs, commits, files, patterns |
-| AI checks (Haiku) | 4 | ~2 seconds | Judgment calls: scope, completeness, research |
-| Self-learning | 3 | Background | Telemetry, aggregation, threshold tuning |
-
-### Lifecycle coverage
-
-17 of 21 Claude Code hook events covered:
+## Install
 
 ```
-SessionStart ---- index codebase, inject learned patterns
-UserPromptSubmit - inject git state, active task, recent failures
-PreToolUse ------ block dangerous commands, stubs, sensitive files
-PermissionRequest auto-approve safe read/test/lint commands
-PostToolUse ----- verify output, track edits, record telemetry
-PostToolUseFailure track failures, block after 3 same-tool fails
-TaskCompleted --- quality gate, verify requirements, check commits
-TeammateIdle ---- quality + commit checks
-SubagentStop ---- independent verification of subagent work
-Stop ------------ multi-tier session review
-PreCompact ------ archive critical state before compaction
-PostCompact ----- restore context after compaction
-Notification ---- desktop alerts for permission/idle prompts
-ConfigChange ---- audit trail for config modifications
-InstructionsLoaded inject project-type-specific rules
-SessionEnd ------ aggregate metrics, cleanup
-SubagentStart --- index codebase for subagent
+/plugin install claudetools@claudetools-marketplace
 ```
 
-### Self-learning
+> Hooks activate immediately. Skills available via `/skill-name`. No configuration needed.
 
-Sessions generate telemetry. Metrics aggregate at session end. Next session starts with learned patterns.
+<br>
+
+## Skills
+
+> 14 built-in skills for structured, repeatable workflows
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+#### Code & Analysis
+| Command | What it does |
+|---------|-------------|
+| `/exploring-codebase` | Find symbols, trace imports, detect dead code, map architecture |
+| `/investigating-bugs` | Evidence-based debug: reproduce &rarr; observe &rarr; hypothesize &rarr; fix |
+| `/code-review` | 4-pass review: correctness, security, performance, maintainability |
+| `/improving-prompts` | Transform rough instructions into structured prompts &rarr; execute |
+
+</td>
+<td width="50%" valign="top">
+
+#### Build & Manage
+| Command | What it does |
+|---------|-------------|
+| `/designing-interfaces` | Production UI with design systems, responsive screenshots, contrast auditing |
+| `/managing-tasks` | Persistent tasks with cross-session continuity and handoff |
+| `/session-dashboard` | System health, success rates, failure patterns |
+| `/field-review` | Plugin self-audit: hook block rates, false positives, gaps |
+
+</td>
+</tr>
+</table>
+
+<br>
+
+## Hooks
+
+> 51 hooks across 17 lifecycle events &mdash; guardrails that run automatically on every tool call
+
+<table>
+<tr>
+<td width="25%" align="center">
+<br>
+
+**Safety**
+
+Blocks destructive commands, hardcoded secrets, sensitive file access
+
+`rm -rf` &bull; API keys &bull; `.env`
+
+</td>
+<td width="25%" align="center">
+<br>
+
+**Quality**
+
+Catches stubs, placeholder code, type abuse, edit churn
+
+`not implemented` &bull; `as any` &bull; churn
+
+</td>
+<td width="25%" align="center">
+<br>
+
+**Process**
+
+Enforces read-before-edit, commit hygiene, scope discipline
+
+blind edits &bull; uncommitted work
+
+</td>
+<td width="25%" align="center">
+<br>
+
+**Context**
+
+Prevents redundant reads, injects learned patterns, tracks metrics
+
+re-reads &bull; memory &bull; telemetry
+
+</td>
+</tr>
+</table>
+
+<details>
+<summary><strong>Quiet mode</strong> &mdash; suppress non-safety hooks for research sessions</summary>
+
+```bash
+CLAUDE_HOOKS_QUIET=1 claude
+```
+
+Safety hooks (stop enforcement, dangerous command blocking, sensitive file guards) always run.
+
+</details>
+
+<br>
+
+## Agents
+
+> 10 agents including 4 pre-built pipelines that compose skills into end-to-end workflows
+
+| Pipeline | Flow | Use when |
+|----------|------|----------|
+| **Feature** | explore &rarr; plan &rarr; implement &rarr; review &rarr; verify | Building a new feature end-to-end |
+| **Bugfix** | explore &rarr; investigate &rarr; fix &rarr; review &rarr; confirm | Structured, evidence-based bug resolution |
+| **Security** | full-audit &rarr; scan &rarr; dead-code &rarr; deps &rarr; report | Read-only security assessment |
+| **Refactor** | impact-analysis &rarr; decompose &rarr; implement &rarr; verify | Safe refactoring with regression checks |
+
+Plus standalone agents: `architect` &bull; `implementing-features` &bull; `code-reviewer` &bull; `test-writer` &bull; `researcher` &bull; `investigating-bugs`
+
+<br>
+
+## Codebase Pilot
+
+> Tree-sitter + SQLite indexing engine &mdash; semantic code navigation across 14 languages
+
+```bash
+codebase-pilot map                        # Project overview
+codebase-pilot find-symbol "handleAuth"   # Locate any function, class, or type
+codebase-pilot change-impact "handleAuth" # What breaks if this changes?
+codebase-pilot dead-code                  # Find unused exports
+codebase-pilot circular-deps              # Detect circular imports
+```
+
+**Languages:** TypeScript, JavaScript, Python (native) + Go, Rust, Java, Kotlin, Ruby, C#, PHP, Swift, C, C++ (WASM)
+
+The index updates automatically on file edits via hooks.
+
+<br>
+
+## Configuration
+
+<details>
+<summary><strong>Adaptive thresholds</strong></summary>
+
+Thresholds for edit frequency, failure detection, and commit enforcement are stored in an SQLite metrics database. They adjust per-model (opus/sonnet/haiku) based on session outcomes.
+
+</details>
+
+<details>
+<summary><strong>Memory system</strong></summary>
+
+Project memory files are indexed into an FTS5-backed database for fast retrieval. Memories inject into session context based on confidence scores with automatic decay for stale entries.
+
+A contradiction detector compares CLAUDE.md directives against stored memories and flags conflicts at session start.
+
+</details>
+
+<details>
+<summary><strong>Skill loading</strong></summary>
+
+Frequently-used skills auto-load when triggered by your message. Specialized skills load only on explicit `/skill-name` invocation, keeping context overhead low.
+
+</details>
+
+<br>
+
+## Project structure
 
 ```
-Tool calls --> metrics.db --> session aggregation --> threshold tuning
-                                                          |
-                                    Next session gets: "high edit churn detected,
-                                    focus on diagnostics before editing"
+claudetools/
+  .claude-plugin/plugin.json    Plugin manifest
+  hooks/hooks.json               17 lifecycle events
+  scripts/                       44 hook scripts
+    lib/                         9 shared libraries
+    validators/                  26 modular validators
+  skills/                        14 skill definitions
+  agents/                        10 agent pipelines
+  codebase-pilot/                Tree-sitter indexing engine
+  agent-mesh/                    Multi-agent coordination
+  task-system/                   MCP task persistence server
 ```
-
-Thresholds drift within safety bounds [0.5x, 2.0x] of defaults. Immutable rules (blocked commands, sensitive files) can never be tuned.
-
----
 
 ## Requirements
 
-- [Claude Code](https://code.claude.com) CLI
-- [jq](https://jqlang.github.io/jq/download/) -- `brew install jq` (Mac) or `apt install jq` (Linux)
-- Node.js (for codebase-pilot MCP server)
-- sqlite3 (for metrics -- `brew install sqlite3` or usually pre-installed)
+- [Claude Code](https://code.claude.com) v1.0+ &bull; Node.js 18+ &bull; SQLite3 &bull; jq (recommended)
 
----
+## License
 
-<details>
-<summary>Full hook reference</summary>
-
-**PreToolUse (10):** block dangerous bash, AI safety check, block restructuring, guard sensitive files, block stubs, require active task, enforce research, enforce deterministic tools, use codebase index, enforce teams
-
-**PostToolUse (7):** verify no stubs, edit frequency guard, mock detection, deploy verification, agent output audit, semantic audit, capture telemetry
-
-**TaskCompleted (5):** quality gate, task verification, commit check, test evidence, process review
-
-**Session lifecycle (12):** index on start, inject context on prompt, auto-approve safe permissions, context archive/restore on compaction, desktop notifications, config audit, dynamic rules, independent subagent verification, idle checks, stop gate, session metrics, session wrap-up
-
-</summary>
-</details>
+MIT
 
 ---
 
 <p align="center">
-  <a href="LICENSE.txt">MIT License</a> &middot; Built by <a href="https://github.com/owenob1">Owen Innes</a>
+  <a href="https://claudetools.com">claudetools.com</a>
 </p>
