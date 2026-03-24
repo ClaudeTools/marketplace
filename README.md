@@ -44,13 +44,13 @@
 
 | Command | Description |
 |---------|-------------|
-| `/code-review` | 4-pass structured review: correctness, security, performance, maintainability. Confidence-filtered findings with file:line references. |
-| `/session-dashboard` | System health report: hook fire/block rates, tool success/failure, edit churn, token efficiency. |
-| `/field-review` | Plugin self-audit from real session data. Block rates, false positives, dead hooks, skill usage, context overhead. |
-| `/memory` | Manage persistent cross-session knowledge. FTS5-backed search, confidence scoring, automatic decay. |
-| `/logs` | Query session logs: conversation history, tool usage, errors, side-questions across sessions. |
-| `/docs-manager` | Documentation audit: staleness detection, index generation, archiving, consistent formatting. |
-| `/claude-code-guide` | Best practices reference for building Claude Code extensions: skills, hooks, agents, plugins, MCP servers. |
+| $\color{#8B5CF6}{\textsf{/code-review}}$ | 4-pass structured review: correctness, security, performance, maintainability. Confidence-filtered findings with file:line references. |
+| $\color{#22C55E}{\textsf{/session-dashboard}}$ | System health report: hook fire/block rates, tool success/failure, edit churn, token efficiency. |
+| $\color{#6366F1}{\textsf{/field-review}}$ | Plugin self-audit from real session data. Block rates, false positives, dead hooks, skill usage, context overhead. |
+| $\color{#A78BFA}{\textsf{/memory}}$ | Manage persistent cross-session knowledge. FTS5-backed search, confidence scoring, automatic decay. |
+| $\color{#9CA3AF}{\textsf{/logs}}$ | Query session logs: conversation history, tool usage, errors, side-questions across sessions. |
+| $\color{#38BDF8}{\textsf{/docs-manager}}$ | Documentation audit: staleness detection, index generation, archiving, consistent formatting. |
+| $\color{#FB923C}{\textsf{/claude-code-guide}}$ | Best practices reference for building Claude Code extensions: skills, hooks, agents, plugins, MCP servers. |
 
 <br>
 
@@ -60,13 +60,13 @@
 
 | Skill | Description |
 |-------|-------------|
-| `/exploring-codebase` | Semantic code navigation via tree-sitter index. Find symbols, trace imports, detect dead code, map architecture, analyse change impact. 14 languages. |
-| `/investigating-bugs` | Evidence-based debugging: **reproduce** &rarr; **observe** &rarr; **hypothesize** &rarr; **verify** &rarr; **fix** &rarr; **confirm**. Two-strike rule. |
-| `/improving-prompts` | Transform rough instructions into structured XML prompts. Modes: **execute**, **plan**, **task**. Auto-detects tech stack. |
-| `/designing-interfaces` | Production UI with generated design systems, responsive screenshots, contrast auditing. React, Next.js, Vite, Astro, SvelteKit, Tailwind. |
-| `/managing-tasks` | Persistent tasks with cross-session continuity. Subcommands: new, start, stop, status, restore, decompose, progress, handoff, validate. |
-| `/evaluating-safety` | Training scenarios, deterministic tests, safety corpus evaluation. Cross-model comparison with deviation tracking. |
-| `/improving-plugin` | Autonomous 7-phase self-improvement: collect, verify, analyse, prioritise, baseline, implement, measure. Auto-reverts regressions. |
+| $\color{#3B82F6}{\textsf{/exploring-codebase}}$ | Semantic code navigation via tree-sitter index. Find symbols, trace imports, detect dead code, map architecture, analyse change impact. 14 languages. |
+| $\color{#EF4444}{\textsf{/investigating-bugs}}$ | Evidence-based debugging: **reproduce** &rarr; **observe** &rarr; **hypothesize** &rarr; **verify** &rarr; **fix** &rarr; **confirm**. Two-strike rule. |
+| $\color{#F59E0B}{\textsf{/improving-prompts}}$ | Transform rough instructions into structured XML prompts. Modes: **execute**, **plan**, **task**. Auto-detects tech stack. |
+| $\color{#EC4899}{\textsf{/designing-interfaces}}$ | Production UI with generated design systems, responsive screenshots, contrast auditing. React, Next.js, Vite, Astro, SvelteKit, Tailwind. |
+| $\color{#10B981}{\textsf{/managing-tasks}}$ | Persistent tasks with cross-session continuity. Subcommands: new, start, stop, status, restore, decompose, progress, handoff, validate. |
+| $\color{#EF4444}{\textsf{/evaluating-safety}}$ | Training scenarios, deterministic tests, safety corpus evaluation. Cross-model comparison with deviation tracking. |
+| $\color{#06B6D4}{\textsf{/improving-plugin}}$ | Autonomous 7-phase self-improvement: collect, verify, analyse, prioritise, baseline, implement, measure. Auto-reverts regressions. |
 
 <br>
 
