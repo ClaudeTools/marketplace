@@ -32,7 +32,7 @@ This touches at least three layers: a notification service, an email template, a
 
 ## Step 1 — Create a task first
 
-> **You:** `/managing-tasks new Add email notification when order ships`
+> **You:** `/task-manager new Add email notification when order ships`
 
 :::note[Hook fires: task-manager skill activates]
 The skill queries codebase-pilot to enrich the task before saving it.

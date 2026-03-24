@@ -1,5 +1,5 @@
 ---
-name: managing-tasks
+name: task-manager
 description: Extended task management with persistence, cross-session continuity, and validation. Use when the user says /task-manager, task status, manage tasks, restore tasks, or session handoff.
 disable-model-invocation: true
 argument-hint: [new|start|stop|status|restore|decompose|progress|handoff|validate]
@@ -231,7 +231,7 @@ Display current task state. This is also the default when no argument is given.
 
 1. Run the report script:
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/managing-tasks/scripts/task-report.js" --format markdown
+node "${CLAUDE_PLUGIN_ROOT}/skills/task-manager/scripts/task-report.js" --format markdown
 ```
 2. Present the markdown output to the user.
 3. If the script exits non-zero or `.tasks/tasks.json` does not exist, tell the user: "No tasks found. Use `/task-manager new <description>` to create one."
@@ -245,7 +245,7 @@ Restore tasks from a previous session into the TodoWrite display. Critical for c
 1. Check if `.tasks/progress.md` exists. If yes, read it FIRST — it provides narrative context about where the previous session left off.
 2. Run the sync script:
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/managing-tasks/scripts/sync-display.js"
+node "${CLAUDE_PLUGIN_ROOT}/skills/task-manager/scripts/sync-display.js"
 ```
 3. Parse the JSON output. It contains an array of task objects with `content` and `status` fields.
 4. Call `TodoWrite` with the restored task list to sync the display.
@@ -314,7 +314,7 @@ Run deterministic validation on the task state.
 
 1. Run the validation script:
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/managing-tasks/scripts/validate-tasks.js"
+node "${CLAUDE_PLUGIN_ROOT}/skills/task-manager/scripts/validate-tasks.js"
 ```
 2. Report the results:
    - Number of tasks checked

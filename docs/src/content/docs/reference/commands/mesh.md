@@ -105,4 +105,4 @@ Message sent to frontend-agent.
 
 - [Coordinate Agents guide](/guides/coordinate-agents/) — walkthrough of multi-agent mesh coordination with real output
 - [Reference: agent-mesh](/reference/agent-mesh/) — full CLI reference for the underlying agent mesh
-- [Reference: managing-tasks skill](/reference/skills/managing-tasks/) — pairs with mesh for multi-session parallel work
+- [Reference: task-manager skill](/reference/skills/task-manager/) — pairs with mesh for multi-session parallel work

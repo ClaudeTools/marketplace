@@ -27,11 +27,11 @@ Spawn an agent when the task is large enough to overflow your context window, or
 
 > "the login button is disabled after a failed auth attempt and never re-enables"
 
-The investigating-bugs skill activates automatically. No command needed.
+The debugger skill activates automatically. No command needed.
 
 **Complex bug** — use the full protocol explicitly:
 
-> "/investigating-bugs the payment webhook fails intermittently in production"
+> "/debugger the payment webhook fails intermittently in production"
 
 This forces the evidence-first workflow: Claude must produce a hypothesis with `file:line` evidence before suggesting any fix.
 
@@ -139,16 +139,16 @@ Tracked in the current session. Does not persist across sessions.
 
 **Multi-task project** — use the task manager:
 
-> "/managing-tasks new add CSV export to the invoices page"
+> "/task-manager new add CSV export to the invoices page"
 
-Then decompose before starting: `/managing-tasks decompose task-a3f8b2c1`
+Then decompose before starting: `/task-manager decompose task-a3f8b2c1`
 
 This creates subtasks with dependencies that can execute in parallel.
 
 **Multi-session project** — use restore and handoff:
 
-- Start of session: `/managing-tasks restore`
-- End of session: `/managing-tasks handoff`
+- Start of session: `/task-manager restore`
+- End of session: `/task-manager handoff`
 
 The handoff writes `progress.md` with implementation detail so the next session has full context. See [Manage Tasks](manage-tasks.md).
 
@@ -185,11 +185,11 @@ Each agent session runs in its own worktree with no git conflicts. The mesh coor
 | `feature-pipeline` | Full implementation pipeline — plan, implement, review, commit |
 | `/code-review` | 4-pass review: correctness, security, performance, maintainability |
 | `/prompt-improver` | Turns rough requests into structured XML prompts |
-| `/managing-tasks` | Create, track, and hand off tasks across sessions |
+| `/task-manager` | Create, track, and hand off tasks across sessions |
 | `/claudetools:security-pipeline` | Full codebase security audit — read-only, findings only |
 | `codebase-pilot` | Symbol search, file overview, import graph, dead code, change impact |
 | `frontend-design` | Build production UI with design system, preview loop, contrast audit |
-| `investigating-bugs` | Evidence-based root cause analysis for bugs |
+| `debugger` | Evidence-based root cause analysis for bugs |
 | `agent-mesh` | File locks, message passing, and shared decisions across agents |
 
 ## Related

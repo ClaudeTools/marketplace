@@ -28,7 +28,7 @@ git log --oneline -20 -- <affected-file>
 ```
 
 ### 2. INVESTIGATE
-Follow the investigating-bugs protocol (REPRODUCE → OBSERVE → HYPOTHESIZE → VERIFY → FIX → CONFIRM):
+Follow the debugger protocol (REPRODUCE → OBSERVE → HYPOTHESIZE → VERIFY → FIX → CONFIRM):
 
 **REPRODUCE** — Run the failing command/test/endpoint and capture exact error output. If not reproducible, stop and ask for more context.
 

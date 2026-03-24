@@ -11,7 +11,7 @@ description: "Track work across sessions with persistent tasks, subtask decompos
 :::
 
 
-Use `/managing-tasks` to create, track, and hand off work across sessions — with persistent storage, cross-session continuity, and AI-assisted decomposition.
+Use `/task-manager` to create, track, and hand off work across sessions — with persistent storage, cross-session continuity, and AI-assisted decomposition.
 
 ## Real scenarios
 
@@ -22,7 +22,7 @@ Use `/managing-tasks` to create, track, and hand off work across sessions — wi
 > "I need to add CSV export to the invoices page, including column selection and date filtering"
 
 :::note[Behind the scenes]
-`/managing-tasks new` runs `codebase-pilot map` to understand the project structure, then calls an enrichment agent that adds acceptance criteria, file references, and verification commands before creating the task with a deterministic ID.
+`/task-manager new` runs `codebase-pilot map` to understand the project structure, then calls an enrichment agent that adds acceptance criteria, file references, and verification commands before creating the task with a deterministic ID.
 :::
 
 ```
@@ -38,7 +38,7 @@ Acceptance criteria:
 
 Now decompose it into subtasks before starting:
 
-> "/managing-tasks decompose task-a3f8b2c1"
+> "/task-manager decompose task-a3f8b2c1"
 
 :::note[Behind the scenes]
 Claude analyses the task, breaks it into 3–7 subtasks with explicit dependencies, and gives each subtask its own acceptance criteria and file references so it can be executed autonomously.
@@ -57,7 +57,7 @@ Dependencies: 1 → 2 → 3; 4 depends on 3
 
 Start the first task:
 
-> "/managing-tasks start"
+> "/task-manager start"
 
 Claude picks `task-b1c2d3e4` (highest priority, no blockers) and begins via TeamCreate.
 
@@ -67,7 +67,7 @@ Claude picks `task-b1c2d3e4` (highest priority, no blockers) and begins via Team
 
 Before closing the session:
 
-> "/managing-tasks handoff"
+> "/task-manager handoff"
 
 :::note[Behind the scenes]
 The handoff command writes `progress.md` with completed items (with implementation detail), in-progress work, blocked items, key decisions, and concrete next steps in priority order.
@@ -96,7 +96,7 @@ Next steps (in order):
 
 **Session 2 — Restore and continue**
 
-> "/managing-tasks restore"
+> "/task-manager restore"
 
 ```
 Restored 4 tasks (1 completed, 1 in_progress, 2 pending)
@@ -110,7 +110,7 @@ Next up: task-f5g6h7i8 — finish ExportModal date picker
 
 Continue without re-explaining anything:
 
-> "/managing-tasks start"
+> "/task-manager start"
 
 Claude picks `task-f5g6h7i8` and resumes from where it left off, using the handoff context as its starting point.
 
@@ -118,7 +118,7 @@ Claude picks `task-f5g6h7i8` and resumes from where it left off, using the hando
 
 ### Scenario C: Checking status mid-session
 
-> "/managing-tasks status"
+> "/task-manager status"
 
 ```
 COMPLETED (1)
@@ -135,10 +135,10 @@ PENDING (2)
 ---
 
 :::tip[Which command to use when]
-- **New project or feature**: `/managing-tasks new` + `/managing-tasks decompose` before starting
-- **Resuming work**: Always run `/managing-tasks restore` first — it shows the last handoff summary
-- **Ending a session**: Run `/managing-tasks handoff` before closing — this is the most important command for cross-session continuity
-- **Check what's next**: `/managing-tasks status` shows blocked vs ready tasks at a glance
+- **New project or feature**: `/task-manager new` + `/task-manager decompose` before starting
+- **Resuming work**: Always run `/task-manager restore` first — it shows the last handoff summary
+- **Ending a session**: Run `/task-manager handoff` before closing — this is the most important command for cross-session continuity
+- **Check what's next**: `/task-manager status` shows blocked vs ready tasks at a glance
 :::
 
 ## MCP tools for programmatic use
@@ -179,9 +179,9 @@ Files: src/api/invoices.ts, src/db/queries/invoices.ts
 
 ## Tips
 
-- Use `/managing-tasks decompose` before `/managing-tasks start` on large tasks — subtasks execute in parallel, saving significant time
+- Use `/task-manager decompose` before `/task-manager start` on large tasks — subtasks execute in parallel, saving significant time
 - Task IDs are stable — use them in commit messages (`fix: auth token expiry (task-a3f8b2c1)`) for traceability
-- If task state looks inconsistent, run `/managing-tasks validate` to check for orphaned subtasks or broken dependencies
+- If task state looks inconsistent, run `/task-manager validate` to check for orphaned subtasks or broken dependencies
 
 ## Related
 

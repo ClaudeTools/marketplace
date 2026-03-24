@@ -163,7 +163,7 @@ Created:
 
 Then work through them:
 
-> "/managing-tasks start"
+> "/task-manager start"
 
 ---
 

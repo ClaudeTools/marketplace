@@ -16,13 +16,13 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 **Goal:** Reproduce, fix, and verify a reported bug — with code review before commit.
 
 **Commands used:**
-- `/claudetools:investigating-bugs` — structured 6-step debugging protocol
+- `/claudetools:debugger` — structured 6-step debugging protocol
 - `/claudetools:code-reviewer` — read-only quality review of the fix
 - `/commit` — conventional commit after review passes
 
 **Workflow:**
 
-1. `"The payment endpoint returns 500 when the order total is zero"` — investigating-bugs activates automatically from "500" and "returns".
+1. `"The payment endpoint returns 500 when the order total is zero"` — debugger activates automatically from "500" and "returns".
 2. Claude works through REPRODUCE → OBSERVE → HYPOTHESIZE → VERIFY, identifying the zero-division in `calculateTax()`.
 3. Claude fixes the file. The `validate-content` hook checks the change for stubs or type escapes.
 4. `"/code-review src/services/payment.ts"` — 4-pass review flags any missed edge cases.
@@ -97,13 +97,13 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 **Goal:** Implement a new feature end-to-end — from task creation through implementation, tests, and review.
 
 **Commands used:**
-- `/claudetools:managing-tasks` — create and track the task
+- `/claudetools:task-manager` — create and track the task
 - `/claudetools:feature-pipeline` — explore → plan → implement → review → verify
 - `/claudetools:test-writer` — generate coverage for the new code
 
 **Workflow:**
 
-1. `"/managing-tasks new Add rate limiting to the API"` — task created with codebase context enrichment.
+1. `"/task-manager new Add rate limiting to the API"` — task created with codebase context enrichment.
 2. `"Spawn feature-pipeline for task-a4f2"` — pipeline agent explores existing middleware, plans the implementation, then executes.
 3. Pipeline completes implementation. `/claudetools:test-writer` generates targeted tests matching existing patterns.
 4. Tests pass; `/code-review` runs the 4-pass review.
@@ -125,14 +125,14 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 
 **Commands used:**
 - `/claudetools:security-pipeline` — read-only full-codebase security audit
-- `/claudetools:investigating-bugs` — for each critical finding
+- `/claudetools:debugger` — for each critical finding
 - `/claudetools:code-reviewer` — verify fixes before commit
 
 **Workflow:**
 
 1. `"/claudetools:security-pipeline"` — agent runs audit, dep scan, and dead-code analysis. No files are modified.
 2. Review the structured findings report (Critical / Important / Suggestions).
-3. For each Critical finding: `"Fix the SQL injection in orders.ts:84"` — investigating-bugs activates to trace the root cause.
+3. For each Critical finding: `"Fix the SQL injection in orders.ts:84"` — debugger activates to trace the root cause.
 4. Claude applies the fix. `validate-content.sh` checks for new stubs introduced during the fix.
 5. Re-run `"/claudetools:security-pipeline"` on the affected files to confirm the finding is resolved.
 
@@ -180,12 +180,12 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 **Commands used:**
 - `/claudetools:mesh` — check who's active, lock files, share decisions
 - `TeamCreate` — spawn coordinated agent teammates
-- `/claudetools:managing-tasks` — decompose and assign subtasks
+- `/claudetools:task-manager` — decompose and assign subtasks
 
 **Workflow:**
 
 1. `"/mesh status"` — check no other agents are working on conflicting files.
-2. `"/managing-tasks new Migrate all API routes to the new auth middleware"` — decompose into per-route subtasks.
+2. `"/task-manager new Migrate all API routes to the new auth middleware"` — decompose into per-route subtasks.
 3. Spawn teammates: `TeamCreate` with agents assigned to separate route files.
 4. Each agent checks `/mesh who --file <path>` before editing — mesh prevents concurrent edits to the same file.
 5. Agents message each other when dependencies are ready: `/mesh send agent-2 "auth-middleware.ts is ready"`.
@@ -258,16 +258,16 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 **Goal:** Break down a large initiative into tracked tasks, hand off between sessions, and restore context cleanly.
 
 **Commands used:**
-- `/claudetools:managing-tasks` — create, decompose, and track
+- `/claudetools:task-manager` — create, decompose, and track
 - `/session-dashboard` — health check at the start of each new session
 
 **Workflow:**
 
-1. `"/managing-tasks new Implement full-text search across all documents"` — decompose into subtasks.
+1. `"/task-manager new Implement full-text search across all documents"` — decompose into subtasks.
 2. Work through subtasks across multiple sessions. Each session: `"/session-dashboard"` shows what failed last time.
-3. At session end, the managing-tasks skill generates a handoff summary with: tasks completed, tasks in progress, blockers, next recommended action.
-4. Next session: `"/managing-tasks status"` restores context. Claude resumes from the correct task.
-5. When the initiative is complete: `"/managing-tasks complete <parent-task-id>"`.
+3. At session end, the task-manager skill generates a handoff summary with: tasks completed, tasks in progress, blockers, next recommended action.
+4. Next session: `"/task-manager status"` restores context. Claude resumes from the correct task.
+5. When the initiative is complete: `"/task-manager complete <parent-task-id>"`.
 
 **What happens behind the scenes:**
 

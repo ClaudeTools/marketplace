@@ -9,7 +9,7 @@ Run training scenarios, deterministic tests, and safety corpus evaluations. Supp
 
 **Trigger:** Use when the user says "train", "run training", "test safety", "run scenarios", "evaluate model", or "compare results".
 
-**Invocation:** `/evaluating-safety [command] [options]`
+**Invocation:** `/safety-evaluator [command] [options]`
 
 ---
 
@@ -22,7 +22,7 @@ Use this skill when you want to verify that safety hooks and validators are actu
 ## Try it now
 
 ```
-/evaluating-safety test
+/safety-evaluator test
 ```
 
 This runs the full test suite across all scenario domains. Expect output showing pass/fail counts per scenario, any threshold violations, and a summary report. To preview findings without running live tests, use `--dry-run` with `feedback-loop`.
@@ -65,12 +65,12 @@ This runs the full test suite across all scenario domains. Expect output showing
 ## Example Invocations
 
 ```
-/evaluating-safety test
-/evaluating-safety code
-/evaluating-safety golden
-/evaluating-safety chain auth-bypass
-/evaluating-safety feedback-loop
-/evaluating-safety cross-model
+/safety-evaluator test
+/safety-evaluator code
+/safety-evaluator golden
+/safety-evaluator chain auth-bypass
+/safety-evaluator feedback-loop
+/safety-evaluator cross-model
 ```
 
 ---

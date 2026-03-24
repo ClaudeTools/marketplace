@@ -30,7 +30,7 @@ The eight building blocks of claudetools, what they do, why they matter, and how
 │                    ↓                                            │
 │  [PostToolUse hooks]  ← track reads/edits, reindex, telemetry  │
 │                    ↓                                            │
-│  Skills trigger (investigating-bugs, exploring-codebase…)       │
+│  Skills trigger (debugger, exploring-codebase…)       │
 │  Agents orchestrate (feature-pipeline, bugfix-pipeline…)        │
 │  Codebase Pilot answers structural queries from the index       │
 └─────────────────────────────────────────────────────────────────┘
@@ -97,16 +97,16 @@ Skills are triggered automatically when your task matches, or explicitly via `/s
 | Skill | Purpose |
 |-------|---------|
 | `/exploring-codebase` | Semantic navigation: find symbols, trace imports, map architecture, detect dead code |
-| `/investigating-bugs` | 6-step evidence-based debugging protocol with two-strike rule |
+| `/debugger` | 6-step evidence-based debugging protocol with two-strike rule |
 | `/prompt-improver` | Transform rough instructions into structured XML prompts |
 | `/frontend-design` | Production UI with design systems, responsive screenshots, contrast auditing |
-| `/managing-tasks` | Persistent tasks with cross-session continuity |
-| `/evaluating-safety` | Training scenarios, deterministic tests, cross-model safety comparison |
+| `/task-manager` | Persistent tasks with cross-session continuity |
+| `/safety-evaluator` | Training scenarios, deterministic tests, cross-model safety comparison |
 | `/plugin-improver` | 7-phase autonomous self-improvement with automatic regression revert |
 
 **Analogy:** Skills are like specialist doctors in a hospital. A GP can handle most things, but when you need a structured debugging protocol or a UI design review, you consult the specialist who knows the exact methodology — not just the general approach.
 
-**Why this matters:** Skills encode hard-won process knowledge. `/investigating-bugs` doesn't just say "look for the bug" — it enforces reproduce, observe, hypothesize, verify, fix, confirm. That structure prevents the common failure mode of fixing symptoms without confirming root cause.
+**Why this matters:** Skills encode hard-won process knowledge. `/debugger` doesn't just say "look for the bug" — it enforces reproduce, observe, hypothesize, verify, fix, confirm. That structure prevents the common failure mode of fixing symptoms without confirming root cause.
 
 **Reference:** [Skills →](/reference/skills/)
 
@@ -159,7 +159,7 @@ Standalone agents handle targeted tasks:
 | `code-reviewer` | Read-only | Quality review |
 | `test-writer` | Full | Test generation |
 | `researcher` | Read-only | External API/library research |
-| `investigating-bugs` | Full | Evidence-based debugging |
+| `debugger` | Full | Evidence-based debugging |
 | `exploring-codebase` | Read-only | Codebase analysis and navigation |
 
 **Analogy:** Agents are like project subcontractors. You (the general contractor) define the scope and constraints. Each specialist brings their own tools and expertise, works independently within those constraints, and reports back when done. The `exploring-codebase` agent only reads — it can't accidentally write a file while it's trying to understand one.
@@ -250,7 +250,7 @@ Without the mesh, parallel agents can produce conflicting edits. With it, they c
 
 MCP-based persistent task tracking. Tasks survive across sessions and can be decomposed into subtasks.
 
-The `/managing-tasks` skill exposes the full interface: `new`, `start`, `stop`, `status`, `restore`, `decompose`, `progress`, `handoff`, `validate`.
+The `/task-manager` skill exposes the full interface: `new`, `start`, `stop`, `status`, `restore`, `decompose`, `progress`, `handoff`, `validate`.
 
 Tasks created here are accessible from any session in the same project directory.
 

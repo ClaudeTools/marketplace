@@ -7,16 +7,16 @@ description: "Walk through a real bug investigation — REPRODUCE through CONFIR
 
 :::note[Prerequisites]
 - [claudetools installed](../getting-started/installation.md) — plugin active in Claude Code
-- [Core Concepts](../getting-started/core-concepts.md) — understanding hooks and the investigating-bugs skill
+- [Core Concepts](../getting-started/core-concepts.md) — understanding hooks and the debugger skill
 - [Explore a Codebase](explore-a-codebase.md) — the OBSERVE step relies on codebase-pilot navigation
 :::
 
 
-A full walkthrough of the investigating-bugs protocol using a realistic example. See the prompts, the output, and where things go wrong the first time.
+A full walkthrough of the debugger protocol using a realistic example. See the prompts, the output, and where things go wrong the first time.
 
 :::tip[When to use what]
-- **Simple bug** (error message, obvious location): Just tell Claude — investigating-bugs activates automatically from keywords like "broken", "failing", "why is", "error"
-- **Complex multi-file bug**: Use `/investigating-bugs` explicitly to invoke the full structured protocol
+- **Simple bug** (error message, obvious location): Just tell Claude — debugger activates automatically from keywords like "broken", "failing", "why is", "error"
+- **Complex multi-file bug**: Use `/debugger` explicitly to invoke the full structured protocol
 - **Critical production bug**: Spawn the `bugfix-pipeline` agent for a coordinated fix + review + verification cycle
 :::
 
@@ -26,7 +26,7 @@ A full walkthrough of the investigating-bugs protocol using a realistic example.
 
 > **You:** "The API returns 500 when updating a user's email. It started after yesterday's deploy."
 
-:::note[Hook fires: investigating-bugs skill activates]
+:::note[Hook fires: debugger skill activates]
 "500" and "started after" are enough. The skill takes over — the 6-step protocol runs in sequence and cannot skip ahead.
 :::
 
@@ -153,4 +153,4 @@ The two-strike rule exists to prevent momentum from carrying Claude past a wrong
 
 - [Exploring a Codebase](explore-a-codebase.md) — map the code before diving into a bug
 - [Run a Security Audit](run-security-audit.md) — find security-class bugs proactively
-- [Reference: investigating-bugs skill](../../reference/skills/investigating-bugs.md)
+- [Reference: debugger skill](../../reference/skills/debugger.md)

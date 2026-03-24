@@ -83,4 +83,4 @@ CLI path: `node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js`
 
 - **codebase-pilot CLI** — the underlying tool this skill wraps (see [CLI Reference](../codebase-pilot/cli-reference.md))
 - **codebase-navigation rule** — full command reference table injected when editing code files
-- **investigating-bugs skill** — uses the same CLI for evidence gathering in debug workflows
+- **debugger skill** — uses the same CLI for evidence gathering in debug workflows

@@ -9,7 +9,7 @@ Extended task management with persistence, cross-session continuity, and validat
 
 **Trigger:** Use when the user says `/task-manager`, "task status", "manage tasks", "restore tasks", or "session handoff".
 
-**Invocation:** `/managing-tasks [subcommand] [arguments]`
+**Invocation:** `/task-manager [subcommand] [arguments]`
 
 ---
 
@@ -22,10 +22,10 @@ Use this skill when a piece of work is too large to finish in one session, or wh
 ## Try it now
 
 ```
-/managing-tasks new Migrate the user authentication module from JWT to session cookies
+/task-manager new Migrate the user authentication module from JWT to session cookies
 ```
 
-Claude will gather codebase context, enrich the task description with acceptance criteria and file references, create it in the persistent task system, and offer to decompose it into subtasks. Run `/managing-tasks status` at any point to see where things stand.
+Claude will gather codebase context, enrich the task description with acceptance criteria and file references, create it in the persistent task system, and offer to decompose it into subtasks. Run `/task-manager status` at any point to see where things stand.
 
 ---
 
@@ -50,7 +50,7 @@ Claude will gather codebase context, enrich the task description with acceptance
 ### Session Start
 1. Check if `.tasks/progress.md` exists — if so, read it first.
 2. Check `.tasks/task-manager.json` for current task state.
-3. Run `/managing-tasks restore` to sync TodoWrite display with persisted state.
+3. Run `/task-manager restore` to sync TodoWrite display with persisted state.
 
 ### Creating a Task (`new`)
 1. Parse arguments as raw input.
@@ -60,7 +60,7 @@ Claude will gather codebase context, enrich the task description with acceptance
 5. Create task via MCP `task_create`.
 
 ### Session End / Before Compaction
-1. Run `/managing-tasks handoff` to update `progress.md`.
+1. Run `/task-manager handoff` to update `progress.md`.
 2. Include key decisions and concrete next steps.
 3. Commit `.tasks/` to version control.
 
@@ -78,11 +78,11 @@ Task state persists in `.tasks/`:
 ## Example Invocations
 
 ```
-/managing-tasks status
-/managing-tasks new Fix the broken webhook endpoint for Stripe events
-/managing-tasks decompose task-abc123
-/managing-tasks restore
-/managing-tasks handoff
+/task-manager status
+/task-manager new Fix the broken webhook endpoint for Stripe events
+/task-manager decompose task-abc123
+/task-manager restore
+/task-manager handoff
 ```
 
 ---

@@ -1,5 +1,5 @@
 ---
-name: investigating-bugs
+name: debugger
 description: Evidence-based debugging workflow that enforces REPRODUCE, OBSERVE, HYPOTHESIZE, VERIFY, FIX, CONFIRM. Use when the user says debug this, fix this bug, why is this failing, this is broken, not working, unexpected behaviour, or error.
 argument-hint: [error-description]
 allowed-tools: Read, Bash, Grep, Glob, Edit, Write

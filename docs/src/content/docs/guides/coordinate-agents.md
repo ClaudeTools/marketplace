@@ -137,7 +137,7 @@ Shared decisions:
 - **No coordination needed**: Single agent, single task — just ask Claude directly
 - **Parallel independent tasks**: Spawn teammates with TeamCreate, no mesh needed
 - **Parallel tasks touching shared files**: Lock files before editing, `/mesh decide` for architectural choices
-- **Long-running multi-session work**: Use `/mesh status` at the start of every session and `/managing-tasks handoff` before ending
+- **Long-running multi-session work**: Use `/mesh status` at the start of every session and `/task-manager handoff` before ending
 :::
 
 ## What happens behind the scenes
@@ -153,7 +153,7 @@ Shared decisions:
 - Run `/mesh status` at the start of every multi-agent session — five seconds now prevents a merge conflict later
 - Lock files for multi-file refactors, not single-line fixes — over-locking creates coordination overhead without benefit
 - Use the `decision` context store for architectural choices so they appear in `/mesh status`, not buried in one-off messages
-- Commit `.tasks/progress.md` via `/managing-tasks handoff` before ending a multi-agent session — the next session needs full context, not just git history
+- Commit `.tasks/progress.md` via `/task-manager handoff` before ending a multi-agent session — the next session needs full context, not just git history
 
 ## Related
 

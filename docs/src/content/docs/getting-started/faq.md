@@ -57,7 +57,7 @@ The `guard-context-reread` hook blocks redundant reads — if Claude tries to re
 
 ### What's the difference between a skill and a slash command?
 
-Skills auto-trigger when your task matches a pattern — you don't have to invoke them explicitly. Slash commands always require you to type them. For example, `/investigating-bugs` fires automatically when you say "this is broken", but `/session-dashboard` only runs when you ask for it. See [Core Concepts — Skills](/marketplace/getting-started/core-concepts/#skills) and [Core Concepts — Slash Commands](/marketplace/getting-started/core-concepts/#slash-commands).
+Skills auto-trigger when your task matches a pattern — you don't have to invoke them explicitly. Slash commands always require you to type them. For example, `/debugger` fires automatically when you say "this is broken", but `/session-dashboard` only runs when you ask for it. See [Core Concepts — Skills](/marketplace/getting-started/core-concepts/#skills) and [Core Concepts — Slash Commands](/marketplace/getting-started/core-concepts/#slash-commands).
 
 ### How do I trigger a skill manually?
 
@@ -65,7 +65,7 @@ Type `/skill-name` in the chat. For example, `/exploring-codebase` starts semant
 
 ### Why did the bug-fixing skill jump straight to a fix without reproducing first?
 
-The `/investigating-bugs` skill enforces a 6-step protocol: REPRODUCE → OBSERVE → HYPOTHESIZE → VERIFY → FIX → CONFIRM. If Claude skipped steps, it may not have triggered the skill — try invoking `/investigating-bugs` explicitly. See the [Debug a Bug guide](/marketplace/guides/debug-a-bug/) for the full protocol.
+The `/debugger` skill enforces a 6-step protocol: REPRODUCE → OBSERVE → HYPOTHESIZE → VERIFY → FIX → CONFIRM. If Claude skipped steps, it may not have triggered the skill — try invoking `/debugger` explicitly. See the [Debug a Bug guide](/marketplace/guides/debug-a-bug/) for the full protocol.
 
 ### What languages does codebase-pilot support?
 

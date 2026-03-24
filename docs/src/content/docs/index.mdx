@@ -60,7 +60,7 @@ Hooks activate immediately. No configuration. No restart.
     Ever had Claude run `rm -rf` or push directly to main? Safety hooks intercept destructive commands before they execute — and explain what went wrong.
   </Card>
   <Card title="Debugging goes in circles" icon="warning">
-    Claude guesses, reverts, guesses again. The investigating-bugs skill enforces a 6-step protocol: reproduce first, fix last. No more patch-and-pray.
+    Claude guesses, reverts, guesses again. The debugger skill enforces a 6-step protocol: reproduce first, fix last. No more patch-and-pray.
   </Card>
   <Card title="Unfamiliar codebases take forever" icon="magnifier">
     Reading file by file to understand a project wastes tokens and time. Codebase Pilot indexes your repo with tree-sitter — find symbols, trace imports, map architecture in seconds.
@@ -78,11 +78,11 @@ Hooks activate immediately. No configuration. No restart.
 |---------------------|------------------|
 | Claude edits files it hasn't read | `pre-edit-gate` hook blocks blind edits until the file is read |
 | `rm -rf` and force-pushes run unchecked | Safety hooks intercept destructive commands before they execute |
-| Debugging is patch-and-pray — guess, revert, repeat | `/investigating-bugs` enforces REPRODUCE → HYPOTHESIZE → VERIFY → FIX |
+| Debugging is patch-and-pray — guess, revert, repeat | `/debugger` enforces REPRODUCE → HYPOTHESIZE → VERIFY → FIX |
 | Unfamiliar codebases require reading dozens of files | Codebase Pilot indexes the repo — find symbols, trace imports in seconds |
 | Sessions forget context from earlier in the conversation | Memory system persists decisions, preferences, and project state across sessions |
 | Multi-agent work produces conflicting edits | Agent mesh coordinates file locks and shared decisions across teammates |
-| You manually track what changed and what's pending | `/managing-tasks` creates persistent tasks with cross-session handoffs |
+| You manually track what changed and what's pending | `/task-manager` creates persistent tasks with cross-session handoffs |
 | Code reviews happen late in the PR cycle | `/code-review` runs a 4-pass structured review on any diff, locally |
 
 ---

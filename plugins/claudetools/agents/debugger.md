@@ -1,5 +1,5 @@
 ---
-name: investigating-bugs
+name: debugger
 description: Evidence-based debugging agent. Use PROACTIVELY when debugging errors, fixing bugs, investigating failures, or when something is broken or not working as expected.
 model: sonnet
 color: orange

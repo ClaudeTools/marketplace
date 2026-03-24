@@ -34,7 +34,7 @@ git log --oneline -20 -- <affected-file>
 
 ### 2. Investigate
 
-Follows the `investigating-bugs` protocol:
+Follows the `debugger` protocol:
 
 - **Reproduce** — runs the failing command and captures exact error output. If not reproducible, stops and asks for more context.
 - **Observe** — reads the actual code at the error location, checks git log for recent changes.
@@ -80,6 +80,6 @@ Use the bugfix-pipeline agent to fix the authentication token expiry bug reporte
 
 ## Related
 
-- [Debug a Bug guide](/guides/debug-a-bug/) — walkthrough of the investigating-bugs protocol with real output
-- [Reference: investigating-bugs skill](/reference/skills/investigating-bugs/) — the skill this pipeline wraps
+- [Debug a Bug guide](/guides/debug-a-bug/) — walkthrough of the debugger protocol with real output
+- [Reference: debugger skill](/reference/skills/debugger/) — the skill this pipeline wraps
 - [Feature Pipeline](feature-pipeline.md) — full-cycle pipeline for new features

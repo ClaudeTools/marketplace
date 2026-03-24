@@ -61,11 +61,11 @@
 | Skill | Description |
 |-------|-------------|
 | <img src="https://img.shields.io/badge/%2Fcodebase--explorer-1D4ED8?style=flat-square" alt="/codebase-explorer"> | Semantic code navigation via tree-sitter index. Find symbols, trace imports, detect dead code, map architecture, analyse change impact. 14 languages. |
-| <img src="https://img.shields.io/badge/%2Finvestigating--bugs-B91C1C?style=flat-square" alt="/investigating-bugs"> | Evidence-based debugging: **reproduce** &rarr; **observe** &rarr; **hypothesize** &rarr; **verify** &rarr; **fix** &rarr; **confirm**. Two-strike rule. |
+| <img src="https://img.shields.io/badge/%2Fdebugger-B91C1C?style=flat-square" alt="/debugger"> | Evidence-based debugging: **reproduce** &rarr; **observe** &rarr; **hypothesize** &rarr; **verify** &rarr; **fix** &rarr; **confirm**. Two-strike rule. |
 | <img src="https://img.shields.io/badge/%2Fprompt--improver-92400E?style=flat-square" alt="/prompt-improver"> | Transform rough instructions into structured XML prompts. Modes: **execute**, **plan**, **task**. Auto-detects tech stack. |
 | <img src="https://img.shields.io/badge/%2Ffrontend--design-BE185D?style=flat-square" alt="/frontend-design"> | Production UI with generated design systems, responsive screenshots, contrast auditing. React, Next.js, Vite, Astro, SvelteKit, Tailwind. |
-| <img src="https://img.shields.io/badge/%2Fmanaging--tasks-065F46?style=flat-square" alt="/managing-tasks"> | Persistent tasks with cross-session continuity. Subcommands: new, start, stop, status, restore, decompose, progress, handoff, validate. |
-| <img src="https://img.shields.io/badge/%2Fevaluating--safety-991B1B?style=flat-square" alt="/evaluating-safety"> | Training scenarios, deterministic tests, safety corpus evaluation. Cross-model comparison with deviation tracking. |
+| <img src="https://img.shields.io/badge/%2Ftask--manager-065F46?style=flat-square" alt="/task-manager"> | Persistent tasks with cross-session continuity. Subcommands: new, start, stop, status, restore, decompose, progress, handoff, validate. |
+| <img src="https://img.shields.io/badge/%2Fsafety--evaluator-991B1B?style=flat-square" alt="/safety-evaluator"> | Training scenarios, deterministic tests, safety corpus evaluation. Cross-model comparison with deviation tracking. |
 | <img src="https://img.shields.io/badge/%2Fplugin--improver-155E75?style=flat-square" alt="/plugin-improver"> | Autonomous 7-phase self-improvement: collect, verify, analyse, prioritise, baseline, implement, measure. Auto-reverts regressions. |
 
 <br>
@@ -144,7 +144,7 @@ Safety hooks always run regardless of quiet mode.
 <details>
 <summary>Standalone agents</summary>
 
-`architect` &bull; `implementing-features` &bull; `code-reviewer` &bull; `test-writer` &bull; `researcher` &bull; `investigating-bugs`
+`architect` &bull; `implementing-features` &bull; `code-reviewer` &bull; `test-writer` &bull; `researcher` &bull; `debugger`
 
 </details>
 

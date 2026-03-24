@@ -108,8 +108,8 @@ All transitions are recorded in `.tasks/history.jsonl` for audit and handoff pur
 ## Cross-Session Continuity
 
 - `.tasks/task-manager.json` — persists all task state
-- `.tasks/progress.md` — human-readable session handoff (written by `/managing-tasks handoff`)
-- On session start, check `progress.md` first, then run `/managing-tasks restore` to sync TodoWrite display
+- `.tasks/progress.md` — human-readable session handoff (written by `/task-manager handoff`)
+- On session start, check `progress.md` first, then run `/task-manager restore` to sync TodoWrite display
 
 Commit `.tasks/` to version control to share task state across team members and sessions.
 
@@ -117,6 +117,6 @@ Commit `.tasks/` to version control to share task state across team members and 
 
 ## Related
 
-- [Manage Tasks guide](/guides/manage-tasks/) — walkthrough of the managing-tasks skill that wraps this MCP server
-- [Reference: managing-tasks skill](/reference/skills/managing-tasks/) — the skill interface to the task system
+- [Manage Tasks guide](/guides/manage-tasks/) — walkthrough of the task-manager skill that wraps this MCP server
+- [Reference: task-manager skill](/reference/skills/task-manager/) — the skill interface to the task system
 - [Reference: Process Hooks](/reference/hooks/process-hooks/) — the hooks that enforce task quality at completion

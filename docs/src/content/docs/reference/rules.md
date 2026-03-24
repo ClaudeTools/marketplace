@@ -78,7 +78,7 @@ At session start: when edit churn from recent sessions is high, prioritize diagn
 **File:** `task-management.md`
 **Paths:** `**/*`
 
-On session start: check `.tasks/progress.md` and `.tasks/task-manager.json`. During work: use TodoWrite normally (hook persists changes). On session end: run `/managing-tasks handoff`, commit `.tasks/` to version control.
+On session start: check `.tasks/progress.md` and `.tasks/task-manager.json`. During work: use TodoWrite normally (hook persists changes). On session end: run `/task-manager handoff`, commit `.tasks/` to version control.
 
 ---
 

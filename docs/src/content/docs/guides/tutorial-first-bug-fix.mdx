@@ -39,7 +39,7 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
    You don't need to diagnose it first. Mention the symptom and when it started — that's enough.
 
    :::note[What just happened: skill auto-activates]
-   Claude detected "broken" and "started after" — keywords that trigger the [investigating-bugs skill](../reference/skills/investigating-bugs/) automatically. The 6-step protocol (REPRODUCE → OBSERVE → HYPOTHESIZE → VERIFY → FIX → CONFIRM) is now active. Claude cannot skip ahead or jump to a fix without evidence.
+   Claude detected "broken" and "started after" — keywords that trigger the [debugger skill](../reference/skills/debugger/) automatically. The 6-step protocol (REPRODUCE → OBSERVE → HYPOTHESIZE → VERIFY → FIX → CONFIRM) is now active. Claude cannot skip ahead or jump to a fix without evidence.
    :::
 
 2. **Watch codebase-pilot locate the code**
@@ -135,7 +135,7 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 
 | Feature | What it did |
 |---------|------------|
-| [investigating-bugs skill](../reference/skills/investigating-bugs/) | Auto-activated on keywords, enforced REPRODUCE→CONFIRM sequence |
+| [debugger skill](../reference/skills/debugger/) | Auto-activated on keywords, enforced REPRODUCE→CONFIRM sequence |
 | [codebase-pilot](../reference/codebase-pilot/cli-reference/) | Located `loginHandler` by symbol name, not by filename guessing |
 | [read-before-edit hook](../reference/hooks/process-hooks/) | Blocked editing without prior read (passed here because read was done) |
 | Git history tracing | Found the rate-limiting commit as the starting point for investigation |
@@ -146,4 +146,4 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 
 - [Debug a Bug](debug-a-bug.md) — deeper walkthrough with a failed first hypothesis
 - [Tutorial: Explore a New Codebase](tutorial-explore-new-codebase.mdx) — map unfamiliar code before diving in
-- [Reference: investigating-bugs skill](../reference/skills/investigating-bugs/)
+- [Reference: debugger skill](../reference/skills/debugger/)

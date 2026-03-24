@@ -89,7 +89,7 @@ Every iteration: **Measure → Change → Re-Measure → Keep or Revert**
 
 ## Related Components
 
-- **evaluating-safety skill** — run training tests before/after to validate behavioral changes
+- **safety-evaluator skill** — run training tests before/after to validate behavioral changes
 - **scripts/collect-all-data.sh** — data collection entry point
 - **scripts/capture-snapshot.sh** — before/after measurement
 - **Remote telemetry** — fleet-wide data from all plugin installs, highest priority signal

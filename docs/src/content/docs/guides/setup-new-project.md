@@ -105,7 +105,7 @@ Commit `CLAUDE.md` to the repository so every team member's Claude session picks
 With the project set up, create a task to track your first piece of work:
 
 ```
-/managing-tasks new [description of your first task]
+/task-manager new [description of your first task]
 ```
 
 ## What happens behind the scenes

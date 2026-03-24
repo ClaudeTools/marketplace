@@ -9,7 +9,7 @@ Evidence-based debugging that enforces a strict six-step protocol. No guessing, 
 
 **Trigger:** Use when the user says "debug this", "fix this bug", "why is this failing", "this is broken", "not working", or "unexpected behaviour".
 
-**Invocation:** `/investigating-bugs [error-description]`
+**Invocation:** `/debugger [error-description]`
 
 ---
 
@@ -22,7 +22,7 @@ Use this skill whenever something is broken and you want a structured fix rather
 ## Try it now
 
 ```
-/investigating-bugs Users get logged out after 5 minutes even with remember-me checked
+/debugger Users get logged out after 5 minutes even with remember-me checked
 ```
 
 Claude will reproduce the failure first, then read the relevant source, state a hypothesis with cited evidence, verify it before writing any code, fix the root cause, and confirm with a passing test — in that order.
@@ -70,9 +70,9 @@ Do not attempt a third fix without fresh evidence.
 ## Example Invocations
 
 ```
-/investigating-bugs TypeError: Cannot read property 'id' of undefined
-/investigating-bugs The payment webhook is not being received
-/investigating-bugs Tests pass locally but fail in CI
+/debugger TypeError: Cannot read property 'id' of undefined
+/debugger The payment webhook is not being received
+/debugger Tests pass locally but fail in CI
 ```
 
 ---

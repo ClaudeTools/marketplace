@@ -56,7 +56,7 @@ The first word of arguments is checked for `plan` or `task` (case-insensitive) t
 
 **Plan mode:** Show prompt in XML fence → summarise assumptions → offer Execute / Revise / Edit / Discard options.
 
-**Task mode:** Create parent task via MCP → create subtasks with acceptance criteria, file references, verification commands → present task tree → invoke `/managing-tasks start`.
+**Task mode:** Create parent task via MCP → create subtasks with acceptance criteria, file references, verification commands → present task tree → invoke `/task-manager start`.
 
 ---
 
@@ -73,6 +73,6 @@ The first word of arguments is checked for `plan` or `task` (case-insensitive) t
 
 ## Related Components
 
-- **managing-tasks skill** — task mode creates tasks executed by this skill
+- **task-manager skill** — task mode creates tasks executed by this skill
 - **frontend-design skill** — commonly invoked when improved prompt involves UI work
 - **no-shortcuts rule** — governs verification requirements the generated prompt must include

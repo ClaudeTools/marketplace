@@ -10,11 +10,11 @@ description: "7 intelligent workflow skills — triggered automatically or invok
 | Skill | Invocation | Purpose |
 |-------|-----------|---------|
 | [Exploring Codebase](exploring-codebase.md) | `/exploring-codebase` | Semantic navigation: find symbols, trace imports, map architecture, detect dead code |
-| [Investigating Bugs](investigating-bugs.md) | `/investigating-bugs` | 6-step evidence-based debugging protocol with two-strike rule |
+| [Investigating Bugs](debugger.md) | `/debugger` | 6-step evidence-based debugging protocol with two-strike rule |
 | [Prompt Improver](prompt-improver.md) | `/prompt-improver` | Transform rough instructions into structured XML prompts |
 | [Frontend Design](frontend-design.md) | `/frontend-design` | Production UI with design systems, responsive screenshots, contrast auditing |
-| [Managing Tasks](managing-tasks.md) | `/managing-tasks` | Persistent tasks with cross-session continuity and handoff summaries |
-| [Evaluating Safety](evaluating-safety.md) | `/evaluating-safety` | Training scenarios, deterministic tests, cross-model safety comparison |
+| [Managing Tasks](task-manager.md) | `/task-manager` | Persistent tasks with cross-session continuity and handoff summaries |
+| [Evaluating Safety](safety-evaluator.md) | `/safety-evaluator` | Training scenarios, deterministic tests, cross-model safety comparison |
 | [Plugin Improver](plugin-improver.md) | `/plugin-improver` | 7-phase autonomous self-improvement with automatic regression revert |
 
 ---
