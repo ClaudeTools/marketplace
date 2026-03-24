@@ -1,5 +1,9 @@
 <div align="center">
-  <img src="assets/img/logo-banner.png" alt="claudetools" width="380">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/img/logo-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="assets/img/logo-light.png">
+    <img alt="claudetools" src="assets/img/logo-light.png" width="380">
+  </picture>
 </div>
 
 <p align="center">
