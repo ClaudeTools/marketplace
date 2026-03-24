@@ -1,0 +1,33 @@
+/* claudetools brand overrides for Starlight */
+
+:root {
+  /* Brand green accent */
+  --sl-color-accent-low: #0d2b06;
+  --sl-color-accent: #7BCC2E;
+  --sl-color-accent-high: #b8e986;
+
+  /* Tighter content */
+  --sl-content-width: 50rem;
+}
+
+/* Dark mode backgrounds — near-black like Vercel/Linear */
+:root[data-theme='dark'] {
+  --sl-color-bg: #0a0a0a;
+  --sl-color-bg-nav: #0a0a0a;
+  --sl-color-bg-sidebar: #0a0a0a;
+  --sl-color-hairline-light: #1a1a1a;
+  --sl-color-hairline: #222;
+  --sl-color-gray-6: #1a1a1a;
+  --sl-color-black: #0a0a0a;
+}
+
+/* Selection colour */
+::selection {
+  background-color: rgba(123, 204, 46, 0.25);
+}
+
+/* Smoother typography */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
