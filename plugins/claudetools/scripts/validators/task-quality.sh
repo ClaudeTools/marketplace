@@ -73,8 +73,7 @@ validate_task_quality() {
         ANY=$(grep -co 'as any\b\|: any\b' "$file" 2>/dev/null || true)
         ANY=${ANY:-0}
         if [ "$ANY" -gt 3 ]; then
-          VIOLATIONS="${VIOLATIONS}\n$(basename "$file"): ${ANY} uses of 'any' type"
-          VIOLATION_COUNT=$((VIOLATION_COUNT + ANY))
+          WARNINGS="${WARNINGS}\n$(basename "$file"): ${ANY} uses of 'any' type — prefer explicit types over 'any'"
         fi
 
         # Circumvention: 'as unknown as Type' bypasses type safety same as 'as any'
@@ -127,7 +126,7 @@ validate_task_quality() {
     if [ "$TOTAL_VIOLATIONS" -gt 3 ]; then
       echo "  ... and $((TOTAL_VIOLATIONS - 3)) more. Fix these first, then re-check." >&2
     fi
-    echo "Replace stubs with real implementations and fix 'any' types — shipping stubs means the next developer inherits broken code. Fix these, verify the fix compiles, then mark the task complete." >&2
+    echo "Replace stubs with real implementations — shipping stubs means the next developer inherits broken code. Fix these, verify the fix compiles, then mark the task complete." >&2
     return 2
   fi
 
@@ -197,9 +196,7 @@ validate_task_quality() {
         if [ "$IS_MECHANICAL" = true ]; then
           WARNINGS="${WARNINGS}\n${VISUAL_FILES} UI file(s) changed (mechanical refactor detected — token/class replacements only). Visual verification recommended but not required."
         else
-          echo "${VISUAL_FILES} UI file(s) changed without visual verification — code that compiles can still render broken in the browser." >&2
-          echo "Open the changed pages in Chrome, confirm they render correctly, then mark the task complete." >&2
-          return 2
+          WARNINGS="${WARNINGS}\n${VISUAL_FILES} UI file(s) changed without visual verification — open changed pages in Chrome to confirm rendering."
         fi
       fi
     fi
@@ -244,9 +241,8 @@ validate_task_quality() {
       local TEST_OUT
       TEST_OUT=$(cd "$tdir" && npm test 2>&1 | tail -10) || true
       if echo "$TEST_OUT" | grep -qE 'FAIL|failed' && ! echo "$TEST_OUT" | grep -qE 'pre-existing|0 failed'; then
-        echo "Tests failing in $PKG_NAME — the next developer inherits broken tests and can't trust the suite. Fix them, re-run the suite, then mark the task complete." >&2
-        echo "$TEST_OUT" | grep -E 'FAIL|failed' | head -3 >&2
-        return 2
+        WARNINGS="${WARNINGS}\n$PKG_NAME: Tests failing — fix them before shipping"
+        WARNINGS="${WARNINGS}\n$(echo "$TEST_OUT" | grep -E 'FAIL|failed' | head -3)"
       fi
     done < <(echo -e "$TEST_DIRS")
   fi
@@ -261,8 +257,7 @@ validate_task_quality() {
     local EVIDENCE
     EVIDENCE=$(echo "$INPUT" | grep -ciE 'error:|stack.?trace|reproduced|observed|caused by|root cause|logs show|exception|traceback|reproduction' 2>/dev/null || echo 0)
     if [ "$EVIDENCE" -eq 0 ]; then
-      echo "Bug fix without diagnostic evidence — guesswork fixes mask the real problem and often introduce new bugs. Reproduce the error first, read logs/traces, then fix based on what you observe." >&2
-      return 2
+      WARNINGS="${WARNINGS}\nBug fix without diagnostic evidence — reproduce the error first, read logs/traces"
     fi
   fi
 

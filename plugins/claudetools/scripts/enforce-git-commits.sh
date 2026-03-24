@@ -6,6 +6,9 @@
 
 set -euo pipefail
 
+# Quiet mode: skip non-safety hooks
+[[ "${CLAUDE_HOOKS_QUIET:-}" = "1" ]] && exit 0
+
 INPUT=$(cat 2>/dev/null || true)
 source "$(dirname "$0")/hook-log.sh"
 

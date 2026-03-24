@@ -1,6 +1,5 @@
 #!/bin/bash
-# SessionEnd dispatcher (async)
-# Replaces: session-wrap.sh, aggregate-session.sh, doc-index.sh, memory-consolidate.sh
+# SessionEnd dispatcher (async) — session-wrap, aggregate-session, doc-index, memory-consolidate
 # Runs all side-effect validators sequentially; exits 0 always (async — errors logged, not blocking).
 set -euo pipefail
 

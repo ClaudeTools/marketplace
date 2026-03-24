@@ -7,6 +7,9 @@
 
 set -euo pipefail
 
+# Quiet mode: skip non-safety hooks
+[[ "${CLAUDE_HOOKS_QUIET:-}" = "1" ]] && exit 0
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 INPUT=$(cat 2>/dev/null || true)

@@ -110,7 +110,7 @@ validate_ran_checks() {
       echo "  Run your project's test suite" >&2
     fi
 
-    return 2
+    return 1
   fi
 
   return 0

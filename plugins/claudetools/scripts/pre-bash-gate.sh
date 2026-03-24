@@ -1,6 +1,5 @@
 #!/bin/bash
-# PreToolUse:Bash dispatcher
-# Replaces: block-dangerous-bash.sh, ai-safety.sh, block-unasked-restructure.sh
+# PreToolUse:Bash dispatcher — ai-safety, dangerous-bash, unasked-restructure, no-deferred-actions
 # Safety-critical — stops on FIRST block, does not continue to further validators.
 set -euo pipefail
 

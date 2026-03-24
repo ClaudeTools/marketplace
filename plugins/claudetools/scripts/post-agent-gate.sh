@@ -1,6 +1,5 @@
 #!/bin/bash
-# PostToolUse:Agent dispatcher
-# Replaces: agent-output.sh, semantic-agent.sh
+# PostToolUse:Agent dispatcher — runs agent-output and semantic-agent validators
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

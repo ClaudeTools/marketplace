@@ -216,4 +216,10 @@ if [ -f "$CANDIDATES_FILE" ] && [ -s "$CANDIDATES_FILE" ]; then
   fi
 fi
 
+# Memory contradiction check
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [[ -f "$SCRIPT_DIR/memory-validate.sh" ]]; then
+  bash "$SCRIPT_DIR/memory-validate.sh" 2>/dev/null || true
+fi
+
 exit 0

@@ -1,6 +1,5 @@
 #!/bin/bash
-# PostToolUse:Edit|Write dispatcher — validates content in a single pass
-# Replaces: verify-no-stubs.sh, detect-hardcoded-secrets.sh, detect-localhost-in-config.sh, check-mock-in-prod.sh
+# PostToolUse:Edit|Write dispatcher — runs stubs, secrets, localhost, and mocks validators in a single pass
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

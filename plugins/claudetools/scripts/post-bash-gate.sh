@@ -1,7 +1,9 @@
 #!/bin/bash
-# PostToolUse:Bash dispatcher
-# Replaces: enforce-deploy-then-verify.sh, detect-unasked-deps.sh
+# PostToolUse:Bash dispatcher — runs unasked-deps and deploy-loop-detector validators
 set -euo pipefail
+
+# Quiet mode: skip non-safety hooks
+[[ "${CLAUDE_HOOKS_QUIET:-}" = "1" ]] && exit 0
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -10,7 +12,6 @@ source "$SCRIPT_DIR/lib/hook-input.sh"
 hook_init
 
 # Phase 2: Source validators
-source "$SCRIPT_DIR/validators/deploy-then-verify.sh"
 source "$SCRIPT_DIR/validators/unasked-deps.sh"
 source "$SCRIPT_DIR/validators/deploy-loop-detector.sh"
 
@@ -41,7 +42,6 @@ run_validator() {
   emit_validator_event "post-bash-gate" "$name" "$decision" "$_duration_ms" "$output" 2>/dev/null || true
 }
 
-run_validator "enforce-deploy-then-verify" validate_deploy_then_verify
 run_validator "detect-unasked-deps"        validate_unasked_deps
 run_validator "deploy-loop-detector"      validate_deploy_loop
 

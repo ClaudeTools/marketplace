@@ -1,6 +1,7 @@
 ---
 name: managing-tasks
 description: Extended task management with persistence, cross-session continuity, and validation. Use when the user says /task-manager, task status, manage tasks, restore tasks, or session handoff.
+disable-model-invocation: true
 argument-hint: [new|start|stop|status|restore|decompose|progress|handoff|validate]
 allowed-tools: Read, Bash, Grep, Glob, Write, Edit, Agent, TeamCreate, TeamDelete, SendMessage
 metadata:

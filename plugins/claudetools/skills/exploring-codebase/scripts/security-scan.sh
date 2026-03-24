@@ -93,6 +93,61 @@ done < <(grep -rnE '(redirect|location)\s*[=(]\s*(req\.|request\.|params\.|query
   "$PROJECT" "${SRC_INCLUDES[@]}" "${EXCLUDES[@]}" \
   --exclude="*.test.*" --exclude="*.spec.*" 2>/dev/null || true)
 
+
+# --- Pilot-powered checks (structural, requires codebase index) ---
+_PILOT_LIB="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}/scripts/lib/pilot-query.sh"
+if [[ -f "$_PILOT_LIB" ]] && [[ -f "${PROJECT}/.codeindex/db.sqlite" ]]; then
+  # shellcheck source=/dev/null
+  source "$_PILOT_LIB"
+  export CODEBASE_PILOT_PROJECT_ROOT="$PROJECT"
+
+  # 6. Dead security validators — exported auth/validate/sanitize functions never imported
+  dead_output=$(pilot_dead_code 2>/dev/null || true)
+  if [[ -n "$dead_output" ]]; then
+    while IFS= read -r line; do
+      [[ -z "$line" ]] && continue
+      if echo "$line" | grep -qiE '(auth|secur|valid|sanitiz|escap|permission|csrf|xss)'; then
+        file=$(echo "$line" | awk '{print $1}')
+        add_finding "MEDIUM" "${file:-unknown}" "0" "dead-security-code" "Exported security function never imported: $line"
+      fi
+    done <<< "$dead_output"
+  fi
+
+  # 7. Route files missing auth imports
+  # Find files that define routes (app.get/post/put/delete, router.get/post/put/delete)
+  while IFS=: read -r route_file _lineno _line; do
+    [[ -z "$route_file" ]] && continue
+    # Check if this file imports any auth-related symbol
+    if ! grep -qiE '(import|require).*\b(auth|middleware|authenticate|authorize|guard|protect|jwt|session)' \
+        "$route_file" 2>/dev/null; then
+      add_finding "MEDIUM" "$route_file" "0" "missing-auth-middleware" \
+        "Route handler file has no auth middleware import"
+    fi
+  done < <(grep -rlE '\b(app|router)\.(get|post|put|patch|delete)\s*\(' \
+    "$PROJECT" "${SRC_INCLUDES[@]}" "${EXCLUDES[@]}" \
+    --exclude="*.test.*" --exclude="*.spec.*" 2>/dev/null | \
+    awk '{print $0":0:route"}' || true)
+
+  # 8. Input handler blast radius — find files handling user input and check import graph
+  # Locate files that reference req.body / req.params / req.query (user input entry points)
+  input_files=$(grep -rlE '\b(req\.(body|params|query)|request\.(body|params|query))\b' \
+    "$PROJECT" "${SRC_INCLUDES[@]}" "${EXCLUDES[@]}" \
+    --exclude="*.test.*" --exclude="*.spec.*" 2>/dev/null | head -10 || true)
+  if [[ -n "$input_files" ]]; then
+    while IFS= read -r input_file; do
+      [[ -z "$input_file" ]] && continue
+      # Use related-files to see how many files depend on this input handler
+      rel_path="${input_file#"$PROJECT"/}"
+      related=$(pilot_related_files "$rel_path" 2>/dev/null || true)
+      affected_count=$(echo "$related" | grep -cE '^\s' || true)
+      if [[ "$affected_count" -gt 5 ]]; then
+        add_finding "LOW" "$input_file" "0" "high-blast-radius-input" \
+          "User-input handler has ${affected_count} related files in import graph"
+      fi
+    done <<< "$input_files"
+  fi
+fi
+
 TOTAL=$(( ${#CRITICAL[@]} + ${#HIGH[@]} + ${#MEDIUM[@]} + ${#LOW[@]} ))
 
 if [ "$JSON_OUT" = true ]; then

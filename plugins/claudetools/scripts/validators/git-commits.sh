@@ -33,12 +33,12 @@ EOF
     return 2
   fi
 
-  # If modified tracked files — they forgot to stage and commit
-  local UNCOMMITTED_LIMIT
-  UNCOMMITTED_LIMIT=$(get_threshold "uncommitted_file_limit")
-  UNCOMMITTED_LIMIT=${UNCOMMITTED_LIMIT%.*}
-  if [ "$UNCOMMITTED" -gt "$UNCOMMITTED_LIMIT" ]; then
-    record_hook_outcome "enforce-git-commits" "TaskCompleted" "block" "" "uncommitted_file_limit" "$UNCOMMITTED_LIMIT" "$MODEL_FAMILY"
+  # Two-tier uncommitted file check:
+  #   >10 files → block (likely forgot to commit a whole feature)
+  #   5-10 files → warn (nudge, but allow completion)
+  #   <5 files → allow
+  if [ "$UNCOMMITTED" -gt 10 ]; then
+    record_hook_outcome "enforce-git-commits" "TaskCompleted" "block" "" "uncommitted_file_limit" "10" "$MODEL_FAMILY"
     cat >&2 <<EOF
 You have ${UNCOMMITTED} modified files that are not committed.
 Uncommitted work is lost during context compaction and is invisible to teammates.
@@ -48,6 +48,13 @@ Stage and commit:
   git commit -m "feat: <description>"
 EOF
     return 2
+  elif [ "$UNCOMMITTED" -gt 4 ]; then
+    record_hook_outcome "enforce-git-commits" "TaskCompleted" "warn" "" "uncommitted_file_limit" "5" "$MODEL_FAMILY"
+    cat >&2 <<EOF
+You have ${UNCOMMITTED} modified files that are not committed — consider committing before moving on.
+Uncommitted work is lost during context compaction and is invisible to teammates.
+EOF
+    return 1
   fi
 
   record_hook_outcome "enforce-git-commits" "TaskCompleted" "allow" "" "" "" "$MODEL_FAMILY"

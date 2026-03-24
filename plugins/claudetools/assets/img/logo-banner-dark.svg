@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 80" width="520" height="80">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700');
+      .brand-text { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace; font-weight: 700; font-size: 32px; fill: #e8e8e8; }
+    </style>
+  </defs>
+  <!-- Brandmark: green square with terminal icon -->
+  <rect x="4" y="4" width="72" height="72" rx="14" fill="#7BCC2E"/>
+  <!-- Terminal > -->
+  <path d="M24 28 L40 42 L24 56" stroke="#2B2B2B" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Terminal _ -->
+  <line x1="42" y1="56" x2="56" y2="56" stroke="#2B2B2B" stroke-width="5.5" stroke-linecap="round"/>
+  <!-- Text (light for dark backgrounds) -->
+  <text x="92" y="53" class="brand-text">claudetools</text>
+</svg>

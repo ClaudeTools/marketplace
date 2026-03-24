@@ -9,6 +9,12 @@ set -euo pipefail
 ROOT="${1:-.}"
 cd "$ROOT"
 
+# Source pilot library (graceful fallback)
+_PILOT_LIB="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}/scripts/lib/pilot-query.sh"
+if [[ -f "$_PILOT_LIB" ]]; then
+  source "$_PILOT_LIB"
+fi
+
 echo "=== PROJECT CONTEXT ==="
 
 # Tech stack detection
@@ -302,6 +308,17 @@ elif [ "$BUILD_CMD_FOUND" = false ] && [ -f "go.mod" ]; then
 fi
 if [ "$BUILD_CMD_FOUND" = false ]; then
   echo "(no build command detected)"
+fi
+
+if [[ -f "$_PILOT_LIB" ]] && declare -f pilot_map &>/dev/null; then
+  if [[ -f "${ROOT}/.codeindex/db.sqlite" ]]; then
+    echo ""
+    echo "=== Project Structure (from index) ==="
+    pilot_map 2>/dev/null || true
+    echo ""
+    echo "=== Most-Referenced Files ==="
+    pilot_context_budget 2>/dev/null | head -15 || true
+  fi
 fi
 
 echo ""

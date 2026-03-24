@@ -1,6 +1,7 @@
 ---
 name: evaluating-safety
 description: Run training scenarios, deterministic tests, and safety corpus evaluations. Use when the user says train, run training, test safety, run scenarios, evaluate model, or compare results.
+disable-model-invocation: true
 argument-hint: <command> [test|code|noncode|edge|compare|cross-model|cross-model-dry-run|golden|golden-cross-model|all]
 allowed-tools: Read, Bash, Grep, Glob, Agent, TeamCreate, TeamDelete, TaskCreate, TaskUpdate, TaskList, SendMessage
 metadata:

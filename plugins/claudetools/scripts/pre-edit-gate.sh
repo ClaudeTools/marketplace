@@ -1,7 +1,9 @@
 #!/bin/bash
-# PreToolUse:Edit|Write dispatcher
-# Replaces: require-active-task.sh, enforce-task-scope.sh, research-backing-gate.sh, detect-bulk-edit.sh
+# PreToolUse:Edit|Write dispatcher — runs blind-edit, task-scope, research-backing, bulk-edit, prefer-edit, mesh-lock validators
 set -euo pipefail
+
+# Quiet mode: skip non-safety hooks
+[[ "${CLAUDE_HOOKS_QUIET:-}" = "1" ]] && exit 0
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -10,7 +12,6 @@ source "$SCRIPT_DIR/lib/hook-input.sh"
 hook_init
 
 # Phase 2: Source validators
-source "$SCRIPT_DIR/validators/active-task.sh"
 source "$SCRIPT_DIR/validators/blind-edit.sh"
 source "$SCRIPT_DIR/validators/task-scope.sh"
 source "$SCRIPT_DIR/validators/research-backing.sh"
@@ -55,7 +56,6 @@ run_pretool_validator() {
 }
 
 run_pretool_validator "blind-edit-guard"         validate_blind_edit
-run_pretool_validator "require-active-task"      validate_active_task
 run_pretool_validator "enforce-task-scope"       validate_task_scope
 run_pretool_validator "research-backing-gate"    validate_research_backing
 run_pretool_validator "detect-bulk-edit"         validate_bulk_edit

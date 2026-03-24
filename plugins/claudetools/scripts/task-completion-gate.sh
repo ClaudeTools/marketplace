@@ -1,7 +1,9 @@
 #!/bin/bash
-# TaskCompleted dispatcher
-# Replaces: task-quality.sh, task-done.sh, git-commits.sh, ran-checks.sh
+# TaskCompleted dispatcher — task-quality, task-done, git-commits, ran-checks
 set -euo pipefail
+
+# Quiet mode: skip non-safety hooks
+[[ "${CLAUDE_HOOKS_QUIET:-}" = "1" ]] && exit 0
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 

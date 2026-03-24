@@ -89,10 +89,10 @@ compute_hook_metrics() {
 get_hook_category() {
   local hook_name="$1"
   case "$hook_name" in
-    block-dangerous-bash|guard-sensitive-files|ai-safety-check|detect-hardcoded-secrets) echo "safety" ;;
-    verify-no-stubs|edit-frequency-guard|failure-pattern-detector|check-mock-in-prod|block-stub-writes) echo "quality" ;;
-    enforce-git-commits|require-active-task|session-stop-gate|enforce-deploy-then-verify|block-unasked-restructure) echo "process" ;;
-    inject-session-context|aggregate-session|doc-manager|doc-stale-detector|doc-index-generator) echo "context" ;;
+    guard-sensitive-files|ai-safety|dangerous-bash) echo "safety" ;;
+    edit-frequency-guard|failure-pattern-detector|stubs|task-quality) echo "quality" ;;
+    enforce-git-commits|session-stop-dispatcher|enforce-task-quality) echo "process" ;;
+    inject-session-context|aggregate-session|doc-manager|doc-stale-detector) echo "context" ;;
     *) echo "general" ;;
   esac
 }

@@ -3,8 +3,31 @@
 
 const path = require('path');
 const fs = require('fs');
+const { execFileSync } = require('child_process');
 
 const { getTasksDir, generateTaskId } = require(path.join(__dirname, '..', '..', '..', 'scripts', 'lib', 'task-store.js'));
+
+const PILOT_CLI = path.join(__dirname, '..', '..', '..', 'codebase-pilot', 'dist', 'cli.js');
+
+/**
+ * Look up a symbol in the codebase-pilot index.
+ * Uses execFileSync (not exec/execSync) to avoid shell injection.
+ * Returns trimmed stdout or null if unavailable/no results.
+ */
+function getPilotSymbol(symbol, projectRoot) {
+  const dbPath = path.join(projectRoot, '.codeindex', 'db.sqlite');
+  if (!fs.existsSync(dbPath) || !fs.existsSync(PILOT_CLI)) return null;
+  try {
+    const result = execFileSync(
+      process.execPath,
+      [PILOT_CLI, 'find-symbol', symbol, '--project', projectRoot],
+      { encoding: 'utf8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] }
+    );
+    return result.trim() || null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Schema validation + circular dependency detection for tasks.json.
@@ -205,14 +228,31 @@ function main() {
   if (errors.length === 0) {
     // Read task count for success output
     let taskCount = 0;
+    let tasks = [];
     try {
       const raw = fs.readFileSync(path.join(tasksDir, 'tasks.json'), 'utf8');
       const data = JSON.parse(raw);
-      taskCount = (data.tasks || []).length;
+      tasks = data.tasks || [];
+      taskCount = tasks.length;
     } catch (e) {
       // already validated, should not happen
     }
-    process.stdout.write(JSON.stringify({ valid: true, task_count: taskCount }) + '\n');
+
+    // Optional pilot enrichment: look up symbols from pending task titles
+    const projectRoot = process.env.PROJECT_ROOT || process.cwd();
+    const enriched = [];
+    for (const task of tasks) {
+      if (task.status !== 'pending' && task.status !== 'in_progress') continue;
+      const title = (task.content || '').split('\n')[0].replace(/^#+\s*/, '');
+      const symbol = title.match(/([A-Z][a-zA-Z]+|[a-z][a-zA-Z]*[A-Z][a-zA-Z]*|[a-z_]{3,}[a-z])/)?.[1];
+      if (!symbol) continue;
+      const related = getPilotSymbol(symbol, projectRoot);
+      if (related) enriched.push({ id: task.id, symbol, relatedCode: related });
+    }
+
+    const out = { valid: true, task_count: taskCount };
+    if (enriched.length > 0) out.pilot_enrichment = enriched;
+    process.stdout.write(JSON.stringify(out) + '\n');
     process.exit(0);
   } else {
     process.stderr.write(JSON.stringify({ valid: false, errors: errors, count: errors.length }) + '\n');
