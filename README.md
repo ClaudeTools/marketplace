@@ -44,13 +44,13 @@
 
 | Command | Description |
 |---------|-------------|
-| $\colorbox{#6D28D9}{\color{white}\textsf{\kern{4} /code-review \kern{4}}}$ | 4-pass structured review: correctness, security, performance, maintainability. Confidence-filtered findings with file:line references. |
-| $\colorbox{#1A7F37}{\color{white}\textsf{\kern{4} /session-dashboard \kern{4}}}$ | System health report: hook fire/block rates, tool success/failure, edit churn, token efficiency. |
-| $\colorbox{#4338CA}{\color{white}\textsf{\kern{4} /field-review \kern{4}}}$ | Plugin self-audit from real session data. Block rates, false positives, dead hooks, skill usage, context overhead. |
-| $\colorbox{#5B21B6}{\color{white}\textsf{\kern{4} /memory \kern{4}}}$ | Manage persistent cross-session knowledge. FTS5-backed search, confidence scoring, automatic decay. |
-| $\colorbox{#4B5563}{\color{white}\textsf{\kern{4} /logs \kern{4}}}$ | Query session logs: conversation history, tool usage, errors, side-questions across sessions. |
-| $\colorbox{#0369A1}{\color{white}\textsf{\kern{4} /docs-manager \kern{4}}}$ | Documentation audit: staleness detection, index generation, archiving, consistent formatting. |
-| $\colorbox{#9A3412}{\color{white}\textsf{\kern{4} /claude-code-guide \kern{4}}}$ | Best practices reference for building Claude Code extensions: skills, hooks, agents, plugins, MCP servers. |
+| ![](https://img.shields.io/badge/%2Fcode--review-6D28D9?style=flat-square) | 4-pass structured review: correctness, security, performance, maintainability. Confidence-filtered findings with file:line references. |
+| ![](https://img.shields.io/badge/%2Fsession--dashboard-1A7F37?style=flat-square) | System health report: hook fire/block rates, tool success/failure, edit churn, token efficiency. |
+| ![](https://img.shields.io/badge/%2Ffield--review-4338CA?style=flat-square) | Plugin self-audit from real session data. Block rates, false positives, dead hooks, skill usage, context overhead. |
+| ![](https://img.shields.io/badge/%2Fmemory-5B21B6?style=flat-square) | Manage persistent cross-session knowledge. FTS5-backed search, confidence scoring, automatic decay. |
+| ![](https://img.shields.io/badge/%2Flogs-4B5563?style=flat-square) | Query session logs: conversation history, tool usage, errors, side-questions across sessions. |
+| ![](https://img.shields.io/badge/%2Fdocs--manager-0369A1?style=flat-square) | Documentation audit: staleness detection, index generation, archiving, consistent formatting. |
+| ![](https://img.shields.io/badge/%2Fclaude--code--guide-9A3412?style=flat-square) | Best practices reference for building Claude Code extensions: skills, hooks, agents, plugins, MCP servers. |
 
 <br>
 
@@ -60,13 +60,13 @@
 
 | Skill | Description |
 |-------|-------------|
-| $\colorbox{#1D4ED8}{\color{white}\textsf{\kern{4} /exploring-codebase \kern{4}}}$ | Semantic code navigation via tree-sitter index. Find symbols, trace imports, detect dead code, map architecture, analyse change impact. 14 languages. |
-| $\colorbox{#B91C1C}{\color{white}\textsf{\kern{4} /investigating-bugs \kern{4}}}$ | Evidence-based debugging: **reproduce** &rarr; **observe** &rarr; **hypothesize** &rarr; **verify** &rarr; **fix** &rarr; **confirm**. Two-strike rule. |
-| $\colorbox{#92400E}{\color{white}\textsf{\kern{4} /improving-prompts \kern{4}}}$ | Transform rough instructions into structured XML prompts. Modes: **execute**, **plan**, **task**. Auto-detects tech stack. |
-| $\colorbox{#BE185D}{\color{white}\textsf{\kern{4} /designing-interfaces \kern{4}}}$ | Production UI with generated design systems, responsive screenshots, contrast auditing. React, Next.js, Vite, Astro, SvelteKit, Tailwind. |
-| $\colorbox{#065F46}{\color{white}\textsf{\kern{4} /managing-tasks \kern{4}}}$ | Persistent tasks with cross-session continuity. Subcommands: new, start, stop, status, restore, decompose, progress, handoff, validate. |
-| $\colorbox{#991B1B}{\color{white}\textsf{\kern{4} /evaluating-safety \kern{4}}}$ | Training scenarios, deterministic tests, safety corpus evaluation. Cross-model comparison with deviation tracking. |
-| $\colorbox{#155E75}{\color{white}\textsf{\kern{4} /improving-plugin \kern{4}}}$ | Autonomous 7-phase self-improvement: collect, verify, analyse, prioritise, baseline, implement, measure. Auto-reverts regressions. |
+| ![](https://img.shields.io/badge/%2Fexploring--codebase-1D4ED8?style=flat-square) | Semantic code navigation via tree-sitter index. Find symbols, trace imports, detect dead code, map architecture, analyse change impact. 14 languages. |
+| ![](https://img.shields.io/badge/%2Finvestigating--bugs-B91C1C?style=flat-square) | Evidence-based debugging: **reproduce** &rarr; **observe** &rarr; **hypothesize** &rarr; **verify** &rarr; **fix** &rarr; **confirm**. Two-strike rule. |
+| ![](https://img.shields.io/badge/%2Fimproving--prompts-92400E?style=flat-square) | Transform rough instructions into structured XML prompts. Modes: **execute**, **plan**, **task**. Auto-detects tech stack. |
+| ![](https://img.shields.io/badge/%2Fdesigning--interfaces-BE185D?style=flat-square) | Production UI with generated design systems, responsive screenshots, contrast auditing. React, Next.js, Vite, Astro, SvelteKit, Tailwind. |
+| ![](https://img.shields.io/badge/%2Fmanaging--tasks-065F46?style=flat-square) | Persistent tasks with cross-session continuity. Subcommands: new, start, stop, status, restore, decompose, progress, handoff, validate. |
+| ![](https://img.shields.io/badge/%2Fevaluating--safety-991B1B?style=flat-square) | Training scenarios, deterministic tests, safety corpus evaluation. Cross-model comparison with deviation tracking. |
+| ![](https://img.shields.io/badge/%2Fimproving--plugin-155E75?style=flat-square) | Autonomous 7-phase self-improvement: collect, verify, analyse, prioritise, baseline, implement, measure. Auto-reverts regressions. |
 
 <br>
 
