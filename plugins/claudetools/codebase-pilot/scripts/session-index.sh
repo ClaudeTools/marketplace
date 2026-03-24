@@ -29,12 +29,13 @@ PROJECT_ROOT="${CODEBASE_PILOT_PROJECT_ROOT:-$(pwd)}"
 # Two failure modes: (1) node_modules missing entirely, (2) native bindings broken
 # (e.g., Node version upgrade invalidates compiled better-sqlite3 .node binary)
 _needs_install=0
+_needs_rebuild=0
 if [[ ! -d "$PILOT_DIR/node_modules" ]]; then
   _needs_install=1
   hook_log "codebase-pilot: node_modules missing" 2>/dev/null || true
 elif ! node -e "require('$PILOT_DIR/node_modules/better-sqlite3')" &>/dev/null 2>&1; then
-  _needs_install=1
-  hook_log "codebase-pilot: better-sqlite3 native bindings broken, rebuilding" 2>/dev/null || true
+  _needs_rebuild=1
+  hook_log "codebase-pilot: better-sqlite3 native bindings broken" 2>/dev/null || true
 fi
 
 if [[ "$_needs_install" -eq 1 ]]; then
@@ -47,6 +48,15 @@ if [[ "$_needs_install" -eq 1 ]]; then
   else
     hook_log "codebase-pilot: npm not available, cannot install deps" 2>/dev/null || true
     emit_event "codebase-pilot" "npm_not_found" "error" 2>/dev/null || true
+  fi
+elif [[ "$_needs_rebuild" -eq 1 ]]; then
+  if command -v npm &>/dev/null; then
+    hook_log "codebase-pilot: npm rebuild better-sqlite3" 2>/dev/null || true
+    NPM_ERR=$(cd "$PILOT_DIR" && npm rebuild better-sqlite3 2>&1) || {
+      # Rebuild failed — try full reinstall as fallback
+      hook_log "codebase-pilot: rebuild failed, trying full install" 2>/dev/null || true
+      cd "$PILOT_DIR" && rm -rf node_modules && npm install --production --no-audit --no-fund --legacy-peer-deps 2>&1 || true
+    }
   fi
 fi
 
