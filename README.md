@@ -44,13 +44,13 @@
 
 | Command | Description |
 |---------|-------------|
-| $\color{#8B5CF6}{\textsf{/code-review}}$ | 4-pass structured review: correctness, security, performance, maintainability. Confidence-filtered findings with file:line references. |
-| $\color{#22C55E}{\textsf{/session-dashboard}}$ | System health report: hook fire/block rates, tool success/failure, edit churn, token efficiency. |
-| $\color{#6366F1}{\textsf{/field-review}}$ | Plugin self-audit from real session data. Block rates, false positives, dead hooks, skill usage, context overhead. |
-| $\color{#A78BFA}{\textsf{/memory}}$ | Manage persistent cross-session knowledge. FTS5-backed search, confidence scoring, automatic decay. |
-| $\color{#9CA3AF}{\textsf{/logs}}$ | Query session logs: conversation history, tool usage, errors, side-questions across sessions. |
-| $\color{#38BDF8}{\textsf{/docs-manager}}$ | Documentation audit: staleness detection, index generation, archiving, consistent formatting. |
-| $\color{#FB923C}{\textsf{/claude-code-guide}}$ | Best practices reference for building Claude Code extensions: skills, hooks, agents, plugins, MCP servers. |
+| $\colorbox{#6D28D9}{\color{white}\textsf{\kern{4} /code-review \kern{4}}}$ | 4-pass structured review: correctness, security, performance, maintainability. Confidence-filtered findings with file:line references. |
+| $\colorbox{#1A7F37}{\color{white}\textsf{\kern{4} /session-dashboard \kern{4}}}$ | System health report: hook fire/block rates, tool success/failure, edit churn, token efficiency. |
+| $\colorbox{#4338CA}{\color{white}\textsf{\kern{4} /field-review \kern{4}}}$ | Plugin self-audit from real session data. Block rates, false positives, dead hooks, skill usage, context overhead. |
+| $\colorbox{#5B21B6}{\color{white}\textsf{\kern{4} /memory \kern{4}}}$ | Manage persistent cross-session knowledge. FTS5-backed search, confidence scoring, automatic decay. |
+| $\colorbox{#4B5563}{\color{white}\textsf{\kern{4} /logs \kern{4}}}$ | Query session logs: conversation history, tool usage, errors, side-questions across sessions. |
+| $\colorbox{#0369A1}{\color{white}\textsf{\kern{4} /docs-manager \kern{4}}}$ | Documentation audit: staleness detection, index generation, archiving, consistent formatting. |
+| $\colorbox{#9A3412}{\color{white}\textsf{\kern{4} /claude-code-guide \kern{4}}}$ | Best practices reference for building Claude Code extensions: skills, hooks, agents, plugins, MCP servers. |
 
 <br>
 
@@ -60,13 +60,13 @@
 
 | Skill | Description |
 |-------|-------------|
-| $\color{#3B82F6}{\textsf{/exploring-codebase}}$ | Semantic code navigation via tree-sitter index. Find symbols, trace imports, detect dead code, map architecture, analyse change impact. 14 languages. |
-| $\color{#EF4444}{\textsf{/investigating-bugs}}$ | Evidence-based debugging: **reproduce** &rarr; **observe** &rarr; **hypothesize** &rarr; **verify** &rarr; **fix** &rarr; **confirm**. Two-strike rule. |
-| $\color{#F59E0B}{\textsf{/improving-prompts}}$ | Transform rough instructions into structured XML prompts. Modes: **execute**, **plan**, **task**. Auto-detects tech stack. |
-| $\color{#EC4899}{\textsf{/designing-interfaces}}$ | Production UI with generated design systems, responsive screenshots, contrast auditing. React, Next.js, Vite, Astro, SvelteKit, Tailwind. |
-| $\color{#10B981}{\textsf{/managing-tasks}}$ | Persistent tasks with cross-session continuity. Subcommands: new, start, stop, status, restore, decompose, progress, handoff, validate. |
-| $\color{#EF4444}{\textsf{/evaluating-safety}}$ | Training scenarios, deterministic tests, safety corpus evaluation. Cross-model comparison with deviation tracking. |
-| $\color{#06B6D4}{\textsf{/improving-plugin}}$ | Autonomous 7-phase self-improvement: collect, verify, analyse, prioritise, baseline, implement, measure. Auto-reverts regressions. |
+| $\colorbox{#1D4ED8}{\color{white}\textsf{\kern{4} /exploring-codebase \kern{4}}}$ | Semantic code navigation via tree-sitter index. Find symbols, trace imports, detect dead code, map architecture, analyse change impact. 14 languages. |
+| $\colorbox{#B91C1C}{\color{white}\textsf{\kern{4} /investigating-bugs \kern{4}}}$ | Evidence-based debugging: **reproduce** &rarr; **observe** &rarr; **hypothesize** &rarr; **verify** &rarr; **fix** &rarr; **confirm**. Two-strike rule. |
+| $\colorbox{#92400E}{\color{white}\textsf{\kern{4} /improving-prompts \kern{4}}}$ | Transform rough instructions into structured XML prompts. Modes: **execute**, **plan**, **task**. Auto-detects tech stack. |
+| $\colorbox{#BE185D}{\color{white}\textsf{\kern{4} /designing-interfaces \kern{4}}}$ | Production UI with generated design systems, responsive screenshots, contrast auditing. React, Next.js, Vite, Astro, SvelteKit, Tailwind. |
+| $\colorbox{#065F46}{\color{white}\textsf{\kern{4} /managing-tasks \kern{4}}}$ | Persistent tasks with cross-session continuity. Subcommands: new, start, stop, status, restore, decompose, progress, handoff, validate. |
+| $\colorbox{#991B1B}{\color{white}\textsf{\kern{4} /evaluating-safety \kern{4}}}$ | Training scenarios, deterministic tests, safety corpus evaluation. Cross-model comparison with deviation tracking. |
+| $\colorbox{#155E75}{\color{white}\textsf{\kern{4} /improving-plugin \kern{4}}}$ | Autonomous 7-phase self-improvement: collect, verify, analyse, prioritise, baseline, implement, measure. Auto-reverts regressions. |
 
 <br>
 
