@@ -1,6 +1,6 @@
 {
   "name": "claudetools",
-  "version": "6.1.1",
+  "version": "6.1.2",
   "description": "Universal guardrail and quality system for Claude Code -- adaptive hooks, self-learning metrics, skills for code, research, writing, and data analysis. Zero config.",
   "author": {
     "name": "owenob1"

@@ -1,8 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/img/logo-banner-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="assets/img/logo-banner.svg">
-    <img alt="claudetools" src="assets/img/logo-banner.svg" width="420">
+    <source media="(prefers-color-scheme: dark)" srcset="assets/img/logo-dark.png">
+    <img alt="claudetools" src="assets/img/logo-light.png" width="380">
   </picture>
 </p>
 
@@ -11,28 +10,25 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ClaudeTools/marketplace"><img src="https://img.shields.io/badge/version-6.0.0-7BCC2E?style=for-the-badge" alt="Version"></a>&nbsp;
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="License"></a>&nbsp;
-  <a href="https://code.claude.com/docs/en/plugins"><img src="https://img.shields.io/badge/Claude_Code-plugin-7BCC2E?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik04IDZMNCAxMkw4IDE4IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIvPjxsaW5lIHgxPSIxMCIgeTE9IjE4IiB4Mj0iMTYiIHkyPSIxOCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4=" alt="Claude Code"></a>
+  <a href="https://github.com/ClaudeTools/marketplace"><img src="https://img.shields.io/badge/version-6.0.0-1A7F37?style=for-the-badge" alt="Version"></a>&nbsp;
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-0550AE?style=for-the-badge" alt="License"></a>&nbsp;
+  <img src="https://img.shields.io/badge/hooks-51-1A7F37?style=for-the-badge" alt="51 Hooks">&nbsp;
+  <img src="https://img.shields.io/badge/skills-14-1A7F37?style=for-the-badge" alt="14 Skills">&nbsp;
+  <img src="https://img.shields.io/badge/agents-10-1A7F37?style=for-the-badge" alt="10 Agents">
 </p>
-
-<br>
 
 <p align="center">
-  <a href="#install">Install</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
-  <a href="#skills">Skills</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
-  <a href="#hooks">Hooks</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
-  <a href="#agents">Agents</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
-  <a href="#codebase-pilot">Codebase Pilot</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
-  <a href="#configuration">Configuration</a>
+  <a href="#-install">Install</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
+  <a href="#-skills">Skills</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
+  <a href="#-hooks">Hooks</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
+  <a href="#-agents">Agents</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
+  <a href="#-codebase-pilot">Codebase Pilot</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
+  <a href="#-configuration">Config</a>
 </p>
 
 <br>
 
-<!-- TODO: Add GIF demo here -->
-<!-- <p align="center"><img src="assets/img/demo.gif" alt="claudetools in action" width="720"></p> -->
-
-## Install
+## <img src="https://img.shields.io/badge/->_-1A7F37?style=flat-square" alt="" height="20"> Install
 
 ```
 /plugin install claudetools@claudetools-marketplace
@@ -42,119 +38,121 @@
 
 <br>
 
-## Skills
+## <img src="https://img.shields.io/badge/-Commands-4338CA?style=flat-square" alt="" height="20"> Slash Commands
 
-> 14 built-in skills for structured, repeatable workflows
+7 utility commands. Invoke explicitly via `/command-name`.
+
+| | Command | Description |
+|:---:|---------|-------------|
+| <img src="https://img.shields.io/badge/_-6D28D9?style=flat-square" height="12" alt=""> | `/code-review` | 4-pass structured review: correctness, security, performance, maintainability. Confidence-filtered findings with file:line references. |
+| <img src="https://img.shields.io/badge/_-1A7F37?style=flat-square" height="12" alt=""> | `/session-dashboard` | System health report: hook fire/block rates, tool success/failure, edit churn, token efficiency. |
+| <img src="https://img.shields.io/badge/_-4338CA?style=flat-square" height="12" alt=""> | `/field-review` | Plugin self-audit from real session data. Block rates, false positives, dead hooks, skill usage, context overhead. |
+| <img src="https://img.shields.io/badge/_-5B21B6?style=flat-square" height="12" alt=""> | `/memory` | Manage persistent cross-session knowledge. FTS5-backed search, confidence scoring, automatic decay. |
+| <img src="https://img.shields.io/badge/_-4B5563?style=flat-square" height="12" alt=""> | `/logs` | Query session logs: conversation history, tool usage, errors, side-questions across sessions. |
+| <img src="https://img.shields.io/badge/_-0369A1?style=flat-square" height="12" alt=""> | `/docs-manager` | Documentation audit: staleness detection, index generation, archiving, consistent formatting. |
+| <img src="https://img.shields.io/badge/_-9A3412?style=flat-square" height="12" alt=""> | `/claude-code-guide` | Best practices reference for building Claude Code extensions: skills, hooks, agents, plugins, MCP servers. |
+
+<br>
+
+## <img src="https://img.shields.io/badge/-Skills-1A7F37?style=flat-square" alt="" height="20"> Skills
+
+7 intelligent workflows. Claude invokes these automatically when your task matches, or use `/skill-name`.
+
+| | Skill | Description |
+|:---:|-------|-------------|
+| <img src="https://img.shields.io/badge/_-1D4ED8?style=flat-square" height="12" alt=""> | `/exploring-codebase` | Semantic code navigation via tree-sitter index. Find symbols, trace imports, detect dead code, map architecture, analyse change impact. 14 languages. |
+| <img src="https://img.shields.io/badge/_-B91C1C?style=flat-square" height="12" alt=""> | `/investigating-bugs` | Evidence-based debugging: **reproduce** &rarr; **observe** &rarr; **hypothesize** &rarr; **verify** &rarr; **fix** &rarr; **confirm**. Two-strike rule. |
+| <img src="https://img.shields.io/badge/_-92400E?style=flat-square" height="12" alt=""> | `/improving-prompts` | Transform rough instructions into structured XML prompts. Modes: **execute**, **plan**, **task**. Auto-detects tech stack. |
+| <img src="https://img.shields.io/badge/_-BE185D?style=flat-square" height="12" alt=""> | `/designing-interfaces` | Production UI with generated design systems, responsive screenshots, contrast auditing. React, Next.js, Vite, Astro, SvelteKit, Tailwind. |
+| <img src="https://img.shields.io/badge/_-065F46?style=flat-square" height="12" alt=""> | `/managing-tasks` | Persistent tasks with cross-session continuity. Subcommands: new, start, stop, status, restore, decompose, progress, handoff, validate. |
+| <img src="https://img.shields.io/badge/_-991B1B?style=flat-square" height="12" alt=""> | `/evaluating-safety` | Training scenarios, deterministic tests, safety corpus evaluation. Cross-model comparison with deviation tracking. |
+| <img src="https://img.shields.io/badge/_-155E75?style=flat-square" height="12" alt=""> | `/improving-plugin` | Autonomous 7-phase self-improvement: collect, verify, analyse, prioritise, baseline, implement, measure. Auto-reverts regressions. |
+
+<br>
+
+## <img src="https://img.shields.io/badge/-Hooks-1D4ED8?style=flat-square" alt="" height="20"> Hooks
+
+51 hooks across 17 lifecycle events. Guardrails that run automatically on every tool call.
 
 <table>
 <tr>
-<td width="50%" valign="top">
-
-#### Code & Analysis
-| Command | What it does |
-|---------|-------------|
-| `/exploring-codebase` | Find symbols, trace imports, detect dead code, map architecture |
-| `/investigating-bugs` | Evidence-based debug: reproduce &rarr; observe &rarr; hypothesize &rarr; fix |
-| `/code-review` | 4-pass review: correctness, security, performance, maintainability |
-| `/improving-prompts` | Transform rough instructions into structured prompts &rarr; execute |
-
-</td>
-<td width="50%" valign="top">
-
-#### Build & Manage
-| Command | What it does |
-|---------|-------------|
-| `/designing-interfaces` | Production UI with design systems, responsive screenshots, contrast auditing |
-| `/managing-tasks` | Persistent tasks with cross-session continuity and handoff |
-| `/session-dashboard` | System health, success rates, failure patterns |
-| `/field-review` | Plugin self-audit: hook block rates, false positives, gaps |
-
-</td>
-</tr>
-</table>
-
-<br>
-
-## Hooks
-
-> 51 hooks across 17 lifecycle events &mdash; guardrails that run automatically on every tool call
-
-<table>
-<tr>
 <td width="25%" align="center">
-<br>
 
-**Safety**
+<img src="https://img.shields.io/badge/-SAFETY-B91C1C?style=for-the-badge" alt="Safety">
 
-Blocks destructive commands, hardcoded secrets, sensitive file access
-
-`rm -rf` &bull; API keys &bull; `.env`
+Destructive commands
+Hardcoded secrets
+Sensitive file access
 
 </td>
 <td width="25%" align="center">
-<br>
 
-**Quality**
+<img src="https://img.shields.io/badge/-QUALITY-6D28D9?style=for-the-badge" alt="Quality">
 
-Catches stubs, placeholder code, type abuse, edit churn
-
-`not implemented` &bull; `as any` &bull; churn
-
-</td>
-<td width="25%" align="center">
-<br>
-
-**Process**
-
-Enforces read-before-edit, commit hygiene, scope discipline
-
-blind edits &bull; uncommitted work
+Stubs & placeholders
+Type abuse (`as any`)
+Edit churn detection
 
 </td>
 <td width="25%" align="center">
-<br>
 
-**Context**
+<img src="https://img.shields.io/badge/-PROCESS-92400E?style=for-the-badge" alt="Process">
 
-Prevents redundant reads, injects learned patterns, tracks metrics
+Read-before-edit
+Commit hygiene
+Scope discipline
 
-re-reads &bull; memory &bull; telemetry
+</td>
+<td width="25%" align="center">
+
+<img src="https://img.shields.io/badge/-CONTEXT-065F46?style=for-the-badge" alt="Context">
+
+Redundant read prevention
+Memory injection
+Session telemetry
 
 </td>
 </tr>
 </table>
 
 <details>
-<summary><strong>Quiet mode</strong> &mdash; suppress non-safety hooks for research sessions</summary>
+<summary><img src="https://img.shields.io/badge/-quiet_mode-4B5563?style=flat-square" alt=""> Suppress non-safety hooks for research sessions</summary>
+
+<br>
 
 ```bash
 CLAUDE_HOOKS_QUIET=1 claude
 ```
 
-Safety hooks (stop enforcement, dangerous command blocking, sensitive file guards) always run.
+Safety hooks always run regardless of quiet mode.
 
 </details>
 
 <br>
 
-## Agents
+## <img src="https://img.shields.io/badge/-Agents-BE185D?style=flat-square" alt="" height="20"> Agents
 
-> 10 agents including 4 pre-built pipelines that compose skills into end-to-end workflows
+10 agents including 4 pre-built pipelines that compose skills into end-to-end workflows.
 
 | Pipeline | Flow | Use when |
 |----------|------|----------|
-| **Feature** | explore &rarr; plan &rarr; implement &rarr; review &rarr; verify | Building a new feature end-to-end |
-| **Bugfix** | explore &rarr; investigate &rarr; fix &rarr; review &rarr; confirm | Structured, evidence-based bug resolution |
-| **Security** | full-audit &rarr; scan &rarr; dead-code &rarr; deps &rarr; report | Read-only security assessment |
-| **Refactor** | impact-analysis &rarr; decompose &rarr; implement &rarr; verify | Safe refactoring with regression checks |
+| <img src="https://img.shields.io/badge/-feature-1A7F37?style=flat-square" alt=""> | explore &rarr; plan &rarr; implement &rarr; review &rarr; verify | New feature end-to-end |
+| <img src="https://img.shields.io/badge/-bugfix-B91C1C?style=flat-square" alt=""> | explore &rarr; investigate &rarr; fix &rarr; review &rarr; confirm | Evidence-based bug resolution |
+| <img src="https://img.shields.io/badge/-security-991B1B?style=flat-square" alt=""> | audit &rarr; scan &rarr; dead-code &rarr; deps &rarr; report | Read-only security assessment |
+| <img src="https://img.shields.io/badge/-refactor-4338CA?style=flat-square" alt=""> | impact &rarr; decompose &rarr; implement &rarr; verify | Safe refactoring |
 
-Plus standalone agents: `architect` &bull; `implementing-features` &bull; `code-reviewer` &bull; `test-writer` &bull; `researcher` &bull; `investigating-bugs`
+<details>
+<summary>Standalone agents</summary>
+
+`architect` &bull; `implementing-features` &bull; `code-reviewer` &bull; `test-writer` &bull; `researcher` &bull; `investigating-bugs`
+
+</details>
 
 <br>
 
-## Codebase Pilot
+## <img src="https://img.shields.io/badge/-Codebase_Pilot-155E75?style=flat-square" alt="" height="20"> Codebase Pilot
 
-> Tree-sitter + SQLite indexing engine &mdash; semantic code navigation across 14 languages
+Tree-sitter + SQLite indexing engine. Semantic code navigation across 14 languages.
 
 ```bash
 codebase-pilot map                        # Project overview
@@ -164,34 +162,43 @@ codebase-pilot dead-code                  # Find unused exports
 codebase-pilot circular-deps              # Detect circular imports
 ```
 
-**Languages:** TypeScript, JavaScript, Python (native) + Go, Rust, Java, Kotlin, Ruby, C#, PHP, Swift, C, C++ (WASM)
+<p>
+  <img src="https://img.shields.io/badge/TypeScript-1D4ED8?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/JavaScript-92400E?style=flat-square&logo=javascript&logoColor=white" alt="JavaScript">
+  <img src="https://img.shields.io/badge/Python-1E3A5F?style=flat-square&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Go-155E75?style=flat-square&logo=go&logoColor=white" alt="Go">
+  <img src="https://img.shields.io/badge/Rust-1C1917?style=flat-square&logo=rust&logoColor=white" alt="Rust">
+  <img src="https://img.shields.io/badge/Java-9A3412?style=flat-square&logo=openjdk&logoColor=white" alt="Java">
+  <img src="https://img.shields.io/badge/Kotlin-5B21B6?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin">
+  <img src="https://img.shields.io/badge/Ruby-991B1B?style=flat-square&logo=ruby&logoColor=white" alt="Ruby">
+  <img src="https://img.shields.io/badge/C%23-065F46?style=flat-square&logo=csharp&logoColor=white" alt="C#">
+  <img src="https://img.shields.io/badge/PHP-4338CA?style=flat-square&logo=php&logoColor=white" alt="PHP">
+  <img src="https://img.shields.io/badge/Swift-9A3412?style=flat-square&logo=swift&logoColor=white" alt="Swift">
+  <img src="https://img.shields.io/badge/C/C++-1D4ED8?style=flat-square&logo=cplusplus&logoColor=white" alt="C/C++">
+  <img src="https://img.shields.io/badge/Bash-1A7F37?style=flat-square&logo=gnubash&logoColor=white" alt="Bash">
+</p>
 
-The index updates automatically on file edits via hooks.
+Index updates automatically on file edits via hooks.
 
 <br>
 
-## Configuration
+## <img src="https://img.shields.io/badge/-Config-92400E?style=flat-square" alt="" height="20"> Configuration
 
 <details>
-<summary><strong>Adaptive thresholds</strong></summary>
+<summary><strong>Memory system</strong> &mdash; FTS5-backed cross-session knowledge</summary>
 
-Thresholds for edit frequency, failure detection, and commit enforcement are stored in an SQLite metrics database. They adjust per-model (opus/sonnet/haiku) based on session outcomes.
+<br>
+
+Project memory files indexed for fast retrieval. Confidence-scored injection with automatic decay. Contradiction detector flags conflicts between CLAUDE.md and stored memories.
 
 </details>
 
 <details>
-<summary><strong>Memory system</strong></summary>
+<summary><strong>Quiet mode</strong> &mdash; silence non-safety hooks</summary>
 
-Project memory files are indexed into an FTS5-backed database for fast retrieval. Memories inject into session context based on confidence scores with automatic decay for stale entries.
+<br>
 
-A contradiction detector compares CLAUDE.md directives against stored memories and flags conflicts at session start.
-
-</details>
-
-<details>
-<summary><strong>Skill loading</strong></summary>
-
-Frequently-used skills auto-load when triggered by your message. Specialized skills load only on explicit `/skill-name` invocation, keeping context overhead low.
+`CLAUDE_HOOKS_QUIET=1` suppresses all quality/process/context hooks. Safety hooks always run.
 
 </details>
 
@@ -201,8 +208,7 @@ Frequently-used skills auto-load when triggered by your message. Specialized ski
 
 ```
 claudetools/
-  .claude-plugin/plugin.json    Plugin manifest
-  hooks/hooks.json               17 lifecycle events
+  hooks/hooks.json               17 lifecycle events, 51 hooks
   scripts/                       44 hook scripts
     lib/                         9 shared libraries
     validators/                  26 modular validators
@@ -215,7 +221,7 @@ claudetools/
 
 ## Requirements
 
-- [Claude Code](https://code.claude.com) v1.0+ &bull; Node.js 18+ &bull; SQLite3 &bull; jq (recommended)
+[Claude Code](https://code.claude.com) v1.0+ &bull; Node.js 18+ &bull; SQLite3 &bull; jq (recommended)
 
 ## License
 
