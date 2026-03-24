@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/img/logo-dark.png">
-    <img alt="claudetools" src="assets/img/logo-light.png" width="380">
+    <source media="(prefers-color-scheme: dark)" srcset="plugins/claudetools/assets/img/logo-dark.png">
+    <img alt="claudetools" src="plugins/claudetools/assets/img/logo-light.png" width="380">
   </picture>
 </p>
 
