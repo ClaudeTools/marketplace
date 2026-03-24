@@ -35,7 +35,7 @@ case "$ACTION" in
     AGENT_TYPE=$(echo "$INPUT" | jq -r '.agent_type // "main"' 2>/dev/null || echo "main")
     NAME="${AGENT_TYPE}-${SID:0:8}"
 
-    if node "$MESH_CLI" register --id "$SID" --name "$NAME" --worktree "$WT" --branch "$BR" --pid "$PID" 2>&1; then
+    if node "$MESH_CLI" register --id "$SID" --name "$NAME" --worktree "$WT" --branch "$BR" --pid "$PID" >/dev/null 2>&1; then
       hook_log "mesh-lifecycle: registered $NAME (sid=$SID wt=$WT branch=$BR pid=$PID)"
     else
       hook_log "mesh-lifecycle: register failed for $NAME (sid=$SID)"
@@ -64,7 +64,7 @@ case "$ACTION" in
     ;;
 
   deregister)
-    if node "$MESH_CLI" deregister --id "$SID" 2>&1; then
+    if node "$MESH_CLI" deregister --id "$SID" >/dev/null 2>&1; then
       hook_log "mesh-lifecycle: deregistered sid=$SID"
     else
       hook_log "mesh-lifecycle: deregister failed for sid=$SID"
