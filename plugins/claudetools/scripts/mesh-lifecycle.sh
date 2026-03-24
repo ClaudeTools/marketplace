@@ -60,11 +60,7 @@ case "$ACTION" in
       done
     fi
 
-    # Worktree enforcement: main worktree should not be edited directly
-    if ! is_worktree; then
-      echo "[agent-mesh] MANDATORY: Call EnterWorktree before making any changes. The main worktree must not be edited directly."
-      hook_log "mesh-lifecycle: not in worktree, emitted MANDATORY warning"
-    fi
+    # Worktree enforcement handled by enforce-worktree-isolation.sh
     ;;
 
   deregister)

@@ -1,13 +1,6 @@
 ---
-name: field-review
-description: Field review of the claudetools plugin itself (NOT code review). Reports on hooks, validators, skills performance — false positives, bugs, gaps, praise. Use when the user says claudetools review, plugin feedback, field report, audit the plugin, rate claudetools.
-argument-hint: [--days N] [--submit]
-allowed-tools: Read, Bash, Grep, Glob, Write
-metadata:
-  author: Owen Innes
-  version: 1.0.0
-  category: meta
-  tags: [feedback, plugin-review, telemetry, field-report]
+description: Field review of the claudetools plugin itself (NOT code review). Reports on hooks, validators, skills performance — false positives, bugs, gaps, praise.
+argument-hint: "[--days N] [--submit]"
 ---
 
 # claudetools Plugin Field Review
@@ -25,8 +18,10 @@ This is YOUR review. The structure below is a scaffold to ensure completeness, n
 Run the metrics collection script to get quantitative context:
 
 ```bash
-bash ${CLAUDE_SKILL_DIR}/scripts/collect-metrics.sh ${DAYS:-30}
+bash ${CLAUDE_PLUGIN_ROOT}/skills/field-review/scripts/collect-metrics.sh ${DAYS:-30}
 ```
+
+Parse `$ARGUMENTS` for `--days N` to override the default 30-day lookback window.
 
 Read the output carefully. This is your evidence base — hook outcomes, failure rates, threshold status, and a changelog showing what recently changed in the plugin. Note anything surprising: hooks with high block rates, tools that fail often, thresholds that have been modified, or new features you haven't tried yet.
 
@@ -174,19 +169,12 @@ The JSON structure:
 }
 ```
 
-**Key differences from the local markdown report:**
-- `narrative` captures the reasoning and interconnections that individual items can't express — the "why" behind findings, how issues relate to each other, structural observations about skill architecture
-- `self_critique` preserves honest process gaps — what you skipped, what you couldn't verify, where your analysis is uncertain
-- `component_grades` provides the dense grade-per-component view that individual items lose
-- `related_items` on each item captures interconnections (e.g., broken codebase-pilot index → grep instead → no CSS awareness → manual pattern counting)
-- `description` limit is 1000 chars (not 500) — enough for actionable detail
-
 ## Phase 5: Optional Submission
 
-If the user passed `--submit` or confirms when asked, submit the JSON:
+If the user passed `--submit` in $ARGUMENTS or confirms when asked, submit the JSON:
 
 ```bash
-bash ${CLAUDE_SKILL_DIR}/scripts/submit-feedback.sh .claude/plugins/feedback/claudetools-review-{date}.json
+bash ${CLAUDE_PLUGIN_ROOT}/skills/field-review/scripts/submit-feedback.sh .claude/plugins/feedback/claudetools-review-{date}.json
 ```
 
 If the user didn't pass `--submit`, ask them:

@@ -31,14 +31,3 @@ paths:
 - When inheriting work from a previous agent: read the actual code, don't trust the agent's summary.
 - When an agent reports "done, verified" — verify it yourself anyway.
 
-## Visual Verification
-- ALL UI/UX changes must be verified in Chrome after deployment. Never claim UI work is done without seeing it render with real data.
-- Test at multiple viewport sizes if responsiveness was changed (375px, 768px, 1440px).
-- If Chrome shows the feature doesn't work, fix it before declaring done.
-
-## Deterministic Over AI Inference
-- Everything follows one principle: if a shell command, script, linter, type-checker, build tool, test runner, hook, or any non-AI mechanism can do it — use that. AI inference is only for what requires judgment.
-- Verification = runnable commands (tests, typecheck, grep, curl). Never "review and confirm it looks correct."
-- File operations (rename, search-replace, bulk imports) = Bash. Not AI-driven file-by-file editing.
-- Documentation lookup = WebSearch, Context7, platform docs. Not training data.
-- This applies to how you configure, how you audit, how you design agents, and how those agents work.

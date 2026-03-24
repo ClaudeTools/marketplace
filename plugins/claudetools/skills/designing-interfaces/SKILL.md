@@ -1,5 +1,5 @@
 ---
-name: frontend-design
+name: designing-interfaces
 description: Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build a website, landing page, dashboard, web app, UI component, page layout, or any visual web interface. Also use when asked to redesign, restyle, make something look better, add dark mode, or create a design system. Covers React, Next.js, Vite, Astro, SvelteKit, Tailwind CSS, and plain HTML/CSS projects.
 argument-hint: [description of what to build]
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch, TaskCreate, TaskUpdate
@@ -10,7 +10,7 @@ metadata:
   tags: [design, ui, frontend, tailwind, components, dashboard, landing-page, web-app]
 ---
 
-# Frontend Design
+# Designing Interfaces
 
 Build distinctive, production-grade interfaces with craft and intent.
 
@@ -37,7 +37,7 @@ These scripts handle deterministic operations. Listed here so you know they exis
 - `generate-design-brief.sh` — AI-generated design brief via Claude CLI
 - `generate-tokens.sh` — CSS token generation from color inputs
 
-All paths: `${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/<name>`
+All paths: `${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/<name>`
 
 ---
 
@@ -71,9 +71,9 @@ When the user asks to audit, fix design issues, or improve design consistency in
 ### Step 1: Run Diagnostics
 Run all three scripts in sequence:
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/extract-system.py --dir .
-bash ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/validate-design.sh .
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/audit-design.py --dir .
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/extract-system.py --dir .
+bash ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/validate-design.sh .
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/audit-design.py --dir .
 ```
 
 ### Step 2: Collate Results
@@ -111,7 +111,7 @@ Before writing any code, establish design direction.
 
 **Step B:** If no system.md, check if the project already has a design:
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/extract-system.py --dir .
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/extract-system.py --dir .
 ```
 If existing tokens, fonts, or colors are found — ask the user: "This project has an existing design system. Should I work within it, or start fresh with a new direction?" If extending, save extraction as `.frontend-design/system.md` and work within it. If redesigning, run the intent-first workflow below.
 
@@ -139,7 +139,7 @@ If you cannot answer with specifics, stop and ask the user.
 
 **Theme Selection** — Choose a starting theme:
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/design-system.py --list-domains
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/design-system.py --list-domains
 ```
 Match the product's domain to recommended themes. Present 2-3 options to the user. The chosen theme provides the color palette, type ratio, depth strategy, and font recommendations as a starting point — then customize based on domain exploration.
 
@@ -147,7 +147,7 @@ Match the product's domain to recommended themes. Present 2-3 options to the use
 
 **Generate Design Brief:**
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/generate-design-brief.sh "<goal>" "<context>"
+bash ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/generate-design-brief.sh "<goal>" "<context>"
 ```
 
 **Save system.md NOW** — immediately after the brief is confirmed, write `.frontend-design/system.md`. Do not wait until the end. This protects decisions against context compaction in long sessions.
@@ -201,18 +201,18 @@ The design system is the foundation. Establish it before writing any component c
 ### Workflow
 1. **Generate design brief** → establishes colors, typography, spacing decisions
 2. **Generate globals.css** → use a theme seed or custom colors:
-   - From theme: `python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/design-system.py --theme midnight`
-   - Custom: `python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/design-system.py --brand "<hex>" --bg "<hex>" --fg "<hex>" --ratio <ratio> --grid <grid>`
-   - List themes: `python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/design-system.py --list-themes`
+   - From theme: `python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/design-system.py --theme midnight`
+   - Custom: `python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/design-system.py --brand "<hex>" --bg "<hex>" --fg "<hex>" --ratio <ratio> --grid <grid>`
+   - List themes: `python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/design-system.py --list-themes`
    - Override theme values: `--theme forest --brand "#10b981"` (theme as base, overrides applied)
-3. **Set up tailwind.config** → use the template at `${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/assets/tailwind-config-template.ts` to map CSS variables to Tailwind classes
+3. **Set up tailwind.config** → use the template at `${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/assets/tailwind-config-template.ts` to map CSS variables to Tailwind classes
 4. **Then build components** → every component references the global tokens, never raw values
 
 ---
 
 ## Design Guidelines
 
-For deeper guidance: `Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/references/design-principles.md`
+For deeper guidance: `Read ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/references/design-principles.md`
 
 ### Color
 
@@ -240,8 +240,8 @@ For deeper guidance: `Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/referenc
 - Avoid `space-*` classes — they apply margin to children, which breaks when elements wrap or reorder.
 - Don't mix margin/padding with gap on the same element because the spacing stacks unpredictably.
 - Pick a base spacing unit and stick to Tailwind scale multiples.
-- Compute spacing scale with `python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/type-scale.py css --base 16 --ratio 1.25 --grid 4`
-- For design theory (Gestalt, visual weight, vertical rhythm): `Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/references/design-theory.md`
+- Compute spacing scale with `python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/type-scale.py css --base 16 --ratio 1.25 --grid 4`
+- For design theory (Gestalt, visual weight, vertical rhythm): `Read ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/references/design-theory.md`
 
 ### Visual Elements
 
@@ -258,7 +258,7 @@ For deeper guidance: `Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/referenc
 
 Before writing components, load the full coding standards reference:
 ```
-Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/references/coding-standards.md
+Read ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/references/coding-standards.md
 ```
 
 Key rules that survive context compaction (repeated here because they cause the most failures):
@@ -298,7 +298,7 @@ Before making changes, understand the existing system. Tools: Glob, Grep, Read.
 | Extract existing system | `python3 .../extract-system.py --dir .` |
 | Clone/reproduce design | `Read .../references/clone-workflow.md` + `python3 .../extract-design-from-image.py prompts` + `bash .../screenshot-compare.sh ref.png impl.png` |
 
-Reference files (read on demand): `component-patterns.md`, `accessibility.md`, `critique-protocol.md`, `layout-patterns.md`, `dark-mode.md`, `token-naming.md`, `example-systems.md`, `design-theory.md`, `state-patterns.md`, `animation-patterns.md`, `performance.md` — all at `${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/references/`
+Reference files (read on demand): `component-patterns.md`, `accessibility.md`, `critique-protocol.md`, `layout-patterns.md`, `dark-mode.md`, `token-naming.md`, `example-systems.md`, `design-theory.md`, `state-patterns.md`, `animation-patterns.md`, `performance.md` — all at `${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/references/`
 
 ---
 
@@ -343,8 +343,8 @@ This is the most important quality lever. After writing UI code:
 4. **Iterate** — fix issues BEFORE presenting to the user
 
 Run validation as part of this loop:
-- `bash ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/validate-design.sh <project-dir>` — structural checks
-- `python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/audit-design.py --dir <project-dir>` — color contrast and spacing grid audit
+- `bash ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/validate-design.sh <project-dir>` — structural checks
+- `python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/audit-design.py --dir <project-dir>` — color contrast and spacing grid audit
 Fix any WARN or FAIL results before presenting.
 
 Do not present work you have not visually verified.
@@ -375,7 +375,7 @@ After building, before presenting, run this self-critique:
 **Craft:** Spacing on grid? Typography layers beyond size? Surfaces whisper hierarchy? All hover/press states?
 **Content:** Coherent story? Real person could see this data? Incoherence breaks illusion faster than visual flaws.
 
-If any critique reveals defaults — fix before presenting. For the full protocol: `Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/references/critique-protocol.md`
+If any critique reveals defaults — fix before presenting. For the full protocol: `Read ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/references/critique-protocol.md`
 
 ---
 
@@ -387,7 +387,7 @@ After completing a task, offer:
 
 If yes, write to `.frontend-design/system.md` using the template:
 ```bash
-Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/assets/system-template.md
+Read ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/assets/system-template.md
 ```
 
 **Save:** Direction, depth strategy, spacing base, key patterns (used 2+ times). **Skip:** One-offs, experiments, prop variations. **Consistency:** Verify new work against system.md — spacing on grid, declared depth strategy, palette colors, documented patterns reused.

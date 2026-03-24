@@ -1,5 +1,5 @@
 ---
-name: improve
+name: improving-plugin
 description: Run a full self-improvement loop — collect data, verify prior fixes, analyze, prioritize, capture baseline, implement, measure after-state, and log. Use when the user says improve, self-improve, improvement loop, iterate, or optimize the plugin.
 argument-hint: [--dry-run] [--category CATEGORY]
 allowed-tools: Read, Bash, Grep, Glob, Write, Edit, WebFetch
@@ -10,7 +10,7 @@ metadata:
   tags: [self-improvement, telemetry, autonomous, loop, before-after]
 ---
 
-# Self-Improvement Loop
+# Improving Plugin
 
 Run a full autonomous improvement iteration with built-in before/after measurement. Every change is measured — improvements are kept, regressions are caught and reverted, duplicate work is prevented.
 

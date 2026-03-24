@@ -22,3 +22,5 @@ When working with external services, APIs, libraries, or platforms:
 3. When an external service returns an error, search for that exact error FIRST.
 
 When you don't know something: SEARCH FOR IT. Do not guess, trial-and-error, or say "this should work" without checking.
+
+When the two-strike rule triggers, invoke the investigating-bugs skill for structured evidence-based debugging.

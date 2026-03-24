@@ -53,3 +53,5 @@ If the `TeamCreate` tool is NOT listed in your available tools:
 - Push to remote regularly — local-only work is at risk
 - Never end a session with uncommitted changes
 - When spawning teammates that edit files in parallel: use `isolation: "worktree"` on Agent tool to give each agent an isolated git worktree. This prevents file conflicts between simultaneous agents.
+
+Use /managing-tasks to track progress across tasks and sessions.

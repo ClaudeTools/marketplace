@@ -117,18 +117,28 @@ total_failures=$(sqlite3 "$METRICS_DB" \
 if [ -n "$avg_churn" ] && [ "$avg_churn" != "0" ] && [ "$avg_churn" != "0.0" ] && [ "$avg_churn" != "0.00" ]; then
   echo "[Session History] Avg edit churn: ${avg_churn} | Recent failures: ${total_failures}"
 
-  # High churn warning
+  # High churn warning (behavioral text now in rules/session-orientation.md)
   CHURN_WARN=$(get_threshold "churn_warning")
-  if awk "BEGIN {exit !(${avg_churn} > ${CHURN_WARN})}" 2>/dev/null; then
-    echo "Note: recent sessions show high edit churn. Focus on diagnostics before editing."
-  fi
 fi
 
-# High failure warning
+# High failure warning threshold check (behavioral text now in rules/session-orientation.md)
 FAILURE_WARN=$(get_threshold "failure_warning")
 FAILURE_WARN=${FAILURE_WARN%.*}
-if [ "${total_failures:-0}" -gt "$FAILURE_WARN" ] 2>/dev/null; then
-  echo "Note: elevated failure rate. Research before implementing."
+
+# --- Inject recent failure patterns (last 24h, top 3) — migrated from dynamic-rules.sh ---
+if [ -f "${METRICS_DB:-/dev/null}" ]; then
+  FAILURES=$(sqlite3 "$METRICS_DB" \
+    "SELECT tool_name || ' (' || COUNT(*) || ' failures)' FROM tool_outcomes
+     WHERE success = 0 AND timestamp > datetime('now', '-1 day')
+     GROUP BY tool_name ORDER BY COUNT(*) DESC LIMIT 3;" \
+    2>/dev/null || true)
+  if [ -n "$FAILURES" ]; then
+    echo ""
+    echo "[Recent Failure Patterns - last 24h]"
+    echo "$FAILURES" | while IFS= read -r line; do
+      echo "  $line"
+    done
+  fi
 fi
 
 # --- Inject high-confidence memories (from active memories table) ---

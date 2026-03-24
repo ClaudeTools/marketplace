@@ -205,4 +205,107 @@ done <<< "$RESULT"
 
 hook_log "memory-reflect: created $CREATED new memories"
 emit_event "memory-reflect" "memories_created" "allow" "0" "{\"count\":${CREATED}}" 2>/dev/null || true
+
+# === PHASE 2: Negative-pattern extraction ===
+# Formerly session-learn-negatives.sh — identifies mistakes, corrections, failed approaches.
+
+# Build negative-signal context: tool errors, user corrections, hook blocks
+ERRORS=$(jq -r '
+  select(.role == "assistant") |
+  .content // [] |
+  if type == "array" then
+    [.[] | select(.type == "tool_result") |
+     select(.is_error == true or (.content // "" | test("error|fail|exception|denied"; "i"))) |
+     .content // ""] | .[]
+  else empty end
+' "$TRANSCRIPT" 2>/dev/null | tail -20 | head -c 2000 || true)
+
+CORRECTIONS=$(echo "$RAW_USER_MSGS" | grep -iE "(no[, ]+not|don't|do not|instead[, ]+use|actually[, ]|stop doing|wrong|shouldn't|that's not|please don't|never)" 2>/dev/null | head -c 1500 || true)
+
+LOG_FILE="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}/logs/hooks.log"
+HOOK_BLOCKS=""
+if [ -f "$LOG_FILE" ]; then
+  HOOK_BLOCKS=$(grep -E "decision=(block|reject|warn)" "$LOG_FILE" 2>/dev/null | tail -15 | head -c 1000 || true)
+fi
+
+# Skip negative extraction if no negative signals found
+NEG_TOTAL="${ERRORS}${CORRECTIONS}${HOOK_BLOCKS}"
+if [ ${#NEG_TOTAL} -lt 50 ]; then
+  hook_log "memory-reflect: no negative signals found, skipping phase 2"
+  exit 0
+fi
+
+hook_log "memory-reflect: phase 2 — extracting negative patterns with Sonnet"
+
+NEG_CONTEXT="SESSION NEGATIVE REVIEW
+
+User corrections:
+${CORRECTIONS:-None detected}
+
+Tool errors/failures:
+${ERRORS:-None detected}
+
+Hook blocks/warnings:
+${HOOK_BLOCKS:-None}"
+
+NEG_RESULT=$(echo "$NEG_CONTEXT" | timeout 45 claude -p --model sonnet \
+  "You are reviewing a Claude Code session to extract NEGATIVE learnings — mistakes made, corrections received, approaches that failed.
+
+<output_format>
+For each finding, output EXACTLY this format (one per line, no other text):
+TYPE|SLUG|DESCRIPTION|WHY|HOW_TO_APPLY
+
+Where:
+- TYPE: feedback, project, or user
+- SLUG: kebab-case identifier for the filename
+- DESCRIPTION: one-line summary
+- WHY: why this happened or why it matters
+- HOW_TO_APPLY: what to do differently next time
+
+If nothing significant went wrong, output exactly: NONE
+Maximum 3 findings per session. Only HIGH-CONFIDENCE findings grounded in actual session evidence.
+</output_format>" 2>/dev/null || true)
+
+if [ -z "$NEG_RESULT" ] || [ "$NEG_RESULT" = "NONE" ]; then
+  hook_log "memory-reflect: phase 2 — no negative patterns found"
+  exit 0
+fi
+
+NEG_CREATED=0
+while IFS='|' read -r TYPE SLUG DESCRIPTION WHY HOW_TO_APPLY; do
+  [ -z "$TYPE" ] || [ -z "$SLUG" ] || [ -z "$DESCRIPTION" ] && continue
+  [ "$TYPE" = "NONE" ] && continue
+
+  SLUG=$(echo "$SLUG" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | head -c 50)
+  [ -z "$SLUG" ] && continue
+
+  FILENAME="${TYPE}_${SLUG}.md"
+  FILEPATH="$MEMORY_DIR/$FILENAME"
+
+  # Skip if memory already exists
+  [ -f "$FILEPATH" ] && continue
+
+  cat > "$FILEPATH" <<NEGMEMEOF
+---
+name: ${DESCRIPTION}
+description: ${DESCRIPTION}
+type: ${TYPE}
+---
+
+${DESCRIPTION}
+
+**Why:** ${WHY:-No context provided}
+
+**How to apply:** ${HOW_TO_APPLY:-Avoid this pattern in future sessions}
+NEGMEMEOF
+
+  if [ -f "$MEMORY_DIR/MEMORY.md" ] && ! grep -qF "$FILENAME" "$MEMORY_DIR/MEMORY.md" 2>/dev/null; then
+    echo "- [${FILENAME}](${FILENAME}) — ${DESCRIPTION}" >> "$MEMORY_DIR/MEMORY.md"
+  fi
+
+  NEG_CREATED=$((NEG_CREATED + 1))
+  hook_log "memory-reflect: phase 2 — created negative memory $FILENAME"
+done <<< "$NEG_RESULT"
+
+hook_log "memory-reflect: phase 2 — created $NEG_CREATED negative-pattern memories"
 exit 0

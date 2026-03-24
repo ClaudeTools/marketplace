@@ -1,6 +1,6 @@
 #!/bin/bash
 # SessionEnd dispatcher (async)
-# Replaces: session-wrap.sh, aggregate-session.sh, doc-index.sh, memory-deep.sh, memory-consolidate.sh
+# Replaces: session-wrap.sh, aggregate-session.sh, doc-index.sh, memory-consolidate.sh
 # Runs all side-effect validators sequentially; exits 0 always (async — errors logged, not blocking).
 set -euo pipefail
 
@@ -14,7 +14,6 @@ hook_init
 source "$SCRIPT_DIR/validators/session-wrap.sh"
 source "$SCRIPT_DIR/validators/aggregate-session.sh"
 source "$SCRIPT_DIR/validators/doc-index.sh"
-source "$SCRIPT_DIR/validators/memory-deep.sh"
 source "$SCRIPT_DIR/validators/memory-consolidate.sh"
 source "$SCRIPT_DIR/lib/telemetry-sync.sh"
 
@@ -49,7 +48,6 @@ emit_session_end "$_sid" 2>/dev/null || true
 run_async_validator "session-wrap"        run_session_wrap
 run_async_validator "aggregate-session"   run_aggregate_session
 run_async_validator "doc-index"           run_doc_index
-run_async_validator "memory-deep"         run_memory_deep
 run_async_validator "memory-consolidate"  run_memory_consolidate
 run_async_validator "telemetry-sync"      telemetry_sync
 

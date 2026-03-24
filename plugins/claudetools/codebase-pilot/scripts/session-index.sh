@@ -25,30 +25,28 @@ fi
 # Determine project root from CWD (Claude Code sets this to the project)
 PROJECT_ROOT="${CODEBASE_PILOT_PROJECT_ROOT:-$(pwd)}"
 
-# Auto-install dependencies if missing (one-time setup)
-# Skip entirely if dist/cli.js exists — deps may already be bundled or pre-installed
+# Auto-install/repair dependencies
+# Two failure modes: (1) node_modules missing entirely, (2) native bindings broken
+# (e.g., Node version upgrade invalidates compiled better-sqlite3 .node binary)
+_needs_install=0
 if [[ ! -d "$PILOT_DIR/node_modules" ]]; then
-  if [[ -f "$CLI" ]]; then
-    # CLI is built; try running it to see if it works without node_modules
-    if node "$CLI" --help &>/dev/null 2>&1 || node -e "require('$PILOT_DIR/dist/cli.js')" &>/dev/null 2>&1; then
-      hook_log "codebase-pilot: node_modules missing but CLI works, skipping npm install" 2>/dev/null || true
-    else
-      # CLI exists but can't run — fall through to npm install
-      :
-    fi
-  fi
-  # Only attempt npm install if node_modules still doesn't exist (skip re-check allows the above block to be a no-op)
-  if [[ ! -d "$PILOT_DIR/node_modules" ]]; then
-    if command -v npm &>/dev/null; then
-      hook_log "codebase-pilot: npm install (first run)" 2>/dev/null || true
-      NPM_ERR=$(cd "$PILOT_DIR" && npm install --production --no-audit --no-fund --legacy-peer-deps 2>&1) || {
-        hook_log "codebase-pilot: npm install FAILED: ${NPM_ERR:0:200}" 2>/dev/null || true
-        emit_event "codebase-pilot" "npm_install_failed" "error" 2>/dev/null || true
-      }
-    else
-      hook_log "codebase-pilot: npm not available, cannot install deps" 2>/dev/null || true
-      emit_event "codebase-pilot" "npm_not_found" "error" 2>/dev/null || true
-    fi
+  _needs_install=1
+  hook_log "codebase-pilot: node_modules missing" 2>/dev/null || true
+elif ! node -e "require('$PILOT_DIR/node_modules/better-sqlite3')" &>/dev/null 2>&1; then
+  _needs_install=1
+  hook_log "codebase-pilot: better-sqlite3 native bindings broken, rebuilding" 2>/dev/null || true
+fi
+
+if [[ "$_needs_install" -eq 1 ]]; then
+  if command -v npm &>/dev/null; then
+    hook_log "codebase-pilot: npm install --production" 2>/dev/null || true
+    NPM_ERR=$(cd "$PILOT_DIR" && npm install --production --no-audit --no-fund --legacy-peer-deps 2>&1) || {
+      hook_log "codebase-pilot: npm install FAILED: ${NPM_ERR:0:200}" 2>/dev/null || true
+      emit_event "codebase-pilot" "npm_install_failed" "error" 2>/dev/null || true
+    }
+  else
+    hook_log "codebase-pilot: npm not available, cannot install deps" 2>/dev/null || true
+    emit_event "codebase-pilot" "npm_not_found" "error" 2>/dev/null || true
   fi
 fi
 

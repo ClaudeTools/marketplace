@@ -244,16 +244,6 @@
             "timeout": 60
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-learn-negatives.sh",
-            "async": true,
-            "timeout": 60
-          }
-        ]
       }
     ],
     "SessionStart": [
@@ -411,17 +401,6 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/config-audit-trail.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "InstructionsLoaded": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/dynamic-rules.sh",
             "timeout": 5
           }
         ]

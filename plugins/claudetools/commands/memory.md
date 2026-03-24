@@ -1,20 +1,13 @@
 ---
-name: memory
-description: Manage developer memory — persistent cross-session knowledge. Use when the user says /memory, remember this, forget this, what do you remember, or manage memory.
-argument-hint: [view|show|add|remove|replace|regenerate|status|reset|export] [args]
-allowed-tools: Read, Bash, Grep, Glob
-metadata:
-  author: Owen Innes
-  version: 1.0.0
-  category: memory
-  tags: [memory, persistence, developer-context]
+description: Manage developer memory — persistent cross-session knowledge.
+argument-hint: "[view|show|add|remove|replace|regenerate|status|reset|export] [args]"
 ---
 
 # Memory Management
 
-You are executing the `/memory` skill. This is a subcommand router for the developer memory system. It provides persistent, cross-session knowledge that is injected into every conversation via CLAUDE.md.
+You are executing the `/memory` command. This is a subcommand router for the developer memory system. It provides persistent, cross-session knowledge that is injected into every conversation via CLAUDE.md.
 
-Parse the first argument to select the subcommand. Default to a status overview if no argument is given.
+Parse $ARGUMENTS to select the subcommand. Default to a status overview if no argument is given.
 
 ## Natural language triggers
 
@@ -67,7 +60,7 @@ Show the full injected memory block — what Claude Code actually sees at the st
 
 Add a new developer-controlled memory entry.
 
-1. Parse the remaining arguments as the entry content (strip surrounding quotes if present).
+1. Parse the remaining arguments from $ARGUMENTS as the entry content (strip surrounding quotes if present).
 2. Call the MCP `memory_view` tool to get existing entries.
 3. Check for duplicates — if an existing entry is semantically very similar, warn the user and ask whether to proceed.
 4. Rewrite the entry to third person if it is written in first person (e.g., "I prefer tabs" → "Prefers tabs over spaces").
@@ -80,7 +73,7 @@ Add a new developer-controlled memory entry.
 
 Remove a developer-controlled memory entry by number.
 
-1. Parse the remaining argument as an entry number (1-indexed).
+1. Parse the remaining argument from $ARGUMENTS as an entry number (1-indexed).
 2. Call the MCP `memory_view` tool to get all entries.
 3. Display the entry that will be removed: "Will remove entry N: <content>"
 4. Ask for confirmation: "Proceed? (yes/no)"
@@ -93,7 +86,7 @@ Remove a developer-controlled memory entry by number.
 
 Replace a developer-controlled memory entry.
 
-1. Parse: first argument is the entry number, remaining arguments are the new content.
+1. Parse from $ARGUMENTS: first argument is the entry number, remaining arguments are the new content.
 2. Call the MCP `memory_view` tool to get all entries.
 3. Display the change: "Will replace entry N:\n  Old: <old content>\n  New: <new content>"
 4. Ask for confirmation: "Proceed? (yes/no)"
@@ -122,7 +115,7 @@ Run the memory stats script for a full diagnostic report.
 
 1. Run the stats script:
 ```bash
-python3 "${CLAUDE_SKILL_DIR}/scripts/memory_stats.py"
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/memory/scripts/memory_stats.py"
 ```
 2. Display the output to the user.
 3. If the script fails, fall back to manual checks:
@@ -138,7 +131,7 @@ Delete all memory data. This is destructive and requires explicit confirmation.
 
 1. Display warning:
    ```
-   ⚠ This will delete ALL memory data:
+   This will delete ALL memory data:
      - developer-edits.md (your manual entries)
      - generated.md (auto-generated context)
      - history.jsonl (operation history)
@@ -229,15 +222,15 @@ Memory requires no attribution. Claude Code never draws attention to the memory 
 
 ## Conditional references
 
-- Load [references/memory-schema.md](references/memory-schema.md) when working with memory file formats, debugging validation errors, or understanding the data model.
-- Load [references/application-rules.md](references/application-rules.md) when handling memory application logic, forbidden phrases, or ownership rules.
-- Load [references/setup-guide.md](references/setup-guide.md) when the memory system is not configured, MCP server is not running, or when troubleshooting setup issues.
+- Load [${CLAUDE_PLUGIN_ROOT}/skills/memory/references/memory-schema.md](references/memory-schema.md) when working with memory file formats, debugging validation errors, or understanding the data model.
+- Load [${CLAUDE_PLUGIN_ROOT}/skills/memory/references/application-rules.md](references/application-rules.md) when handling memory application logic, forbidden phrases, or ownership rules.
+- Load [${CLAUDE_PLUGIN_ROOT}/skills/memory/references/setup-guide.md](references/setup-guide.md) when the memory system is not configured, MCP server is not running, or when troubleshooting setup issues.
 
 ---
 
 ## Gotchas
 
-- **All memory operations go through MCP tools.** The skill does not read/write memory files directly, except for `show` (reads the injected file) and `status` (reads files for diagnostics).
+- **All memory operations go through MCP tools.** The command does not read/write memory files directly, except for `show` (reads the injected file) and `status` (reads files for diagnostics).
 - **Always show before destructive ops.** For `remove` and `replace`, ALWAYS display what will change and get confirmation before proceeding.
 - **Third person rewriting.** Developer entries are stored in third person ("Prefers X" not "I prefer X") so they read naturally when injected into the system prompt.
 - **Duplicate detection.** Before adding, check existing entries for semantic overlap to avoid redundancy.

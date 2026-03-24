@@ -1,6 +1,5 @@
 ---
-name: claude-code-guide
-description: Best practices reference for building Claude Code extensions — skills, hooks, agents, plugins, slash commands, scripts, MCP servers, CLAUDE.md, memory, and task systems. Use when creating, reviewing, or debugging any Claude Code extension component.
+description: Best practices reference for building Claude Code extensions — skills, hooks, agents, plugins, slash commands, scripts, MCP servers, CLAUDE.md, memory, and task systems.
 argument-hint: "[what you're building: skill | hook | agent | plugin | script | mcp-server | claude-md]"
 ---
 
@@ -10,18 +9,18 @@ A curated reference for building reliable Claude Code extensions. This skill rou
 
 ## What are you building?
 
-Read the argument the user provided (or infer from context) and load only the relevant reference files — do not load all references at once.
+Read the argument the user provided via $ARGUMENTS (or infer from context) and load only the relevant reference files — do not load all references at once.
 
 | Building... | Read this |
 |---|---|
-| A skill (SKILL.md + resources) | `references/skills-guide.md` |
-| A hook (hooks.json + shell scripts) | `references/hooks-guide.md` |
-| An agent definition (.md in agents/) | `references/agents-guide.md` |
-| Prompts or instructions for Claude | `references/prompting-guide.md` |
-| CLAUDE.md project instructions | `references/claude-md-guide.md` |
-| An MCP server | `references/mcp-servers-guide.md` |
-| A plugin (bundling hooks + skills + agents for marketplace) | `references/plugins-guide.md` |
-| Memory or task system integration | `references/memory-task-guide.md` |
+| A skill (SKILL.md + resources) | `${CLAUDE_PLUGIN_ROOT}/skills/claude-code-guide/references/skills-guide.md` |
+| A hook (hooks.json + shell scripts) | `${CLAUDE_PLUGIN_ROOT}/skills/claude-code-guide/references/hooks-guide.md` |
+| An agent definition (.md in agents/) | `${CLAUDE_PLUGIN_ROOT}/skills/claude-code-guide/references/agents-guide.md` |
+| Prompts or instructions for Claude | `${CLAUDE_PLUGIN_ROOT}/skills/claude-code-guide/references/prompting-guide.md` |
+| CLAUDE.md project instructions | `${CLAUDE_PLUGIN_ROOT}/skills/claude-code-guide/references/claude-md-guide.md` |
+| An MCP server | `${CLAUDE_PLUGIN_ROOT}/skills/claude-code-guide/references/mcp-servers-guide.md` |
+| A plugin (bundling hooks + skills + agents for marketplace) | `${CLAUDE_PLUGIN_ROOT}/skills/claude-code-guide/references/plugins-guide.md` |
+| Memory or task system integration | `${CLAUDE_PLUGIN_ROOT}/skills/claude-code-guide/references/memory-task-guide.md` |
 
 If the user's intent spans multiple types (e.g., "build a skill with hooks"), load both relevant references.
 
@@ -173,19 +172,19 @@ Run the appropriate validator to check your work programmatically:
 
 ```bash
 # Validate a skill directory
-bash ${CLAUDE_SKILL_DIR}/scripts/validate-skill.sh /path/to/skill-directory
+bash ${CLAUDE_PLUGIN_ROOT}/skills/claude-code-guide/scripts/validate-skill.sh /path/to/skill-directory
 
 # Validate a hook script
-bash ${CLAUDE_SKILL_DIR}/scripts/validate-hook.sh /path/to/hook-script.sh
+bash ${CLAUDE_PLUGIN_ROOT}/skills/claude-code-guide/scripts/validate-hook.sh /path/to/hook-script.sh
 
 # Validate an agent definition
-bash ${CLAUDE_SKILL_DIR}/scripts/validate-agent.sh /path/to/agent.md
+bash ${CLAUDE_PLUGIN_ROOT}/skills/claude-code-guide/scripts/validate-agent.sh /path/to/agent.md
 
 # Validate a plugin directory
-bash ${CLAUDE_SKILL_DIR}/scripts/validate-plugin.sh /path/to/plugin-directory
+bash ${CLAUDE_PLUGIN_ROOT}/skills/claude-code-guide/scripts/validate-plugin.sh /path/to/plugin-directory
 
 # Validate an MCP server directory
-bash ${CLAUDE_SKILL_DIR}/scripts/validate-mcp.sh /path/to/mcp-server-directory
+bash ${CLAUDE_PLUGIN_ROOT}/skills/claude-code-guide/scripts/validate-mcp.sh /path/to/mcp-server-directory
 ```
 
 Each validator checks structure, conventions, safety patterns, and outputs PASS/FAIL/WARN for every check.

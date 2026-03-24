@@ -99,7 +99,7 @@ hook_log "tool=$TOOL_NAME pattern_count=$PATTERN_COUNT tool_total=$TOOL_TOTAL li
 if [ "$PATTERN_COUNT" -ge "$FAILURE_LIMIT" ]; then
   echo "STOP: $TOOL_NAME has failed $PATTERN_COUNT times with the same error pattern this session." >&2
   echo "Error pattern: $ERROR_KEY" >&2
-  echo "Step back and rethink your approach. Review error messages, check documentation, or try a different strategy." >&2
+  echo "Switch to the investigating-bugs workflow: REPRODUCE the error, OBSERVE the actual state, HYPOTHESIZE a root cause, then VERIFY before fixing." >&2
   hook_log_result 2 "block" "repeated-failure: $TOOL_NAME same-pattern failed $PATTERN_COUNT times"
   record_hook_outcome "failure-pattern-detector" "PostToolUseFailure" "block" "$TOOL_NAME" "failure_loop_limit" "$FAILURE_LIMIT" "$MODEL_FAMILY"
   exit 2

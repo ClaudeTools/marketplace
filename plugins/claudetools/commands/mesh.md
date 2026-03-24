@@ -1,18 +1,11 @@
 ---
-name: mesh
-description: Coordinate with other Claude agents working in the same repo. Check status, send messages, lock files, share decisions. Use when multi-agent coordination is needed — e.g., before refactoring shared files, after discovering blocking issues, or to share architectural decisions.
-argument-hint: <status|send|lock|decide> [args]
-allowed-tools: Bash, Read
-metadata:
-  author: Owen Innes
-  version: 1.0.0
-  category: coordination
-  tags: [multi-agent, coordination, mesh, worktree]
+description: Coordinate with other Claude agents working in the same repo. Check status, send messages, lock files, share decisions.
+argument-hint: "<status|send|lock|decide> [args]"
 ---
 
 # Agent Mesh Coordination
 
-Coordinate with other Claude agents working in the same repository. Parse the subcommand from the user's argument to determine what to do.
+Coordinate with other Claude agents working in the same repository. Parse the subcommand from $ARGUMENTS to determine what to do.
 
 ## Subcommands
 
@@ -36,7 +29,7 @@ node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js context --list
 **When to use:** At the start of a session, before starting work on shared code, or when you suspect conflicts.
 
 ### `send <agent-name> <message>`
-Send a message to another agent. Parse the agent name and message from the arguments.
+Send a message to another agent. Parse the agent name and message from $ARGUMENTS.
 
 ```bash
 node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js send --to "<agent-name>" --message "<text>" --from "${AGENT_MESH_NAME:-agent-$$}"

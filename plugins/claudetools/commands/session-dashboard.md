@@ -1,15 +1,6 @@
 ---
-name: session-dashboard
-description: Generate a human-readable report of claudetools system health, session metrics, success rates, failure patterns, and token efficiency. Use when the user says dashboard, show metrics, system health, session stats, how am I doing, or performance report.
-argument-hint: [last-N-sessions]
-allowed-tools: Read, Bash, Grep, Glob
-context: fork
-agent: Explore
-metadata:
-  author: Owen Innes
-  version: 1.1.0
-  category: meta
-  tags: [metrics, dashboard, analytics, health]
+description: Generate a human-readable report of claudetools system health, session metrics, success rates, failure patterns, and token efficiency.
+argument-hint: "[last-N-sessions]"
 ---
 
 # Session Dashboard
@@ -22,15 +13,12 @@ Generate a health report for the claudetools plugin system.
 |---|---|
 | `/session-dashboard` | Show report for last 10 sessions |
 | `/session-dashboard 5` | Show report for last 5 sessions |
-| `how am I doing` | Same as `/session-dashboard` |
-| `show metrics` | Same as `/session-dashboard` |
-| `session stats` | Same as `/session-dashboard` |
 
 ## Workflow
 
 1. Run the report generator:
 ```bash
-bash ${CLAUDE_SKILL_DIR}/scripts/generate-report.sh ${ARGUMENTS:-10}
+bash ${CLAUDE_PLUGIN_ROOT}/skills/session-dashboard/scripts/generate-report.sh ${ARGUMENTS:-10}
 ```
 
 2. Present the output as a formatted report. Explain each section:

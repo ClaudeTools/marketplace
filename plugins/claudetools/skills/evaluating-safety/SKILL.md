@@ -1,18 +1,18 @@
 ---
-name: train
+name: evaluating-safety
 description: Run training scenarios, deterministic tests, and safety corpus evaluations. Use when the user says train, run training, test safety, run scenarios, evaluate model, or compare results.
 argument-hint: <command> [test|code|noncode|edge|compare|cross-model|cross-model-dry-run|golden|golden-cross-model|all]
 allowed-tools: Read, Bash, Grep, Glob, Agent, TeamCreate, TeamDelete, TaskCreate, TaskUpdate, TaskList, SendMessage
-context: fork
-agent: general-purpose
 metadata:
+  context: fork
+  agent: general-purpose
   author: Owen Innes
   version: 2.1.0
   category: testing
   tags: [training, testing, safety, evaluation, scenarios, teams]
 ---
 
-# Training System
+# Evaluating Safety
 
 You are executing the `/train` skill. Follow these instructions exactly.
 

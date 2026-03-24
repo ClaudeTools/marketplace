@@ -132,7 +132,7 @@ xl:    25px  (16 × 1.25²)
 ```
 
 Use the type-scale.py script to compute scales with baseline grid snapping:
-`python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/type-scale.py scale --base 16 --ratio major-third --grid 4`
+`python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/type-scale.py scale --base 16 --ratio major-third --grid 4`
 
 ---
 

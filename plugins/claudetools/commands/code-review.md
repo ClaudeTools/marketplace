@@ -1,15 +1,6 @@
 ---
-name: code-review
-description: Structured 4-pass code review covering correctness, security, performance, and maintainability. Use when the user says review this code, code review, check these changes, review my PR, look over this, or what do you think of this code.
-argument-hint: [file-or-branch]
-allowed-tools: Read, Bash, Grep, Glob
-context: fork
-agent: Explore
-metadata:
-  author: Owen Innes
-  version: 1.0.0
-  category: code-quality
-  tags: [review, security, performance, quality]
+description: Structured 4-pass code review covering correctness, security, performance, and maintainability.
+argument-hint: "[file-or-branch]"
 ---
 
 # Code Review
@@ -20,7 +11,7 @@ Structured 4-pass review of code changes. Read-only — this skill does not modi
 
 1. **Gather the diff** — run the gather script to collect changes:
 ```bash
-bash ${CLAUDE_SKILL_DIR}/scripts/gather-diff.sh $ARGUMENTS
+bash ${CLAUDE_PLUGIN_ROOT}/skills/code-review/scripts/gather-diff.sh $ARGUMENTS
 ```
 This outputs the diff to review. If $ARGUMENTS is a file path, it shows that file. If it's a branch name, it shows the diff against main. If empty, it shows uncommitted changes.
 
@@ -71,5 +62,5 @@ If no issues found in a category, skip it. Always include the Positive section.
 
 ## Reference files
 
-- Review checklist: [references/review-checklist.md](references/review-checklist.md)
-- Example output: [examples/review-output.md](examples/review-output.md)
+- Review checklist: [${CLAUDE_PLUGIN_ROOT}/skills/code-review/references/review-checklist.md](references/review-checklist.md)
+- Example output: [${CLAUDE_PLUGIN_ROOT}/skills/code-review/examples/review-output.md](examples/review-output.md)

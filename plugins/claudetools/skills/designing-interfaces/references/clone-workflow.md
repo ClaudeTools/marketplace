@@ -34,7 +34,7 @@ Do NOT just "look at" the image. Use the extraction script for systematic, focus
 
 ```bash
 # Print ALL extraction prompts (colors, typography, layout, components, depth)
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/extract-design-from-image.py prompts
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/extract-design-from-image.py prompts
 
 # Or target a specific area
 python3 extract-design-from-image.py prompts --region colors
@@ -54,12 +54,12 @@ From extracted values, generate the design system BEFORE writing components:
 
 ```bash
 # Parse extracted colors into design-system.py arguments
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/extract-design-from-image.py \
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/extract-design-from-image.py \
   parse --colors "#3b82f6 brand, #ffffff bg, #0a0a0a fg"
 # Outputs the exact design-system.py command to run
 
 # Generate the complete token system
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/design-system.py \
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/design-system.py \
   --brand "#extracted" --bg "#extracted" --fg "#extracted" \
   --ratio <closest-matching-ratio> --grid 4 > globals.css
 ```
@@ -101,7 +101,7 @@ Show Claude BOTH images (reference + implementation) and ask:
 ### Automated Comparison Script
 ```bash
 # Full pixel-level comparison with region analysis
-bash ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/screenshot-compare.sh \
+bash ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/screenshot-compare.sh \
   reference.png implementation.png --output diff.png
 
 # Outputs: overall match %, per-quadrant scores, visual diff image
@@ -111,7 +111,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/screenshot-compare.sh 
 ### Iteration Target
 Use the checklist to track progress:
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/extract-design-from-image.py checklist
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/extract-design-from-image.py checklist
 ```
 
 - **Pass 1**: Layout structure (~70% match) — grid, sections, navigation

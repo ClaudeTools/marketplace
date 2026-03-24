@@ -1,3 +1,16 @@
+---
+paths:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+  - "**/*.py"
+  - "**/*.rs"
+  - "**/*.go"
+  - "**/*.java"
+  - "**/*.rb"
+---
+
 # Codebase Navigation — CLI Commands
 
 Use the codebase-pilot CLI to navigate code precisely before reading files directly.

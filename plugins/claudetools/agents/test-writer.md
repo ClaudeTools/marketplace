@@ -1,6 +1,8 @@
 ---
 name: test-writer
 description: Generate tests following existing project patterns. Invoke when test coverage is needed for new or changed code.
+disallowedTools:
+  - NotebookEdit
 model: sonnet
 ---
 
