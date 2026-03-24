@@ -1,5 +1,5 @@
 ---
-name: improving-prompts
+name: prompt-improver
 description: Transforms vague prompts into structured XML and executes them. Modes: execute (default), plan (review before running), task (create persistent tasks without executing). Use when the user says improve prompt, make this work better, prompt engineer, or structure a prompt.
 argument-hint: [plan|task] [prompt-text or description of what to improve]
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent

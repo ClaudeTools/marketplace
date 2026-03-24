@@ -62,11 +62,11 @@
 |-------|-------------|
 | <img src="https://img.shields.io/badge/%2Fexploring--codebase-1D4ED8?style=flat-square" alt="/exploring-codebase"> | Semantic code navigation via tree-sitter index. Find symbols, trace imports, detect dead code, map architecture, analyse change impact. 14 languages. |
 | <img src="https://img.shields.io/badge/%2Finvestigating--bugs-B91C1C?style=flat-square" alt="/investigating-bugs"> | Evidence-based debugging: **reproduce** &rarr; **observe** &rarr; **hypothesize** &rarr; **verify** &rarr; **fix** &rarr; **confirm**. Two-strike rule. |
-| <img src="https://img.shields.io/badge/%2Fimproving--prompts-92400E?style=flat-square" alt="/improving-prompts"> | Transform rough instructions into structured XML prompts. Modes: **execute**, **plan**, **task**. Auto-detects tech stack. |
+| <img src="https://img.shields.io/badge/%2Fimproving--prompts-92400E?style=flat-square" alt="/prompt-improver"> | Transform rough instructions into structured XML prompts. Modes: **execute**, **plan**, **task**. Auto-detects tech stack. |
 | <img src="https://img.shields.io/badge/%2Fdesigning--interfaces-BE185D?style=flat-square" alt="/designing-interfaces"> | Production UI with generated design systems, responsive screenshots, contrast auditing. React, Next.js, Vite, Astro, SvelteKit, Tailwind. |
 | <img src="https://img.shields.io/badge/%2Fmanaging--tasks-065F46?style=flat-square" alt="/managing-tasks"> | Persistent tasks with cross-session continuity. Subcommands: new, start, stop, status, restore, decompose, progress, handoff, validate. |
 | <img src="https://img.shields.io/badge/%2Fevaluating--safety-991B1B?style=flat-square" alt="/evaluating-safety"> | Training scenarios, deterministic tests, safety corpus evaluation. Cross-model comparison with deviation tracking. |
-| <img src="https://img.shields.io/badge/%2Fimproving--plugin-155E75?style=flat-square" alt="/improving-plugin"> | Autonomous 7-phase self-improvement: collect, verify, analyse, prioritise, baseline, implement, measure. Auto-reverts regressions. |
+| <img src="https://img.shields.io/badge/%2Fimproving--plugin-155E75?style=flat-square" alt="/plugin-improver"> | Autonomous 7-phase self-improvement: collect, verify, analyse, prioritise, baseline, implement, measure. Auto-reverts regressions. |
 
 <br>
 

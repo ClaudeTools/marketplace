@@ -35,7 +35,7 @@ node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js api-surface
 Read the code at all impact sites before proceeding.
 
 ### 2. DECOMPOSE
-Use the improving-prompts skill to decompose the refactor into safe, independently verifiable steps:
+Use the prompt-improver skill to decompose the refactor into safe, independently verifiable steps:
 - Each step must be testable in isolation
 - Steps must be ordered to avoid breaking intermediate states (e.g., add new → migrate callers → remove old)
 - Identify steps that can be parallelised safely (no shared write targets)

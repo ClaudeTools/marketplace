@@ -28,7 +28,7 @@ node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js file-overview "<entry-file
 Read the code at relevant locations before forming a plan.
 
 ### 2. PLAN
-Use the improving-prompts skill to structure the implementation plan:
+Use the prompt-improver skill to structure the implementation plan:
 - Break the feature into discrete, reviewable steps
 - Identify dependencies and ordering constraints
 - Flag any cross-cutting concerns (auth, logging, error handling)

@@ -1,5 +1,5 @@
 ---
-name: improving-plugin
+name: plugin-improver
 description: Run a full self-improvement loop — collect data, verify prior fixes, analyze, prioritize, capture baseline, implement, measure after-state, and log. Use when the user says improve, self-improve, improvement loop, iterate, or optimize the plugin.
 disable-model-invocation: true
 argument-hint: [--dry-run] [--category CATEGORY]
