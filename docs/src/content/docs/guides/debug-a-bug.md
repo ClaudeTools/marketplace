@@ -1,90 +1,147 @@
 ---
 title: "Debug a Bug"
-description: "Debug a Bug — claudetools documentation."
+description: "Walk through a real bug investigation — REPRODUCE through CONFIRM with actual prompts and output."
 ---
-Use the investigating-bugs skill to track down and fix any error using a structured, evidence-based protocol that prevents guessing and dead-end fixes.
 
+A full walkthrough of the investigating-bugs protocol using a realistic example. See the prompts, the output, and where things go wrong the first time.
 
-## What you need
-- claudetools installed
-- A reproducible error, failing test, or unexpected behaviour to investigate
+:::tip[When to use what]
+- **Simple bug** (error message, obvious location): Just tell Claude — investigating-bugs activates automatically from keywords like "broken", "failing", "why is", "error"
+- **Complex multi-file bug**: Use `/investigating-bugs` explicitly to invoke the full structured protocol
+- **Critical production bug**: Spawn the `bugfix-pipeline` agent for a coordinated fix + review + verification cycle
+:::
 
-## Steps
+---
 
-### 1. Describe the error to Claude
+## The bug
 
-Tell Claude what is broken. Include the error message, the command that fails, or a description of the unexpected behaviour.
+> **You:** "The API returns 500 when updating a user's email. It started after yesterday's deploy."
 
-```
-fix this bug: TypeError: Cannot read properties of undefined (reading 'id')
-```
+:::note[Hook fires: investigating-bugs skill activates]
+"500" and "started after" are enough. The skill takes over — the 6-step protocol runs in sequence and cannot skip ahead.
+:::
 
-The investigating-bugs skill activates automatically when you use words like "debug", "fix", "why is this failing", "not working", or "unexpected behaviour".
+---
 
-### 2. REPRODUCE — confirm the bug exists
+## Step 1 — REPRODUCE
 
-Claude runs a diagnostics script then attempts to reproduce the exact failure:
+Claude reads the route handler and tries to reconstruct the failure path:
 
-```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/investigating-bugs/scripts/gather-diagnostics.sh
-```
-
-If the bug cannot be reproduced, Claude asks for more context before continuing. Never skip this step — a fix for an unreproduced bug is a guess.
-
-### 3. OBSERVE — read the relevant code
-
-Claude reads the file where the error occurs, checks recent git history for that file, and reads any related test files:
+> "REPRODUCE: Reading `api/src/routes/users.ts`... Found `PATCH /users/:id`. It validates the request body with Zod, then calls `UserService.updateEmail`. Let me check what error the service throws."
+>
+> "I can't run the request directly, but I can trace the code path. Reading `api/src/services/user-service.ts`..."
 
 ```bash
-git log --oneline -10 -- path/to/file.ts
+# Claude checks git history to surface what changed yesterday
+git log --oneline --since="1 day ago" -- src/services/user-service.ts
+# a3f92c1 feat: add email uniqueness check
 ```
 
-This surfaces recent changes that may have introduced the bug without requiring you to do the archaeology yourself.
+> "Found it — a uniqueness check was added yesterday. Let me read that commit."
 
-### 4. HYPOTHESIZE — state the root cause before fixing
+---
 
-Before touching any code, Claude writes out a hypothesis:
+## Step 2 — OBSERVE
 
-> "The bug is caused by X because Y (evidence: Z)"
+> "OBSERVE: The new uniqueness check in `user-service.ts:34` runs `SELECT COUNT(*) WHERE email = ?`. If the email already belongs to the user making the request, the count is 1 (their own record) and the check throws `EmailAlreadyInUse`. So updating to the same email you already have causes a 500."
 
-Multiple hypotheses are ranked by likelihood. Each one references specific evidence — an error message, a line number, a log output. If Claude cannot point to evidence, it goes back to OBSERVE.
+Claude reads the related test file:
 
-### 5. VERIFY — test the hypothesis
+> "The test in `tests/user-service.test.ts:88` only tests updating to a *new* email. There's no test for updating to your existing email — which is a valid no-op that should succeed."
 
-Claude adds diagnostic logging or runs targeted commands to confirm the root cause before fixing anything. If the hypothesis is wrong, it returns to OBSERVE and forms a new one.
+---
 
-### 6. FIX — address the root cause
+## Step 3 — HYPOTHESIZE
 
-Claude implements the fix targeting the root cause, not the symptom. It also adds or updates a test that catches this specific bug, so the same failure cannot regress silently.
+> "HYPOTHESIZE: The uniqueness check doesn't exclude the current user's own email. When a user updates their profile (submitting the form with their existing email unchanged), the check finds their own record, counts it as a collision, and throws. Root cause: `WHERE email = ?` should be `WHERE email = ? AND id != ?`."
 
-### 7. CONFIRM — verify the fix works
+This is a specific, testable claim with evidence: the line number, the SQL, and the scenario that triggers it.
+
+---
+
+## Step 4 — VERIFY
+
+> "VERIFY: Confirming the query in `user-service.ts:34`..."
+
+```typescript
+// Current (broken)
+const count = await db.query(
+  'SELECT COUNT(*) FROM users WHERE email = $1',
+  [newEmail]
+);
+
+// The fix: exclude the user being updated
+const count = await db.query(
+  'SELECT COUNT(*) FROM users WHERE email = $1 AND id != $2',
+  [newEmail, userId]
+);
+```
+
+> "Confirmed — the current query counts the user's own record. Any update that keeps the same email will trigger the uniqueness error. Hypothesis verified."
+
+---
+
+## Step 5 — FIX
+
+> "FIX: Updating `user-service.ts:34` to exclude the current user from the uniqueness check. Also adding a test for the same-email-update case."
+
+**`api/src/services/user-service.ts:34`** — adds `AND id != $2` to the query.
+
+**`tests/user-service.test.ts`** — adds:
+```typescript
+it('allows updating to the same email (no-op)', async () => {
+  const user = await createUser({ email: 'alice@example.com' });
+  await expect(UserService.updateEmail(user.id, 'alice@example.com')).resolves.not.toThrow();
+});
+```
+
+---
+
+## Step 6 — CONFIRM
 
 ```bash
-# Run the previously-failing command
-npm test -- --grep "auth"
-
-# Run typecheck
-npx tsc --noEmit
+npx tsc --noEmit          # passes
+npm test -- --grep "email" # 4 tests pass, 0 fail
 ```
 
-Claude runs the previously-failing command (it should now pass), runs the test suite to check for regressions, and runs typecheck. All three must pass before the fix is declared complete.
+> "CONFIRM: Typecheck passes. All email-related tests pass including the new same-email test. The 500 on update is resolved."
 
-## What happens behind the scenes
+---
 
-- The **investigating-bugs skill** is triggered by keywords in your message (debug, fix, broken, error, etc.)
-- The **gather-diagnostics.sh** script collects environment info, recent git log, and any available logs
-- All six steps (REPRODUCE → OBSERVE → HYPOTHESIZE → VERIFY → FIX → CONFIRM) run in sequence — Claude cannot skip ahead
-- The **two-strike rule** activates if the first fix fails: Claude re-reads the error carefully and re-examines the hypothesis before attempting a second fix. After two failed attempts, Claude adds more diagnostic logging and starts from scratch
+## When the first hypothesis is wrong
 
-## Tips
+Sometimes the HYPOTHESIZE step gets it wrong. Here's what that looks like:
 
-- Include the full stack trace, not just the error message — line numbers in the trace let Claude skip directly to OBSERVE
-- If Claude's first hypothesis seems wrong to you, say so before it moves to VERIFY — it's faster to correct the hypothesis early
-- For intermittent bugs, describe the conditions under which it occurs; Claude will adjust the REPRODUCE step accordingly
-- The two-strike rule protects you from Claude spinning on incorrect fixes — trust it to restart with fresh evidence rather than forcing a third attempt
+> **You:** "Users are getting logged out randomly — maybe every 10-15 minutes. Not all of them, just some."
+
+**First hypothesis:**
+
+> "HYPOTHESIZE: The JWT expiry (`SESSION_TTL`) may be shorter than the refresh interval. If `SESSION_TTL=600` and the refresh runs every 900 seconds, some users miss the refresh window."
+
+**VERIFY:**
+
+> "Checking `SESSION_TTL` in `.env` — it's `86400` (24 hours). Checking the refresh interval... it's 300 seconds. The window is fine. Hypothesis is wrong."
+
+:::caution[Two-strike rule]
+After a failed hypothesis, Claude doesn't just try the next idea. It returns to OBSERVE with the failed hypothesis in view and asks: "what does this failure tell me about what I missed?" One more failed hypothesis and Claude adds diagnostic logging and restarts from scratch.
+:::
+
+**Back to OBSERVE:**
+
+> "The logouts are intermittent and affect some users, not all. Let me look at what's different between affected and unaffected sessions... Checking `auth.ts` for anything user-specific."
+>
+> "Found it — the cookie `SameSite` attribute is `Strict`. Users accessing from a third-party redirect (password manager, email link) have their cookie dropped by the browser. It's not expiry — it's the cookie policy."
+
+**Second hypothesis, correct:**
+
+> "HYPOTHESIZE: `SameSite=Strict` drops the auth cookie on cross-site navigations. Users arriving from an email link or external redirect are treated as unauthenticated. Fix: change to `SameSite=Lax`."
+
+The two-strike rule exists to prevent momentum from carrying Claude past a wrong turn. See [Core Concepts](../getting-started/core-concepts.md) for more on the protocol constraints.
+
+---
 
 ## Related
 
-- [Exploring a Codebase](explore-a-codebase.md) — understand the code around a bug before diving in
+- [Exploring a Codebase](explore-a-codebase.md) — map the code before diving into a bug
 - [Run a Security Audit](run-security-audit.md) — find security-class bugs proactively
-- [Reference: investigating-bugs skill](../reference/skills.md)
+- [Reference: investigating-bugs skill](../../reference/skills/investigating-bugs/index.md)

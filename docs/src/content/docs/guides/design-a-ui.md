@@ -1,132 +1,161 @@
 ---
 title: "Design a UI"
-description: "Design a UI — claudetools documentation."
+description: "Build production-grade interfaces with a consistent design system, responsive screenshots, and automated contrast auditing."
 ---
-Use the designing-interfaces skill to build production-grade frontend interfaces — landing pages, dashboards, web apps, or individual components — with a consistent design system and visual quality checks built in.
 
+Use the designing-interfaces skill to build landing pages, dashboards, and components — with design direction established before any code is written, and a visual quality loop built in.
 
-## What you need
-- claudetools installed
-- A Next.js, Vite, Astro, SvelteKit, or plain HTML/CSS project (or start from scratch)
-- Chrome available for headless screenshots (optional but recommended)
+## Real scenarios
 
-## Steps
+### Scenario A: Building a landing page from scratch
 
-### 1. Describe what you want to build
+> "build a landing page for a legal document review SaaS — I want it to feel authoritative but approachable, not like a bank"
+
+:::note[Behind the scenes]
+The skill checks for `.frontend-design/system.md`. If it doesn't exist, it enters **Build Mode** and runs the intent-first workflow before touching any code.
+:::
+
+**Step 1 — Intent questions**
+
+Claude responds with targeted questions rather than starting to code:
 
 ```
-build a dashboard for a SaaS invoicing app — sidebar nav, metrics at the top, invoice table below
+Before I start building, I need to understand a few things:
+
+1. Who is the primary user — solo lawyers, law firm associates, legal ops teams, or non-lawyers reviewing contracts?
+2. What's the single most important action on this page — start a free trial, book a demo, or upload a document?
+3. Any examples of visual direction you like? (industries, not necessarily legal)
 ```
 
-or to work on an existing page:
+> "Legal ops teams at mid-size companies. Book a demo is the CTA. I like the feel of Linear — precise, confident, not sales-y."
+
+**Step 2 — Domain exploration**
 
 ```
-improve the design of src/pages/dashboard.tsx
+Domain exploration: legal document review
+
+Vocabulary: redlines, clause library, playbook, escalation path, outside counsel, matter
+Natural colors: aged parchment (#F5F0E8), deep mahogany (#3D1F0E), gold seal (#C9A84C),
+               carbon black (#1A1A1A), document cream (#FAFAF7)
+Signature element: a document "redline" visual — a subtle red strikethrough annotation
+                   that appears in backgrounds/dividers, unique to this domain
+Defaults I will NOT use: navy blue + white (screams law firm website),
+                         stock photo of a handshake, the word "seamless"
 ```
 
-### 2. Mode detection — build vs maintain
+**Step 3 — Design brief presented for approval**
 
-Claude evaluates your project before starting:
+```
+Proposed direction: "Precision Document"
 
-**Build mode** applies when building something new or redesigning from scratch. It runs the full intent-first workflow: exploring the product's domain, proposing a design direction, and generating a design brief before writing any code.
+Palette: Carbon black primary, document cream backgrounds, gold as the single accent,
+         a single muted red for the signature element
+Typography: IBM Plex Sans (legal precision without the stuffiness),
+            IBM Plex Mono for code/clause snippets
+Spacing: 8px base, generous whitespace — documents breathe
+Tone: Confident and specific, like a well-argued brief — not warm, not cold
 
-**Maintain mode** applies when the project has an existing design system (a `.frontend-design/system.md` file). Consistency is the goal — new components follow existing patterns, tokens are reused, and no new design directions are introduced.
+CTA treatment: Single "Book a demo" button, gold on black, above the fold
 
-### 3. Build mode — establish design direction first
-
-For new or unstyled projects, Claude works through intent before any code:
-
-**Intent** — Claude asks (or infers from context):
-- Who is the user and what must they accomplish?
-- What should the interface feel like? Not "clean and modern" — specific: warm like a notebook, dense like a trading floor?
-
-**Domain exploration** — Claude produces four outputs:
-1. Domain concepts and vocabulary from the product's world
-2. Colors that exist naturally in this domain
-3. One signature element that could only exist for this product
-4. Three obvious defaults it will NOT use
-
-**Theme selection** — Claude selects a starting theme and presents 2–3 options for your approval:
-
-```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/design-system.py --list-domains
+Confirm this direction? (or tell me what to change)
 ```
 
-**Design brief** — Generated and presented for your confirmation before any code is written:
+> "yes go ahead"
 
-```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/generate-design-brief.sh "<goal>" "<context>"
-```
+:::note[Behind the scenes]
+`generate-design-brief.sh` writes `.frontend-design/system.md` immediately. This protects the design decisions against context compaction in long sessions — any future agent reads this file before writing UI code.
+:::
 
-### 4. Generate the design system
-
-Once the direction is confirmed, Claude generates globals.css with the full token set:
+**Step 4 — Design tokens generated**
 
 ```bash
 python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/design-system.py \
-  --theme midnight \
-  --brand "#0D4F4F"
+  --theme precision \
+  --brand "#C9A84C"
 ```
 
-This produces semantic CSS custom properties (`--bg-background`, `--text-foreground`, etc.). All components reference these tokens — never raw Tailwind color values like `bg-white` or `text-gray-800`.
+This produces `globals.css` with semantic CSS custom properties:
 
-The design system is saved to `.frontend-design/system.md` immediately after the brief is confirmed, protecting decisions against context compaction in long sessions.
+```css
+:root {
+  --bg-background: #FAFAF7;
+  --bg-surface: #F5F0E8;
+  --text-foreground: #1A1A1A;
+  --text-muted: #5C5C5C;
+  --accent-primary: #C9A84C;
+  --accent-signature: #B33A3A;
+  /* ... */
+}
+```
 
-### 5. Build components
+All components reference these tokens. No raw Tailwind color classes like `bg-white` or `text-gray-800`.
 
-With the design system in place, Claude builds the components. Each component is written against the token system, handles all data states (loading, empty, error, populated), and stays under 200 lines before being split.
+**Step 5 — Components built against the brief**
 
-### 6. Preview loop — screenshot and evaluate
+Claude builds the landing page sections. Each component handles all data states and stays under 200 lines.
 
-After writing UI code, Claude:
-
-1. Starts the dev server if not running (`pnpm dev`)
-2. Takes responsive screenshots at 4 breakpoints via headless Chrome:
+**Step 6 — Screenshot loop at 4 breakpoints**
 
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/responsive-screenshots.sh http://localhost:3000
 ```
 
-3. Evaluates the screenshots against the design brief
-4. Fixes issues before presenting to you
+Screenshots captured at 375px, 768px, 1280px, and 1440px. Claude evaluates them against the brief before showing you anything.
 
-You will not see half-finished work — the preview loop runs before every handoff.
-
-### 7. Maintain mode — audit and fix existing design
-
-For existing projects, run the audit workflow:
+**Step 7 — Audit catches a contrast issue**
 
 ```
-audit the design of this project
+Audit finding: text-muted (#5C5C5C) on bg-surface (#F5F0E8) = 3.8:1 contrast ratio
+Required: 4.5:1 for WCAG AA (normal text)
+Fix: darken --text-muted to #4A4A4A → contrast becomes 5.2:1
 ```
 
-Claude runs:
+Claude applies the fix, re-runs the screenshot, and confirms the issue is resolved before presenting the result.
 
-```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/extract-system.py --dir .
-bash ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/validate-design.sh .
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/designing-interfaces/scripts/audit-design.py --dir .
+---
+
+### Scenario B: Maintaining an existing design
+
+> "add a pricing table to the landing page"
+
+:::note[Behind the scenes]
+The skill detects `.frontend-design/system.md` and enters **Maintain Mode**. No new design direction is proposed — the existing tokens and patterns are followed exactly.
+:::
+
+```
+Loading design system from .frontend-design/system.md...
+
+Existing tokens: --accent-primary: #C9A84C, --bg-surface: #F5F0E8, ...
+Pattern: cards use 24px padding, 1px border with --border-subtle, no box-shadows
+
+Building pricing table following existing patterns...
 ```
 
-Findings are categorized as auto-fixable (hardcoded colors, wrong spacing classes) or manual (contrast failures, missing state handling). Claude offers to apply auto-fixable issues in a batch, then reports the score delta after re-running the audit.
+---
+
+:::tip[When to intervene in the design process]
+- **If Claude defaults to blue + gray**: Push back before it writes any code — ask for the domain exploration outputs first
+- **If a proposed brief feels generic**: Ask "what are the three defaults you're actively avoiding?" — this forces specificity
+- **If you want to change direction mid-build**: Say "start over on the design brief" — it re-runs intent questions without losing code already written
+- **For existing projects**: Say "extract the design system from this project" before anything else — this prevents conflicting token sets
+:::
 
 ## What happens behind the scenes
 
 - **design-system.py** generates a complete CSS custom property system from a color seed and spacing ratio
 - **validate-design.sh** catches raw color values, missing tokens, and oversized components structurally
-- **audit-design.py** runs a contrast matrix, spacing grid check, and vertical rhythm audit
-- **responsive-screenshots.sh** uses headless Chrome to capture full-page screenshots at 375px, 768px, 1280px, and 1440px, handling sticky navs correctly
+- **audit-design.py** runs a contrast matrix, spacing grid check, and vertical rhythm audit — WCAG AA compliance is the minimum
+- **responsive-screenshots.sh** uses headless Chrome at 375px, 768px, 1280px, 1440px, handling sticky navs correctly
 - **system.md** is the single source of truth for design decisions — all agents in a multi-agent session read it before writing UI code
 
 ## Tips
 
-- If Claude defaults to blue + gray with a sidebar + card grid layout, push back — ask for the domain exploration outputs before it touches code
+- In a multi-agent session, write `system.md` before spawning implementation teammates — they all start from the same design foundation
+- The contrast audit is non-negotiable — if Claude tries to skip it, ask explicitly: "run the contrast audit before finishing"
 - For a project with an existing design, always extract the system first: "extract the design system from this project"
-- The contrast audit is non-negotiable — WCAG AA compliance is the minimum
-- In a multi-agent session, write system.md before spawning implementation teammates so they all start from the same design foundation
 
 ## Related
 
 - [Build a Feature](build-a-feature.md) — feature-pipeline can spawn designing-interfaces for UI features
-- [Set Up a New Project](setup-new-project.md) — scaffold a project with the right stack
-- [Reference: designing-interfaces skill](../reference/skills.md)
+- [Set Up a New Project](setup-new-project.md) — scaffold a project with the right stack before designing
+- [Coordinate Agents](coordinate-agents.md) — share `system.md` decisions across a multi-agent UI build

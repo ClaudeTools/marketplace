@@ -2,118 +2,131 @@
 title: "Review Code"
 description: "Review Code — claudetools documentation."
 ---
-Use the `/code-review` command to run a structured 4-pass review covering correctness, security, performance, and maintainability — on a branch, a file, or uncommitted changes.
 
+Use `/code-review` to run a structured 4-pass review — correctness, security, performance, maintainability — on a branch, a file, or your uncommitted changes.
 
-## What you need
-- claudetools installed
-- Code to review: a git branch, a file path, or uncommitted changes in the working tree
+## Real scenarios
 
-## Steps
+### Scenario A: Review a PR branch
 
-### 1. Choose your scope
+> "review the changes on feature/add-auth"
 
-The `/code-review` command accepts three kinds of input:
+Claude detects `feature/add-auth` as a branch name and diffs it against `main`:
 
-**Review a branch** (diff against main):
-```
-/code-review feature/csv-export
-```
-
-**Review a specific file**:
-```
-/code-review src/pages/invoices.tsx
-```
-
-**Review uncommitted changes** (no argument):
-```
-/code-review
-```
-
-### 2. Claude gathers the diff
-
-The review starts by running a gather script that collects the changes to review:
-
-```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/code-review/scripts/gather-diff.sh [branch-or-file]
-```
-
-- If given a file path: shows that file's content
-- If given a branch name: shows the diff against main
-- If given nothing: shows all uncommitted changes
-
-### 3. Pass 1 — Correctness
-
-Claude reads every changed file and checks:
-- Does the logic do what it claims?
-- Are edge cases handled (null, empty, boundary values)?
-- Are error paths complete (try/catch, error returns)?
-- Do types match (no implicit any, correct return types)?
-
-### 4. Pass 2 — Security
-
-Claude scans for vulnerabilities:
-- SQL injection (string interpolation in queries)
-- XSS (unsanitised user input in HTML or JSX)
-- Secret exposure (hardcoded keys, tokens, passwords)
-- Path traversal (unsanitised file paths)
-- Missing auth checks on sensitive routes
-
-### 5. Pass 3 — Performance
-
-Claude checks for:
-- N+1 queries or unnecessary database calls
-- Missing indexes for queried fields
-- Unbounded loops or recursion
-- Large allocations in hot paths
-- Missing pagination on list endpoints
-
-### 6. Pass 4 — Maintainability
-
-Claude assesses code quality:
-- Follows existing patterns in the codebase?
-- Naming is clear and consistent?
-- Duplication that should be extracted?
-- Tests cover the changes?
-
-### 7. Read the findings
-
-Findings are grouped by severity:
+:::note[Behind the scenes]
+`gather-diff.sh feature/add-auth` runs `git diff main...feature/add-auth` and groups changes by file. The 4-pass review runs on that diff only — not the full codebase.
+:::
 
 ```
-## Code Review: feature/csv-export
+## Code Review: feature/add-auth
 
 ### Critical (must fix)
-- [src/api/export.ts:42] Raw SQL string interpolation — user input reaches query directly
+- [src/api/users.ts:87] Missing null check — `user.profile` accessed directly after
+  `getUserById()` which can return null when the user does not exist. Will throw
+  at runtime on any unauthenticated request that reaches this path.
+
+- [src/db/query-builder.ts:34] SQL injection — `filterClause` is built from raw
+  string interpolation of `req.query.search`. Replace with parameterised query:
+  `WHERE name ILIKE $1` with `['%' + term + '%']` as the bound value.
 
 ### Important (should fix)
-- [src/pages/invoices.tsx:88] Missing loading state — component renders null while fetching
+- [src/api/users.ts:112–138] N+1 query — `getUserPermissions(userId)` is called
+  inside a `.map()` over the results of `listUsers()`. For 100 users this fires
+  101 queries. Batch with a single `WHERE user_id = ANY($1)` call instead.
 
 ### Suggestions (nice to have)
-- [src/utils/csv.ts:15] extractRow duplicates logic from formatRow — consider extracting shared helper
+- [src/api/users.ts:52] `buildUserResponse()` and `formatUserPayload()` share
+  identical field-mapping logic. Extract to a single `toUserDTO(user)` helper.
 
 ### Positive
-- Error boundaries correctly placed at route level
-- TypeScript strict mode maintained throughout
+- Auth middleware correctly placed before all protected routes
+- TypeScript strict mode maintained throughout — no implicit `any`
+- JWT expiry and refresh logic is clean and well-scoped
 ```
 
-Categories with no findings are omitted. The Positive section always appears.
+---
+
+### Scenario B: Review a specific file
+
+> "/code-review src/api/users.ts"
+
+Claude focuses the 4 passes on that single file:
+
+:::note[Behind the scenes]
+`gather-diff.sh src/api/users.ts` reads the full file content. All findings reference `src/api/users.ts:line`.
+:::
+
+```
+## Code Review: src/api/users.ts
+
+### Critical (must fix)
+- [src/api/users.ts:87] Unhandled null — see above
+
+### Important (should fix)
+- [src/api/users.ts:203] Missing rate limiting on /api/users/login — brute force
+  is possible. Add the existing `rateLimiter` middleware used on /api/auth/token.
+
+### Suggestions (nice to have)
+- [src/api/users.ts:14] `MAX_PAGE_SIZE = 500` is defined locally here and also
+  in src/config/pagination.ts — use the shared constant.
+
+### Positive
+- Input validation on all POST/PATCH handlers using the shared schema validators
+- Consistent error response shape throughout
+```
+
+---
+
+### Scenario C: Review before committing
+
+> "review my uncommitted changes"
+
+:::note[Behind the scenes]
+`gather-diff.sh` with no argument runs `git diff HEAD` (staged + unstaged). If nothing is staged, it also checks `git status` for untracked new files.
+:::
+
+```
+## Code Review: uncommitted changes (3 files)
+
+### Important (should fix)
+- [src/hooks/useAuth.ts:41] `localStorage.setItem('token', rawToken)` — storing
+  the raw JWT in localStorage exposes it to XSS. Use an httpOnly cookie or
+  keep in memory only.
+
+### Suggestions
+- [src/components/UserMenu.tsx:28] `isAdmin` prop is passed but never read in
+  this component — remove or use it.
+
+### Positive
+- All new components have corresponding test files
+- No hardcoded strings — copy routed through i18n keys
+```
+
+---
+
+:::tip[When to use what]
+- **Quick scan**: Ask "any issues with this file?" — Claude does an informal read-through without the structured 4-pass protocol
+- **Structured review**: Use `/code-review` for severity-rated findings with `file:line` references — good for pre-PR checks
+- **Deep review**: Say "spawn a code-reviewer agent" for thorough analysis that cross-references the full codebase, not just the diff
+:::
 
 ## What happens behind the scenes
 
 - The review is **read-only** — no files are modified
-- All findings include a `file:line` reference so you can navigate directly to the issue
-- The 4-pass structure ensures security and performance are never skipped even when the diff looks small
+- All findings include `file:line` so you can jump directly to the issue
+- The 4-pass structure means security and performance are never skipped, even on small diffs
+- The **Positive** section is intentional — reinforce patterns you want the team to repeat
+- Categories with no findings are omitted from the output
 
 ## Tips
 
 - Run `/code-review` before every PR — catching issues locally is faster than in review
-- For a branch review, the diff is computed against `main` — make sure your branch is rebased if main has advanced significantly
-- If you want to review only security issues on a large diff, say "focus on Pass 2" after the review starts
-- The Positive section is intentional — use it to reinforce patterns you want the team to repeat
+- For a branch review, the diff is against `main` — rebase first if main has advanced significantly
+- To focus on one pass on a large diff, say "focus on security only" after the review starts
+- Combine with the feature pipeline: [`build-a-feature`](build-a-feature.md) runs code-review automatically after implementation
 
 ## Related
 
-- [Build a Feature](build-a-feature.md) — the feature-pipeline runs code-review automatically after implementation
+- [Build a Feature](build-a-feature.md) — the feature pipeline runs code-review automatically after implementation
 - [Run a Security Audit](run-security-audit.md) — full codebase security scan, not just changed files
 - [Reference: code-review skill](../reference/skills.md)

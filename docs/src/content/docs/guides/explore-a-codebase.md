@@ -2,138 +2,193 @@
 title: "Explore a Codebase"
 description: "Explore a Codebase — claudetools documentation."
 ---
-Use the exploring-codebase skill to navigate unfamiliar code, locate symbols, trace dependency chains, and map project architecture — without reading every file manually.
 
+Use codebase-pilot to navigate an unfamiliar project — map its structure, trace how a request flows, find dead code, and understand change blast radius — all through natural conversation.
 
-## What you need
-- claudetools installed
-- A codebase indexed by codebase-pilot (indexing runs automatically at session start)
+## Starting out on a new project
 
-## Steps
+> "I just joined this project, help me understand the architecture"
 
-### 1. Get a project overview (map mode)
-
-Start any unfamiliar codebase with a map:
+:::note[Behind the scenes]
+`codebase-pilot map` runs at session start via `session-index.sh`, building a persistent index of symbols, files, and import graphs. The map command reads from this index — no re-parsing needed.
+:::
 
 ```
-explore this codebase
+## Project Map
+
+Languages:  TypeScript (82%), SQL (11%), Shell (7%)
+Entry points:
+  - src/server.ts          — Express app bootstrap
+  - src/worker.ts          — Background job processor
+
+Key directories:
+  src/api/        — Route handlers (12 files)
+  src/services/   — Business logic (8 files)
+  src/db/         — Knex migrations + query builders (15 files)
+  src/jobs/       — Bull queue job definitions (6 files)
+  src/middleware/  — Auth, rate-limit, validation (4 files)
+
+Exports with wide usage (>5 importers):
+  src/db/client.ts         → db (knex instance)
+  src/services/auth.ts     → verifyToken, createSession
+  src/config/index.ts      → config
 ```
 
-or ask Claude directly:
+Now you have enough orientation to ask specific questions.
 
-```bash
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js map
-```
+---
 
-The map shows languages, directory structure, entry points, and key exports. Use it to orient before diving into specifics.
+## Following a request path
 
-### 2. Find where something is defined (find mode)
+> "how does the /api/users endpoint work?"
 
-```
-where is handleAuth defined?
-```
+Claude chains three tools to trace the full path:
 
-Claude runs:
-
-```bash
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-symbol "handleAuth"
-# Filter by kind: function, class, interface, type, variable, enum, method, property
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-symbol "handleAuth" --kind function
-```
-
-After finding the symbol, Claude automatically runs `file-overview` on the containing file to show surrounding context.
-
-### 3. Understand a file or module (explore mode)
+:::note[Behind the scenes]
+1. `find-route.sh "/api/users"` locates the route registration
+2. `file-overview src/api/users.ts` lists all symbols in the handler file
+3. `related-files src/api/users.ts` shows what the handler imports and what imports it
+:::
 
 ```
-how does src/api/auth.ts work?
+Route: GET /api/users
+  Registered:  src/server.ts:44
+  Middleware:  requireAuth → rateLimiter (src/middleware/)
+  Handler:     src/api/users.ts → listUsers()
+
+Handler: listUsers() [src/api/users.ts:23]
+  Calls:
+    - db.select() from src/db/client.ts
+    - validatePaginationParams() from src/middleware/validation.ts
+    - formatUserResponse() from src/services/users.ts
+
+Callers of src/api/users.ts:
+  - src/server.ts (route registration only)
+  - tests/api/users.test.ts
 ```
 
-Claude runs two commands in sequence:
+You can now read `src/api/users.ts` and `src/services/users.ts` with full context.
 
-```bash
-# See all symbols exported from the file
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js file-overview "src/api/auth.ts"
+---
 
-# Find files connected via imports
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js related-files "src/api/auth.ts"
-```
+## Finding a specific symbol
 
-### 4. Trace who calls something (trace mode)
+> "what does handleAuth do?"
 
-```
-what uses the processPayment function?
-```
-
-Claude follows the usage chain:
-
-```bash
-# Find all files that import the symbol
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-usages "processPayment"
-
-# For each importing file, see what it does with it
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js file-overview "<importing-file>"
-```
-
-### 5. Trace a field through the codebase (trace-field mode)
+:::note[Behind the scenes]
+`find-symbol "handleAuth"` searches the symbol index. Claude then runs `file-overview` on the containing file to show surrounding context.
+:::
 
 ```
-where does amount_due get transformed?
+handleAuth  [function]
+  Defined:  src/middleware/auth.ts:18
+  Exported: yes
+
+  src/middleware/auth.ts exports:
+    - handleAuth(req, res, next)   — JWT verification middleware
+    - requireRole(role)            — Role-check factory
+    - extractUserId(req)           — Helper, reads from req.auth
 ```
 
-```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/trace-field.sh "amount_due"
-```
+---
 
-Output is grouped by role: definitions, transforms, queries (SQL/ORM), and display (frontend rendering).
+## Tracing a field through the codebase
 
-### 6. Find a route's handler (find-route mode)
+> "where does amount_due get transformed?"
 
-```
-which handler serves GET /api/v1/dashboard?
-```
-
-```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/find-route.sh "/api/v1/dashboard"
-```
-
-Shows the full chain: route registration, handler function, middleware, and database calls.
-
-### 7. Find dead code (dead-code mode)
+:::note[Behind the scenes]
+`trace-field.sh "amount_due"` scans for the field across all files and groups hits by role: definition, transforms, SQL queries, and frontend rendering.
+:::
 
 ```
-what exports are never imported?
+Field: amount_due
+
+Definitions:
+  src/db/migrations/003_invoices.ts:31   — decimal(10,2) NOT NULL
+  src/types/invoice.ts:12                — amountDue: number
+
+Transforms:
+  src/services/invoices.ts:67   — computed from lineItems.reduce(...)
+  src/jobs/sync.ts:103          — converted from cents (÷ 100) on ingest
+
+SQL queries:
+  src/db/invoices.ts:45   — SELECT amount_due FROM invoices WHERE ...
+  src/db/reports.ts:88    — SUM(amount_due) GROUP BY customer_id
+
+Display:
+  src/components/InvoiceTable.tsx:34   — formatCurrency(invoice.amountDue)
 ```
 
-```bash
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js dead-code
+---
+
+## Finding dead code
+
+> "anything unused I should clean up?"
+
+:::note[Behind the scenes]
+`codebase-pilot dead-code` cross-references the import graph against all exported symbols. It only flags exports that have zero importers — unexported dead code is not included.
+:::
+
+```
+Unused exports (no importers found):
+
+  src/utils/legacy-csv.ts
+    exportToCSVv1()   — last modified 4 months ago
+
+  src/services/notifications.ts
+    sendPushNotification()   — imported in 0 files
+    PUSH_RETRY_LIMIT         — imported in 0 files
+
+  src/api/internal.ts
+    debugDumpState()   — likely debug artifact
 ```
 
-### 8. Analyse change impact (change-impact mode)
+---
+
+## Impact analysis before a refactor
+
+> "what breaks if I change the User model?"
+
+:::note[Behind the scenes]
+`codebase-pilot change-impact "User"` walks the import graph from the symbol outward, separating direct importers from test files and indirect dependents.
+:::
 
 ```
-what breaks if I change handleAuth?
+Change impact: User (src/types/user.ts)
+
+Direct importers (must update):
+  src/services/auth.ts:12
+  src/api/users.ts:5
+  src/db/users.ts:8
+  src/services/billing.ts:31
+
+Indirect dependents (may be affected):
+  src/jobs/invoice-sync.ts   — imports billing.ts
+  src/api/invoices.ts        — imports billing.ts
+
+Test files:
+  tests/services/auth.test.ts
+  tests/api/users.test.ts
+
+Blast radius: 4 direct, 2 indirect, 2 test files
 ```
 
-```bash
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js change-impact "handleAuth"
-```
+---
 
-Separates direct importers from test files so you can see the real blast radius before refactoring.
-
-## What happens behind the scenes
-
-- **codebase-pilot** maintains a persistent index of symbols, files, and import graphs — built at session start by `session-index.sh`
-- Each mode chains multiple CLI commands to give a deeper picture than any single command would
-- If recently edited files are missing from results, Claude runs `index-file <path>` to update the index incrementally without a full rebuild
-- The **security-scan** and **dead-code** modes use the same index so they do not need to re-parse source files
+:::tip[When to use what]
+- **"What does X do?"** — `find-symbol` → `file-overview` gives you definition + context
+- **"What uses X?"** — `find-usages` lists all call sites across the codebase
+- **"What imports from Y?"** — `related-files` shows the full import neighbourhood
+- **"Are there circular dependencies?"** — ask "any circular deps?" and Claude runs `circular-deps`
+- **"What's safe to delete?"** — ask "any dead code?" and Claude runs `dead-code`
+:::
 
 ## Tips
 
-- Start every unfamiliar codebase with `map` — the overview guides all subsequent queries
-- For a bug investigation, use: `find-symbol` (locate the error source) → `file-overview` (context) → `find-usages` (all call sites)
-- Use `change-impact` before any refactor that touches exported symbols — know the blast radius first
-- If results seem stale after editing files, ask Claude to reindex: "reindex the codebase" triggers a full rebuild
+- Start every unfamiliar codebase with `map` — the overview guides every subsequent query
+- For a bug investigation: `find-symbol` (locate the source) → `file-overview` (context) → `find-usages` (all call sites)
+- Run `change-impact` before any refactor touching exported symbols — know the blast radius first
+- If results seem stale after editing, say "reindex the codebase" — Claude triggers a full rebuild
 
 ## Related
 

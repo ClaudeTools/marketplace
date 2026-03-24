@@ -1,111 +1,157 @@
 ---
 title: "Manage Tasks"
-description: "Manage Tasks — claudetools documentation."
+description: "Track work across sessions with persistent tasks, subtask decomposition, and handoff summaries."
 ---
-Use the `/managing-tasks` skill to create, track, and hand off work across sessions — with persistent storage, cross-session continuity, and AI-assisted decomposition.
 
+Use `/managing-tasks` to create, track, and hand off work across sessions — with persistent storage, cross-session continuity, and AI-assisted decomposition.
 
-## What you need
-- claudetools installed
-- The task-manager MCP server configured (included with claudetools)
+## Real scenarios
 
-## Steps
+### Scenario A: Starting a multi-session project
 
-### 1. Create a task
+**Session 1 — Create tasks and start work**
 
-```
-/managing-tasks new Add CSV export to the invoices page
-```
+> "I need to add CSV export to the invoices page, including column selection and date filtering"
 
-The task system enriches your description before creating it:
-
-1. Runs `codebase-pilot map` to understand the project structure
-2. Looks up file paths and symbols mentioned in your description
-3. Calls an enrichment agent to add acceptance criteria, file references, and verification commands
-4. Creates the task with a deterministic ID (e.g. `task-a3f8b2c1`)
-
-You can also pass a file path or URL as the input — the system reads and enriches the content:
+:::note[Behind the scenes]
+`/managing-tasks new` runs `codebase-pilot map` to understand the project structure, then calls an enrichment agent that adds acceptance criteria, file references, and verification commands before creating the task with a deterministic ID.
+:::
 
 ```
-/managing-tasks new docs/design/csv-export-spec.md
+Task created: task-a3f8b2c1
+Title: Add CSV export to invoices page
+Files: src/pages/invoices.tsx, src/api/export.ts (new), src/components/ExportModal.tsx (new)
+Acceptance criteria:
+  - Column selector lets users pick which fields to export
+  - Date range filter applies before export
+  - Export triggers a file download with correct MIME type
+  - Works with up to 10,000 rows without timeout
 ```
 
-### 2. Start the next task
+Now decompose it into subtasks before starting:
+
+> "/managing-tasks decompose task-a3f8b2c1"
+
+:::note[Behind the scenes]
+Claude analyses the task, breaks it into 3–7 subtasks with explicit dependencies, and gives each subtask its own acceptance criteria and file references so it can be executed autonomously.
+:::
 
 ```
-/managing-tasks start
+Decomposed into 4 subtasks:
+
+task-b1c2d3e4  [1] Add export API endpoint           src/api/export.ts
+task-f5g6h7i8  [2] Build ExportModal component        src/components/ExportModal.tsx
+task-j9k0l1m2  [3] Wire modal into invoices page      src/pages/invoices.tsx
+task-n3o4p5q6  [4] Add E2E test for export flow       tests/e2e/export.spec.ts
+
+Dependencies: 1 → 2 → 3; 4 depends on 3
 ```
 
-This picks the highest-priority pending task with no blockers, marks it `in_progress`, and begins execution via TeamCreate. You do not need to specify which task — the system selects based on priority and dependency order.
+Start the first task:
 
-### 3. Check task status
+> "/managing-tasks start"
 
-```
-/managing-tasks status
-```
+Claude picks `task-b1c2d3e4` (highest priority, no blockers) and begins via TeamCreate.
 
-The status report shows all tasks grouped by state (pending, in_progress, completed, blocked) with their priority and dependency links.
+---
 
-### 4. Stop (complete) a task
+**Session 1 ends — generate a handoff**
 
-```
-/managing-tasks stop
-```
+Before closing the session:
 
-This marks the current in-progress task as completed, records which files were touched (via `git diff`), and shows the next pending task as a suggestion.
+> "/managing-tasks handoff"
 
-### 5. Decompose a complex task into subtasks
+:::note[Behind the scenes]
+The handoff command writes `progress.md` with completed items (with implementation detail), in-progress work, blocked items, key decisions, and concrete next steps in priority order.
+:::
 
 ```
-/managing-tasks decompose task-a3f8b2c1
+Handoff written to .tasks/progress.md
+
+Completed this session:
+  ✓ task-b1c2d3e4 — Export API endpoint at POST /api/invoices/export
+    Returns CSV with Content-Disposition header. Accepts { columns[], startDate, endDate }.
+    Pagination handled internally — single request regardless of row count.
+
+In progress:
+  → task-f5g6h7i8 — ExportModal — column checkboxes done, date picker not yet wired
+
+Next steps (in order):
+  1. Finish ExportModal date picker (task-f5g6h7i8)
+  2. Wire modal into invoices page (task-j9k0l1m2)
+  3. Add E2E test (task-n3o4p5q6)
 ```
 
-Claude analyses the task and breaks it into 3–7 subtasks with explicit dependencies. Each subtask gets its own acceptance criteria, file references, and verification commands so it can be executed autonomously.
+---
 
-### 6. Hand off to the next session
+### Scenario B: Picking up in a new session
 
-Run this before ending a session or when context is running low:
+**Session 2 — Restore and continue**
 
-```
-/managing-tasks handoff
-```
-
-This writes a `progress.md` file with:
-- What was completed (with implementation detail, not just task names)
-- What is in progress and what remains
-- Blocked items and their specific blockers
-- Key decisions made this session
-- Concrete next steps in priority order
-
-### 7. Restore tasks in a new session
-
-At the start of a new session, restore the task state:
+> "/managing-tasks restore"
 
 ```
-/managing-tasks restore
+Restored 4 tasks (1 completed, 1 in_progress, 2 pending)
+
+Last session summary:
+  Export API complete at POST /api/invoices/export
+  ExportModal partially done — column checkboxes work, date picker incomplete
+
+Next up: task-f5g6h7i8 — finish ExportModal date picker
 ```
 
-This reads the persistent task store and syncs it to the current display. The previous session's `progress.md` is shown so you have full context before starting.
+Continue without re-explaining anything:
 
-### 8. View progress narrative
+> "/managing-tasks start"
+
+Claude picks `task-f5g6h7i8` and resumes from where it left off, using the handoff context as its starting point.
+
+---
+
+### Scenario C: Checking status mid-session
+
+> "/managing-tasks status"
 
 ```
-/managing-tasks progress
+COMPLETED (1)
+  ✓ task-b1c2d3e4  Export API endpoint
+
+IN PROGRESS (1)
+  → task-f5g6h7i8  ExportModal component
+
+PENDING (2)
+  · task-j9k0l1m2  Wire modal into invoices page    [blocked by task-f5g6h7i8]
+  · task-n3o4p5q6  Add E2E test                     [blocked by task-j9k0l1m2]
 ```
 
-Shows the full progress history. If the file is stale (last updated more than 2 hours ago), the system offers to regenerate it from the current task state.
+---
 
-### 9. Validate task state
+:::tip[Which command to use when]
+- **New project or feature**: `/managing-tasks new` + `/managing-tasks decompose` before starting
+- **Resuming work**: Always run `/managing-tasks restore` first — it shows the last handoff summary
+- **Ending a session**: Run `/managing-tasks handoff` before closing — this is the most important command for cross-session continuity
+- **Check what's next**: `/managing-tasks status` shows blocked vs ready tasks at a glance
+:::
+
+## MCP tools for programmatic use
+
+The task system exposes MCP tools you can invoke directly:
+
+> "Use task_query to show all blocked tasks"
 
 ```
-/managing-tasks validate
+task-j9k0l1m2  Wire modal into invoices page    blocked by task-f5g6h7i8
+task-n3o4p5q6  Add E2E test                     blocked by task-j9k0l1m2
 ```
 
-Checks for duplicate IDs, invalid status values, orphaned subtasks, and broken dependencies. Run this if the task state looks inconsistent.
+> "Use task_create to add a task: investigate the slow query on the invoices list page"
 
-## MCP tools
-
-The task system also exposes MCP tools for direct use:
+```
+Task created: task-r7s8t9u0
+Title: Investigate slow query on invoices list page
+Priority: medium
+Files: src/api/invoices.ts, src/db/queries/invoices.ts
+```
 
 | Tool | Purpose |
 |------|---------|
@@ -115,29 +161,22 @@ The task system also exposes MCP tools for direct use:
 | `task_decompose` | Get decomposition guidance for a task |
 | `task_progress` | Generate or append a session progress report |
 
-These tools are called automatically by the skill but you can invoke them directly via Claude:
-
-```
-Use task_query to show all blocked tasks
-```
-
 ## What happens behind the scenes
 
-- Tasks are stored in `.tasks/tasks.json` and designed to be committed to git
+- Tasks are stored in `.tasks/tasks.json` — commit this to git so state is shared across teammates and survives branch switches
 - History is appended to `.tasks/history.jsonl` on every status change
-- Task IDs are deterministic — SHA-256 of the content string, truncated to 8 hex chars — so the same task always gets the same ID
-- A PostToolUse hook fires on every `TodoWrite` to sync the persistent store — it runs in <100ms using only Node.js built-ins
+- Task IDs are deterministic (SHA-256 of content, truncated to 8 hex chars) — reference them in commit messages to link work to its tracking record
+- A PostToolUse hook fires on every `TodoWrite` to sync the persistent store in under 100ms
 - All execution uses TeamCreate to keep the main conversation context clean
 
 ## Tips
 
-- Commit `.tasks/` to git so task state survives branch switches and is shared with teammates
 - Use `/managing-tasks decompose` before `/managing-tasks start` on large tasks — subtasks execute in parallel, saving significant time
-- The `handoff` command is the most important one to run consistently — it is the primary mechanism for cross-session continuity
-- Task IDs are stable — reference them in commit messages and PR descriptions to link work to its tracking record
+- Task IDs are stable — use them in commit messages (`fix: auth token expiry (task-a3f8b2c1)`) for traceability
+- If task state looks inconsistent, run `/managing-tasks validate` to check for orphaned subtasks or broken dependencies
 
 ## Related
 
-- [Build a Feature](build-a-feature.md) — the feature-pipeline creates and tracks tasks automatically
 - [Coordinate Agents](coordinate-agents.md) — tasks and agents work together via TeamCreate
+- [Build a Feature](build-a-feature.md) — the feature-pipeline creates and tracks tasks automatically
 - [Improve Prompts](improve-prompts.md) — use `task` mode to convert prompts into tracked tasks

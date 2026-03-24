@@ -2,103 +2,148 @@
 title: "Improve Prompts"
 description: "Improve Prompts — claudetools documentation."
 ---
-Use `/prompt-improver` to transform a rough request into a structured XML prompt and execute it — or review it, or convert it into a tracked task — in three modes.
 
+Use `/improving-prompts` to turn a rough request into a structured XML prompt. Three modes: run it immediately, review it first, or convert it into a tracked task tree.
 
-## What you need
-- claudetools installed
-- A rough description of what you want Claude to do
+## Execute mode (default)
 
-## Steps
+> "add dark mode support to the settings page"
 
-### 1. Choose a mode
+Claude structures the request, shows you a brief plan, then implements without waiting:
 
-| Mode | Command | What it does |
-|------|---------|-------------|
-| Execute (default) | `/prompt-improver <request>` | Generates a structured prompt and runs it immediately |
-| Plan | `/prompt-improver plan <request>` | Generates the prompt and shows it for review before running |
-| Task | `/prompt-improver task <request>` | Generates the prompt and creates persistent tasks — does not execute |
-
-### 2. Execute mode — just run it
-
-For a rough request you trust, use execute mode:
+:::note[Behind the scenes]
+A generation agent is spawned in a sub-context. It reads 4 reference files (XML template, prompting principles, chaining patterns, before/after examples), runs `codebase-pilot map` to find real file paths, then produces a validated XML prompt. `validate-prompt.sh` checks structure — failures are auto-corrected. The main conversation agent then executes the prompt directly.
+:::
 
 ```
-/prompt-improver add pagination to the invoices API endpoint
+Improving prompt and gathering codebase context...
+
+Plan (3 steps):
+  1. Add `theme` field to user preferences schema and settings API
+  2. Implement dark/light CSS variables in globals.css, toggle in settings UI
+  3. Persist preference to localStorage + user profile; apply on load
+
+Executing...
+
+  ✓ src/db/migrations/018_user_prefs.ts — added `theme` column
+  ✓ src/api/settings.ts — GET/PATCH theme preference
+  ✓ src/styles/globals.css — dark mode CSS variable overrides
+  ✓ src/components/Settings/ThemeToggle.tsx — created
+  ✓ src/hooks/useTheme.ts — reads preference, applies class to <html>
+  ✓ src/app/layout.tsx — ThemeToggle added to settings section
+
+Branch: feat/dark-mode-settings
+Commit: feat: add dark mode support to settings page
 ```
 
-Claude:
-1. Detects the tech stack and gathers codebase context
-2. Spawns a generation agent to produce a structured XML prompt
-3. Shows you a 2–3 sentence plan of what it is about to do
-4. Executes the prompt immediately — implementing the change, verifying it, and committing
+Use execute mode when the request is focused and you are comfortable with Claude proceeding without review.
 
-Use this when the request is clear enough that you are comfortable with Claude proceeding without showing you the full plan.
+---
 
-### 3. Plan mode — review before running
+## Plan mode
 
-For anything non-trivial, use plan mode to see the generated prompt first:
+> "/improving-prompts plan refactor the authentication middleware to support OAuth2"
 
-```
-/prompt-improver plan refactor the auth module to use JWT instead of sessions
-```
+Claude generates the structured prompt and presents it before doing anything:
 
-Claude generates the prompt and presents it in a code fence with a summary of:
-- What codebase context was gathered
-- What assumptions were made
-- How many tasks are involved
-- Whether parallel execution is recommended
-
-You then choose:
+:::note[Behind the scenes]
+Same generation agent runs as in execute mode, but the result is printed to the conversation instead of being executed. Claude also summarises what assumptions were baked in (e.g., existing auth strategy, JWT vs session detection).
+:::
 
 ```
-Execute — run this prompt as-is
-Revise  — tell me what to change
-Edit    — paste back a modified prompt
-Discard — cancel
+Generated prompt (OAuth2 middleware refactor):
+
+<task>
+  <context>
+    Current auth: JWT via src/middleware/auth.ts (handleAuth, requireRole)
+    Session store: none — stateless JWT only
+    Existing token validation: src/services/auth.ts:verifyToken
+  </context>
+  <objective>
+    Extend handleAuth to accept OAuth2 Bearer tokens from external providers
+    alongside existing JWTs. Do not break existing JWT flow.
+  </objective>
+  <steps>
+    <step>Add OAuth2 provider config to src/config/auth.ts</step>
+    <step>Extend verifyToken() to detect and validate OAuth2 tokens</step>
+    <step>Update handleAuth middleware to call new verifyToken branch</step>
+    <step>Add integration tests for both token paths</step>
+  </steps>
+  <constraints>
+    Existing JWT auth must continue to work without changes for callers.
+    No new dependencies — use node:crypto for token verification.
+  </constraints>
+</task>
+
+Assumptions made:
+  - Provider uses RS256 signed tokens
+  - JWKS endpoint URL will be added to environment config
+  - No session storage required (stateless verification)
+
+What would you like to do?
+  Execute — run this prompt as-is
+  Revise  — tell me what to change
+  Edit    — paste back a modified prompt
+  Discard — cancel
 ```
 
-Use this for large or risky changes where you want to verify the plan before implementation starts.
+You say "Execute" and Claude follows the structured plan exactly.
 
-### 4. Task mode — convert to tracked tasks
+Use plan mode for anything that touches multiple files, involves an architectural decision, or where you want to verify assumptions before implementation starts.
 
-For a feature or piece of work you want to schedule rather than run now:
+---
 
-```
-/prompt-improver task build a CSV export feature for the invoices page
-```
+## Task mode
 
-Claude:
-1. Generates the same structured XML prompt as execute/plan modes
-2. Creates a parent task in the task system
-3. Creates subtasks for each phase, with acceptance criteria and verification commands
-4. Shows you the task tree with IDs
+> "/improving-prompts task build a real-time notification system with WebSocket support"
 
-Then starts the work automatically:
+Claude generates the XML prompt, then converts it into a persistent task tree instead of executing:
+
+:::note[Behind the scenes]
+After the generation agent produces the prompt, Claude calls `task_create` for each `<step>` block in the XML, setting acceptance criteria, file references, and verification commands from the prompt's metadata. The parent task links to the original structured prompt.
+:::
 
 ```
-Created task tree:
-- [task-a3f8b2c1] CSV export for invoices (high, prompt-improved)
-  - [task-b1c2d3e4] Add /api/invoices/export endpoint (high)
-  - [task-e5f6a7b8] Add Export button to invoices UI (medium, depends on: b1c2d3e4)
-  - [task-c9d0e1f2] Add integration tests (medium, depends on: b1c2d3e4)
+Generated prompt and created task tree:
+
+[task-f2a9c1d0] Build real-time notification system (high)
+  [task-a3b4c5d6] WebSocket server setup — src/ws/server.ts (high)
+    Acceptance: WS server starts on same port, handles connect/disconnect
+    Verify: curl --include --no-buffer -H "Upgrade: websocket" ...
+  [task-b5c6d7e8] Notification event emitter — src/services/notifications.ts (high)
+    Acceptance: emitToUser(userId, event) reaches all open connections
+    Depends on: a3b4c5d6
+  [task-c7d8e9f0] Client hook — src/hooks/useNotifications.ts (medium)
+    Acceptance: hook reconnects on disconnect, exposes notifications[]
+    Depends on: b5c6d7e8
+  [task-d9e0f1a2] Notification bell UI — src/components/NotificationBell.tsx (medium)
+    Acceptance: badge shows unread count, clears on open
+    Depends on: c7d8e9f0
+  [task-e1f2a3b4] Integration tests (medium)
+    Acceptance: tests cover connect, message delivery, reconnect
+    Depends on: b5c6d7e8
+
+Tasks created. Start with task-a3b4c5d6, or say "start the notification system" to begin.
 ```
 
-## What happens behind the scenes
+Use task mode for multi-session projects, backlog items you want to schedule, or work you want a separate agent to pick up.
 
-- A **generation agent** is spawned in a sub-context to build the prompt — this keeps the main conversation clean and prevents context bloat
-- The agent reads 4 reference files before generating: an XML template, prompting principles, chaining patterns, and before/after examples
-- The generated prompt is validated with `validate-prompt.sh` before being used — structural failures are fixed automatically
-- In execute mode, the prompt is followed directly by the main conversation agent — not a subagent
-- In task mode, `task_create` is called for each task block in the generated XML, with full metadata (acceptance criteria, file references, verification commands)
+---
+
+:::tip[When to use what]
+- **Clear task, just do it**: Skip `/improving-prompts` entirely — just tell Claude what you want
+- **Vague idea, want structure**: Use execute mode — it structures the request and runs it immediately
+- **Complex task, want to review the approach first**: Use plan mode — see the full plan and assumptions before anything is touched
+- **Multi-session project, want persistent tracking**: Use task mode — creates a task tree you can come back to across sessions
+:::
 
 ## Tips
 
-- Use **execute mode** for focused, single-concern requests (add a field, fix a bug, change a behaviour)
-- Use **plan mode** for anything that touches multiple files or involves an architectural decision
-- Use **task mode** when you have a backlog item that should be worked on later or by a separate agent
-- If the generated prompt looks wrong, use **Revise** to give feedback — the generation agent re-runs with your notes
-- The generation agent uses codebase-pilot to find real file paths — the output should never contain invented paths
+- Use **execute mode** for single-concern requests: add a field, fix a bug, change a behaviour
+- Use **plan mode** for refactors that touch multiple files or introduce a new architectural pattern
+- Use **task mode** when the work spans multiple sessions or should be picked up by a separate agent
+- If the generated prompt looks wrong in plan mode, say "Revise — add X constraint" — the generation agent re-runs with your notes
+- The generation agent uses codebase-pilot to find real file paths — the output will never contain invented paths
 
 ## Related
 

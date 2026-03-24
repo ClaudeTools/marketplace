@@ -1,151 +1,152 @@
 ---
 title: "Coordinate Agents"
-description: "Coordinate Agents — claudetools documentation."
+description: "Run multiple Claude agents in parallel with file locks, shared decisions, and message passing."
 ---
-Use the agent mesh to coordinate multiple Claude agents working in the same repository simultaneously — checking who is active, locking files, sending messages, and sharing architectural decisions.
 
+Use the agent mesh to coordinate multiple Claude agents working in the same repository simultaneously — checking who is active, locking files, sharing architectural decisions, and passing messages between sessions.
 
-## What you need
-- claudetools installed
-- A git repository with worktree isolation enabled (each agent works in its own worktree)
+## Real scenarios
 
-## Steps
+### Scenario A: Spawning a team and dividing work
 
-### 1. Check who is active
+> "spawn three teammates to refactor the auth module: one to audit the current code, one to write the new JWT implementation, and one to update the tests"
 
-Before starting work on shared files, see who else is in the repo:
+:::note[Behind the scenes]
+TeamCreate spawns each agent in an isolated context window with scoped instructions. Each gets only the files and context relevant to their task — not the full conversation history.
+:::
 
-```
-/mesh status
-```
+The team lead (you) coordinates. The three teammates start independently:
 
-This runs three commands:
+- **auditor** — reads the existing auth code, identifies what's being replaced
+- **implementer** — builds the new JWT implementation
+- **tester** — waits for the implementer's output, then updates tests
+
+Before the implementer touches shared files, it checks for locks:
 
 ```bash
-# List active agents
-node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js list --brief
-
-# Show active file locks
-node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js locks
-
-# Show shared decisions
-node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js context --list
+node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js who --file "src/api/auth.ts"
+# No lock held
 ```
 
-Run this at the start of every session and before starting work on any shared code.
-
-### 2. Lock a file before a multi-file refactor
-
-Advisory locks prevent two agents from editing the same file simultaneously:
-
-```
-/mesh lock src/api/auth.ts "mid-migration to new session format"
-```
-
-This runs:
+Clear — it proceeds and locks the file:
 
 ```bash
 node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js lock \
   --file "src/api/auth.ts" \
   --id "$SESSION_ID" \
-  --reason "mid-migration to new session format"
+  --reason "rewriting JWT implementation"
 ```
 
-Check who holds a lock before editing:
+---
+
+### Scenario B: One agent checks a lock held by another
+
+The tester agent starts and wants to read `src/api/auth.ts` to understand what changed:
 
 ```bash
 node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js who --file "src/api/auth.ts"
+# Lock held by implementer (session abc-123): rewriting JWT implementation
 ```
 
-Release the lock when done:
+:::note[Behind the scenes]
+Locks are advisory — the tester can still read the file. The lock signals intent: "this file is in flux, coordinate before editing." The tester reads the file but waits to write tests until the implementer unlocks it.
+:::
 
-```bash
-node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js unlock --file "src/api/auth.ts" --id "$SESSION_ID"
-```
+---
 
-### 3. Send a message to another agent
+### Scenario C: Sharing an architectural decision across the team
 
-Alert another agent before touching files they depend on:
+The implementer makes a key choice and records it so all other agents can read it:
 
-```
-/mesh send researcher "don't touch config.ts — I'm mid-migration on the auth module"
-```
-
-Message types:
-- `info` — general update ("finished refactoring the auth module")
-- `alert` — something they need to know now ("don't touch config.ts")
-- `request` — asking for something ("can you review my API layer changes?")
-- `decision` — sharing an architectural choice ("going with JWT, not sessions")
-
-### 4. Share an architectural decision
-
-When you make a choice that affects the whole codebase, store it in the shared context:
-
-```
-/mesh decide auth-strategy "JWT with 15-minute access tokens and 7-day refresh tokens"
-```
-
-This runs:
+> "/mesh decide auth-strategy 'JWT with 15-minute access tokens and 7-day refresh tokens, stored in httpOnly cookies — no localStorage'"
 
 ```bash
 node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js context \
   --set "auth-strategy" \
-  "JWT with 15-minute access tokens and 7-day refresh tokens"
+  "JWT with 15-minute access tokens and 7-day refresh tokens, stored in httpOnly cookies — no localStorage"
 ```
 
-Other agents can read the decision:
+The tester reads the decision before writing tests:
 
 ```bash
 node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js context --get "auth-strategy"
+# JWT with 15-minute access tokens and 7-day refresh tokens, stored in httpOnly cookies — no localStorage
 ```
 
-### 5. Spawn a team with TeamCreate
+Now the tester knows to write tests for httpOnly cookies, not localStorage. No need for the implementer to repeat themselves.
 
-For work with 3+ independent tasks, use TeamCreate to run them in parallel:
+---
 
-```
-/managing-tasks start
-```
+### Scenario D: Sending an alert to another agent
 
-The task system calls TeamCreate internally, spawning one teammate per independent subtask. Each teammate gets scoped context — their task content, relevant file paths, and constraints — rather than the full conversation history.
+The implementer realizes it's changing a shared utility that the auditor was also reading:
 
-For a custom team, Claude can create one directly:
-
-```
-spawn three teammates:
-- researcher: explore the auth module
-- implementer: add the JWT refresh endpoint
-- reviewer: review the implementer's output
-```
-
-### 6. Maintain worktree isolation
-
-Each agent session should run in its own git worktree. Create a worktree for a new session:
+> "/mesh send auditor 'heads up — I moved token validation out of auth.ts and into src/lib/tokens.ts, update your audit findings'"
 
 ```bash
-git worktree add .claude/worktrees/my-feature -b my-feature
+node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js send \
+  --to "auditor" \
+  --message "heads up — I moved token validation out of auth.ts and into src/lib/tokens.ts, update your audit findings" \
+  --type "alert"
 ```
 
-Agents working in separate worktrees can edit different files simultaneously without conflicts. The agent mesh coordinates at a higher level — file locks are advisory and cross-worktree communication happens via the mesh CLI, not git.
+:::note[Behind the scenes]
+A PostToolUse hook delivers the message to the auditor's inbox automatically. The auditor does not need to poll — it sees the alert the next time it calls a tool.
+:::
+
+The auditor acknowledges:
+
+```bash
+node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js inbox --id "$SESSION_ID"
+# [alert from implementer] heads up — I moved token validation out of auth.ts and into src/lib/tokens.ts
+```
+
+---
+
+### Scenario E: Checking the full team status
+
+> "/mesh status"
+
+```
+Active agents (3):
+  auditor      [session abc-111]  reading src/api/auth.ts
+  implementer  [session abc-123]  locked src/api/auth.ts, src/lib/tokens.ts
+  tester       [session abc-456]  waiting on implementer
+
+File locks (2):
+  src/api/auth.ts     → implementer (abc-123): rewriting JWT implementation
+  src/lib/tokens.ts   → implementer (abc-123): new token validation module
+
+Shared decisions:
+  auth-strategy: JWT with 15-minute access tokens...
+```
+
+---
+
+:::tip[When to use the mesh vs just asking]
+- **No coordination needed**: Single agent, single task — just ask Claude directly
+- **Parallel independent tasks**: Spawn teammates with TeamCreate, no mesh needed
+- **Parallel tasks touching shared files**: Lock files before editing, `/mesh decide` for architectural choices
+- **Long-running multi-session work**: Use `/mesh status` at the start of every session and `/managing-tasks handoff` before ending
+:::
 
 ## What happens behind the scenes
 
 - The **agent-mesh CLI** (`plugin/agent-mesh/cli.js`) stores state in a local JSON file shared across worktrees — no network required
-- **Locks are advisory** — they do not prevent editing, they signal intent. Agents must check locks before starting work
-- **Context store** persists for the session — decisions written by one agent are immediately readable by others
-- **Inbox** is checked automatically by hooks when messages arrive — you can also check manually: `node .../cli.js inbox --id $SESSION_ID`
+- **Locks are advisory** — they signal intent, not access control. Agents must check locks before starting work, not before reading
+- **Context store** persists for the session — decisions written by one agent are immediately readable by others in the same session
+- **Inbox** delivery is triggered automatically by a PostToolUse hook — agents receive messages without polling
 - **TeamCreate** isolates each teammate's context window from the main conversation, keeping it clean and preventing context overflow
 
 ## Tips
 
-- Always check `/mesh status` before starting work in a shared repo — five seconds now prevents a merge conflict later
-- Lock files when doing multi-file refactors, not for single-line fixes — over-locking creates coordination overhead
-- Use `decision` message type for architectural choices so they appear in the shared context list, not just as one-off messages
-- If the mesh CLI is unavailable (e.g. not yet installed), mesh commands are best-effort — report the issue and continue working
-- Commit agent coordination notes to `.tasks/progress.md` via `/managing-tasks handoff` so the next session has full context
+- Run `/mesh status` at the start of every multi-agent session — five seconds now prevents a merge conflict later
+- Lock files for multi-file refactors, not single-line fixes — over-locking creates coordination overhead without benefit
+- Use the `decision` context store for architectural choices so they appear in `/mesh status`, not buried in one-off messages
+- Commit `.tasks/progress.md` via `/managing-tasks handoff` before ending a multi-agent session — the next session needs full context, not just git history
 
 ## Related
 
-- [Manage Tasks](manage-tasks.md) — task system coordinates with TeamCreate
+- [Manage Tasks](manage-tasks.md) — task system coordinates with TeamCreate for parallel execution
 - [Build a Feature](build-a-feature.md) — feature-pipeline uses the mesh for multi-teammate implementation
-- [Set Up a New Project](setup-new-project.md) — worktree setup for new projects
+- [Set Up a New Project](setup-new-project.md) — worktree setup for isolated agent sessions

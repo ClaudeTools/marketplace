@@ -1,72 +1,128 @@
 ---
 title: "Run a Security Audit"
-description: "Run a Security Audit — claudetools documentation."
+description: "Scan for secrets, injection vulnerabilities, dead security controls, and dependency CVEs — with file:line evidence for every finding."
 ---
-Use the security-pipeline agent for a full codebase audit, or the exploring-codebase security-scan mode for a targeted check — producing structured findings with file:line evidence for every issue.
 
+Use the security-pipeline agent for a full codebase audit, or ask Claude directly for a targeted check — producing structured findings with `file:line` evidence for every issue.
 
-## What you need
-- claudetools installed
-- A project with Node.js dependencies (for the npm audit step)
+## Real scenarios
 
-## Steps
+### Scenario A: Quick scan during development
 
-### Option A — Full audit with the security-pipeline agent
+> "check this project for security issues"
 
-For a comprehensive audit of the whole codebase:
-
-```
-/claudetools:security-pipeline
-```
-
-The pipeline is read-only — it produces a findings report but never modifies files.
-
-**Step 1: Full audit**
-
-```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/full-audit.sh
-```
-
-Covers architecture overview, dependency surface area, and entry points.
-
-**Step 2: Security scan**
+:::note[Behind the scenes]
+The exploring-codebase skill detects the security intent and runs `security-scan.sh` automatically. No command needed — Claude recognises the request and acts.
+:::
 
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/security-scan.sh
 ```
 
-AST-aware scanning that finds:
+```
+Security scan complete — 3 findings
+
+[CRITICAL] src/api/users.ts:42
+  SQL injection — user input reaches query via string interpolation
+  req.query.search is passed directly into `WHERE name LIKE '${search}'`
+  Fix: use parameterised query with $1 placeholder
+
+[HIGH] src/config/database.ts:8
+  Hardcoded credential — DB_PASSWORD set as string literal
+  Fix: move to environment variable
+
+[MEDIUM] src/api/auth.ts:103
+  console.log prints req.body on login attempts — includes password field in logs
+  Fix: remove or replace with structured logger that strips sensitive fields
+```
+
+Every finding includes the file and line number so you can jump directly to the issue.
+
+---
+
+### Scenario B: Specific concern
+
+> "check for hardcoded secrets"
+
+Claude runs the scan with a focused filter:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/security-scan.sh --secrets-only
+```
+
+```
+Secrets scan — 2 findings
+
+[CRITICAL] src/config/database.ts:8
+  DB_PASSWORD = "prod-db-pass-2024"
+
+[HIGH] tests/fixtures/seed.ts:31
+  API_KEY = "sk-test-abc123..." — test fixture key, but pattern matches production format
+  Confirm this is a test key and rotate if there is any chance it reached production
+```
+
+---
+
+### Scenario C: Full audit with the security-pipeline agent
+
+> "spawn a security-pipeline agent and run a full audit"
+
+:::note[Behind the scenes]
+The security-pipeline agent runs four steps in sequence, each feeding context into the next. The pipeline is read-only — it produces findings but never modifies files.
+:::
+
+**Step 1 — Full audit**
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/full-audit.sh
+```
+
+Covers architecture overview, dependency surface area, and entry points — establishing what exists before scanning for what's wrong.
+
+**Step 2 — Security scan**
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/security-scan.sh --all
+```
+
+AST-aware scanning across all severity levels:
 - Hardcoded secrets (API keys, tokens, passwords)
 - SQL injection (string interpolation in query calls)
 - Insecure crypto (MD5, SHA1, weak algorithms)
-- `console.log` calls in production code paths
+- `console.log` in production code paths
 - Unvalidated redirects
 
-Findings are grouped by severity: CRITICAL, HIGH, MEDIUM, LOW.
-
-**Step 3: Dead security controls check**
+**Step 3 — Dead security controls**
 
 ```bash
 node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js dead-code
 ```
 
-Flags security-related files (validators, guards, hooks) that exist but are not wired up or being called.
+Flags security-related files that exist but are never called — validators, guards, sanitizers that were written but not wired up. A validator that is never invoked is as dangerous as one that doesn't exist.
 
-**Step 4: Dependency vulnerability audit**
+```
+Dead security controls — 1 finding
+
+src/validators/input-sanitizer.ts
+  Exported: sanitizeInput(), validateSchema()
+  Imported in: nowhere
+  Status: defined but never called in production code paths
+```
+
+**Step 4 — Dependency audit**
 
 ```bash
 npm audit --json
 ```
 
-Summarised by severity with affected packages and recommended actions.
-
-**Step 5: Structured report**
-
-The pipeline produces a four-section report:
+**Step 5 — Structured report**
 
 ```
+Security Audit Report — 2026-03-24
+
 Section 1 — Critical Findings
 [CRITICAL] src/api/users.ts:42 — SQL injection — user input reaches query via string interpolation
+[CRITICAL] node_modules/lodash@4.17.15 — prototype pollution (CVE-2021-23337)
 
 Section 2 — Dead Security Controls
 src/validators/input-sanitizer.ts — exported but never imported in production code
@@ -81,58 +137,46 @@ Section 4 — Recommended Actions
 3. Upgrade lodash to 4.17.21 (CRITICAL — supply chain risk)
 ```
 
-Every finding includes file:line evidence from the actual code. Theoretical issues without evidence are marked "unconfirmed" with an explanation.
-
-### Option B — Quick security scan
-
-For a targeted check on a specific concern:
-
-```
-scan for security issues
-```
-
-or
-
-```
-check for hardcoded secrets
-```
-
-Claude uses the exploring-codebase security-scan mode:
-
-```bash
-# Default: CRITICAL and HIGH only
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/security-scan.sh
-
-# Show all severities
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/security-scan.sh --all
-
-# JSON output for piping
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/security-scan.sh --json
-```
+---
 
 ### Acting on findings
 
-The security-pipeline produces findings only — it does not fix them. To address findings:
+The security-pipeline produces findings only — it does not apply fixes. To address findings:
 
-1. Review the report and prioritize by severity
-2. Use `/managing-tasks new` to create tracked tasks for each fix
-3. Use the debug-a-bug workflow for security fixes that require root-cause investigation
-4. Re-run the security scan after fixes to verify resolution
+> "create tasks for the critical and high findings from the security audit"
+
+```
+Created:
+  task-sec-001  Fix SQL injection in src/api/users.ts:42         [critical]
+  task-sec-002  Wire input-sanitizer.ts into API middleware       [high]
+  task-sec-003  Upgrade lodash to 4.17.21                         [critical]
+```
+
+Then work through them:
+
+> "/managing-tasks start"
+
+---
+
+:::tip[Quick scan vs full pipeline]
+- **Quick scan**: Ask "check for security issues" or "any hardcoded secrets?" — Claude runs `security-scan.sh` automatically, results in under 30 seconds
+- **Full audit**: Say "spawn a security-pipeline agent" — four-step analysis including dead security controls and dependency CVEs, takes 2–5 minutes
+- **Pre-release**: Always run the full pipeline before a major release or after a large dependency upgrade
+- **During development**: Run the quick scan after touching auth, database queries, or user input handling
+:::
 
 ## What happens behind the scenes
 
-- **security-scan.sh** uses grep with AST-aware patterns — it filters out safe patterns (e.g., `process.env` lookups) before flagging potential secrets, reducing false positives
-- **full-audit.sh** runs all analysis commands in a single pass to avoid redundant parsing
-- **codebase-pilot dead-code** uses the import graph to find security controls that are defined but never referenced — a common source of "defense that doesn't exist"
-- The pipeline is **read-only** — no files are modified, no fixes are applied, no commands with side effects are run
+- **security-scan.sh** uses grep with AST-aware patterns — it filters out safe patterns (e.g. `process.env` lookups) before flagging potential secrets, reducing false positives significantly
+- **full-audit.sh** runs all analysis commands in a single pass to avoid redundant file parsing
+- **codebase-pilot dead-code** uses the import graph to find security controls that are defined but never referenced
+- The pipeline is **read-only** — no files are modified, no fixes applied, no commands with side effects run
 
 ## Tips
 
-- Run a full audit before any major release or after a large dependency upgrade
-- Use the quick scan during development to catch issues as they are introduced
-- The dead security controls check is often overlooked — a validator that is never called is as dangerous as one that doesn't exist
-- Share the findings report with `git add audit-report.md && git commit` so the team has a baseline to track improvements against
-- Fix CRITICAL findings before HIGH, HIGH before MEDIUM — severity reflects the actual risk of exploitation
+- The dead security controls check is often overlooked — run it before every release, not just after a new feature
+- Fix CRITICAL before HIGH, HIGH before MEDIUM — severity reflects actual exploitation risk
+- Save the findings report to git (`git add audit-report.md && git commit`) so the team has a baseline to track improvements against
 
 ## Related
 

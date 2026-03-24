@@ -1,101 +1,157 @@
 ---
 title: "Build a Feature"
-description: "Build a Feature — claudetools documentation."
+description: "Walk through a real feature build — task creation, parallel implementation, quality hooks, and verification."
 ---
-Use the feature-pipeline agent to take a feature from idea to verified delivery — covering codebase exploration, planning, parallel implementation, code review, and final verification.
 
+A realistic walkthrough of building a medium-complexity feature end-to-end. See what Claude actually does at each stage.
 
-## What you need
-- claudetools installed
-- A feature description (rough or detailed — the pipeline handles enrichment)
+:::tip[When to use what]
+- **Small feature** (1-2 files, clear scope): Just ask Claude directly — it will implement without needing a pipeline
+- **Medium feature** (3-10 files): Use `/improving-prompts` to structure the task, then execute directly
+- **Large feature** (10+ files, multiple concerns): Spawn the `feature-pipeline` agent — it handles explore, plan, parallel implementation, review, and verify
+:::
 
-## Steps
+---
 
-### 1. Create a task for the feature
+## The feature
 
-Before spawning the pipeline, create a persistent task so the work is tracked across the session:
+> **You:** "Add a notification system — users should get an email when their order ships"
 
-```
-/managing-tasks new Add CSV export to the invoices page
-```
+This touches at least three layers: a notification service, an email template, and a trigger in the order fulfillment flow. That's large enough to benefit from the pipeline.
 
-The task system enriches the description using codebase context, adds acceptance criteria, and identifies the files involved. Review the generated task and confirm it before proceeding.
+---
 
-### 2. Spawn the feature pipeline
+## Step 1 — Create a task first
 
-With the task created, start the feature-pipeline agent:
+> **You:** `/managing-tasks new Add email notification when order ships`
 
-```
-/claudetools:feature-pipeline <task description or task ID>
-```
+:::note[Hook fires: task-manager skill activates]
+The skill queries codebase-pilot to enrich the task before saving it.
+:::
 
-The pipeline orchestrates the entire workflow. You do not need to manage individual steps.
+**Claude responds:**
 
-### 3. EXPLORE — understand the codebase first
+> "Task created: `task-a4f2`. Enriched with codebase context:
+>
+> - Fulfillment trigger point: `OrderService.markShipped()` in `api/src/services/order-service.ts:142`
+> - Email infrastructure: `lib/mailer.ts` (uses Nodemailer, SMTP configured)
+> - Existing notification pattern: `NotificationService` in `api/src/services/notification-service.ts` (SMS only)
+> - Acceptance criteria added: email sent within 5s of `markShipped`, contains tracking number, unsubscribe link included
+>
+> Review the task? Or spawn the feature pipeline?"
 
-The pipeline runs codebase-pilot commands to map the area where the feature will land:
+:::tip
+Always create the task before spawning the pipeline. The enriched task description becomes the pipeline's specification — without it, the pipeline works from your raw description alone.
+:::
+
+---
+
+## Step 2 — Spawn the feature pipeline
+
+> **You:** `/claudetools:feature-pipeline task-a4f2`
+
+The pipeline takes over. You interact with it as a single agent — it coordinates everything below the surface.
+
+---
+
+## Step 3 — EXPLORE
+
+The pipeline runs codebase-pilot to map the area:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js map
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-symbol "invoices"
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js related-files "src/pages/invoices.tsx"
+node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-symbol "NotificationService"
+node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js related-files "api/src/services/order-service.ts"
+node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js map --entry "api/src/services/"
 ```
 
-The pipeline reads the relevant code before forming any plan. Nothing is assumed.
+> "EXPLORE complete. Key findings:
+> - `NotificationService` exists but only sends SMS. The email channel is missing.
+> - `markShipped()` emits an `order.shipped` domain event — perfect hook point, no new trigger needed.
+> - `lib/mailer.ts` has a `sendTemplate(to, template, vars)` method. I just need a template.
+> - Tests live in `tests/services/` — one test file per service."
 
-### 4. PLAN — break the feature into reviewable steps
+---
 
-Using the codebase knowledge from EXPLORE, the pipeline structures the implementation into discrete steps with dependencies and ordering. It identifies cross-cutting concerns (auth, logging, error handling) and documents the expected interface before writing any code.
+## Step 4 — PLAN
 
-Review the plan when it is presented. You can ask for changes before implementation begins.
+> "PLAN: Breaking into 3 independent units:
+>
+> 1. **Email template** — `templates/order-shipped.html` + `templates/order-shipped.txt`
+> 2. **NotificationService email channel** — extend `notification-service.ts` to handle `email` channel
+> 3. **Event wiring** — subscribe `NotificationService.sendShipmentEmail` to the `order.shipped` event
+>
+> Dependencies: (1) and (2) are parallel. (3) blocks on both.
+>
+> Confirm this plan before I implement?"
 
-### 5. IMPLEMENT — teammates build in parallel
+> **You:** "yes, go ahead"
 
-The pipeline spawns implementing-features teammates, one per logical unit:
+---
 
-- One teammate for the data layer
-- One teammate for the UI layer
-- One teammate for tests
+## Step 5 — IMPLEMENT (parallel)
 
-Teammates coordinate shared decisions via the agent-mesh CLI:
+The pipeline spawns two implementing-features teammates via TeamCreate:
+
+**Teammate A** — notification service email channel:
+- Reads `notification-service.ts`, adds `sendShipmentEmail(order)`
+- Calls `mailer.sendTemplate` with the template name and order variables
+- Shares the template variable schema via agent-mesh:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js context --set "csv-format" "RFC 4180"
+node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js context --set "shipment-template-vars" '{"orderId","trackingNumber","customerName","unsubscribeToken"}'
 ```
 
-You do not need to coordinate them manually.
+**Teammate B** — email templates:
+- Reads agent-mesh context to get the variable schema
+- Creates `templates/order-shipped.html` and `.txt` with the correct variables
+- No coordination needed — the schema is the contract
 
-### 6. REVIEW — code-reviewer checks the output
+:::note[Hook fires mid-implementation: stub detection]
+Teammate A writes `sendShipmentEmail` as a stub while scaffolding. The stub-detection hook fires:
+> "Stub detected: `sendShipmentEmail` has no implementation body. Complete the implementation before proceeding."
 
-After implementation, the pipeline runs a code-reviewer agent over all changed files. Every finding comes with a file:line reference. Blocking findings must be resolved before the pipeline proceeds.
+Teammate A fills in the implementation before continuing.
+:::
 
-### 7. VERIFY — typecheck and targeted tests
+After both complete, Teammate C wires the event subscription — reads both outputs, connects `order.shipped` to `sendShipmentEmail`.
+
+---
+
+## Step 6 — REVIEW
+
+A code-reviewer agent runs over all changed files:
+
+> "Review findings (3 total, 1 blocking):
+>
+> - **[BLOCK]** `notification-service.ts:89` — `sendShipmentEmail` doesn't handle mailer errors. If SMTP fails, the exception propagates unhandled and will crash the order fulfillment flow.
+> - `templates/order-shipped.html:12` — unsubscribe link uses a hardcoded domain. Should use `process.env.APP_URL`.
+> - `tests/notification-service.test.ts` — test for email channel missing. SMS tests exist, email tests don't."
+
+The pipeline holds until the blocking finding is resolved. Teammate A wraps the mailer call in try/catch and logs the failure without rethrowing.
+
+---
+
+## Step 7 — VERIFY
 
 ```bash
 npx tsc --noEmit
-./tests/run-tests.sh --file invoices
+./tests/run-tests.sh --file notification-service
+./tests/run-tests.sh --file order-service
 ```
 
-The pipeline runs typecheck and tests scoped to the changed files. All checks must pass before the feature is declared complete.
+> "VERIFY: Typecheck passes. 6 notification-service tests pass (4 SMS, 2 new email). Order-service tests unaffected. Feature complete."
 
-## What happens behind the scenes
+---
 
-- **feature-pipeline agent** orchestrates the entire lifecycle — you interact with it as a single agent
-- **codebase-pilot CLI** indexes the project and answers structural questions without reading every file
-- **TeamCreate** spawns implementing-features teammates in parallel for independent work units
-- **agent-mesh CLI** passes shared decisions between teammates so they stay consistent
-- **code-reviewer agent** runs a 4-pass review (correctness, security, performance, maintainability)
-- **run-tests.sh** only runs tests related to changed files — never the full suite unless you ask
+## The result
 
-## Tips
+Three files created, two files modified, six tests passing. The entire flow from prompt to verified feature ran through one pipeline agent — you only made two decisions: confirm the plan, and read the review findings.
 
-- If the feature is large, ask the pipeline to decompose it into subtasks first: `/managing-tasks decompose <task-id>`
-- You can interrupt after PLAN and before IMPLEMENT if the plan needs revision — the pipeline waits for your confirmation
-- For features touching auth, database schema, or API contracts, flag this in your initial description so the pipeline highlights those concerns in the plan
-- The pipeline never skips VERIFY — if tests fail, fix them before declaring the feature done
+---
 
 ## Related
 
-- [Manage Tasks](manage-tasks.md) — create and track feature tasks
-- [Review Code](review-code.md) — run a manual review on the output
-- [Coordinate Agents](coordinate-agents.md) — understand how teammates share decisions
+- [Manage Tasks](manage-tasks.md) — create and track feature tasks before building
+- [Review Code](review-code.md) — run a standalone code review on any output
+- [Coordinate Agents](coordinate-agents.md) — understand how TeamCreate teammates share decisions
+- [Reference: feature-pipeline agent](../../reference/agents/feature-pipeline/index.md)
