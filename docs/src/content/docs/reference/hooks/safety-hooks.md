@@ -1,8 +1,12 @@
 ---
 title: "Safety Hooks"
-description: "Safety Hooks — claudetools documentation."
+description: "Hooks that enforce safety boundaries — stop signal detection, dangerous command blocking, sensitive file protection, and secret exposure prevention."
 ---
 Hooks that enforce safety boundaries — stopping dangerous operations, protecting sensitive files, preventing harmful Bash commands, and blocking secret exposure.
+
+## What this protects you from
+
+Safety hooks are the last line of defense against irreversible mistakes. Without them, a misworded prompt could delete your entire `node_modules`, force-push over a teammate's work, or commit an API key directly into your repository. These hooks intercept every shell command and file write before it executes — destructive patterns are blocked immediately, and Claude is told why so it can offer a safe alternative instead.
 
 ---
 

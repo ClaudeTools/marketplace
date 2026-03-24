@@ -1,6 +1,6 @@
 ---
 title: "Refactor Pipeline"
-description: "Refactor Pipeline — claudetools documentation."
+description: "Safe refactor pipeline — impact analysis, step decomposition, parallel implementation, and regression verification for cross-cutting changes."
 ---
 Safe refactor pipeline. Orchestrates change-impact analysis, step decomposition, parallel implementation, and regression verification.
 

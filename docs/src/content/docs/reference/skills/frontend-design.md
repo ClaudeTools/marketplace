@@ -1,12 +1,28 @@
 ---
 title: "Designing Interfaces"
-description: "Designing Interfaces — claudetools documentation."
+description: "Skill for building production-grade frontend interfaces with high design quality — React, Next.js, Vite, Astro, SvelteKit, and Tailwind CSS."
 ---
 Build distinctive, production-grade frontend interfaces with high design quality. Covers React, Next.js, Vite, Astro, SvelteKit, Tailwind CSS, and plain HTML/CSS projects.
 
 **Trigger:** Use when the user asks to build a website, landing page, dashboard, web app, UI component, page layout, or any visual web interface. Also use for redesigns, restyling, dark mode, or design system creation.
 
 **Invocation:** `/frontend-design [description of what to build]`
+
+---
+
+## When to use this
+
+Use this skill when you're building any visual interface from scratch — a landing page, dashboard, settings form, or component. It's also the right choice when you have an existing design and want to audit it, add dark mode, or bring it in line with a design system. If Claude is about to write UI code without a systematic approach to tokens, contrast, or responsiveness, invoke this first.
+
+---
+
+## Try it now
+
+```
+/designing-interfaces A billing dashboard with a summary card, recent invoices table, and usage chart
+```
+
+Claude will ask about your stack (or detect it from `package.json`), generate a CSS design system with semantic tokens, build the components, take responsive screenshots at 4 breakpoints, and run contrast and token audits before presenting the result.
 
 ---
 

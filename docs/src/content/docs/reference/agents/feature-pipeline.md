@@ -1,6 +1,6 @@
 ---
 title: "Feature Pipeline"
-description: "Feature Pipeline — claudetools documentation."
+description: "Full-cycle feature pipeline — coordinates exploration, planning, parallel implementation, review, and verification for multi-file features."
 ---
 Full-cycle feature development pipeline. Orchestrates exploration, planning, implementation, review, and verification end-to-end.
 

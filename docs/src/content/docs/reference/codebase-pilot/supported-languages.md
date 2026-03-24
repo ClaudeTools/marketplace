@@ -1,6 +1,6 @@
 ---
 title: "Supported Languages"
-description: "Supported Languages — claudetools documentation."
+description: "14 languages supported via tree-sitter — native compiled bindings for fast parsing, WASM bindings for others, with per-language symbol coverage."
 ---
 Codebase Pilot supports 14 languages via tree-sitter parsing.
 

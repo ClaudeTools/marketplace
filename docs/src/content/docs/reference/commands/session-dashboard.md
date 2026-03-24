@@ -1,6 +1,6 @@
 ---
 title: "/session-dashboard"
-description: "/session-dashboard — claudetools documentation."
+description: "Plugin health report command — session metrics, hook success rates, failure patterns, and token efficiency in a single readable summary."
 ---
 Generate a human-readable health report of the claudetools plugin system — session metrics, success rates, failure patterns, and token efficiency.
 
@@ -33,6 +33,40 @@ Adaptive guardrail thresholds. "modified" entries have been tuned from defaults.
 
 ### Recommendations
 Automated suggestions based on metric patterns.
+
+## Quick example
+
+```
+/session-dashboard
+```
+
+**Claude responds:**
+
+```
+claudetools Session Health — last 10 sessions
+
+Session Summary
+  avg_tool_calls  42   (healthy range: 20–100)
+  avg_failures     1.2  ✓  (under 3 is healthy)
+  avg_churn        1.4  ✓  (under 2.0 is good)
+  avg_tasks        3.1
+
+Failure Rate Trend (last 7 days)
+  Mon  2.1%   Tue  1.8%   Wed  3.4%   Thu  1.1%   Fri  0.9%
+  ↓ Improving
+
+Top Failing Tools
+  Edit  — 4 failures   (likely cause: editing without reading first)
+  Bash  — 2 failures   (exit 1 — see individual session logs)
+
+Current Thresholds
+  uncommitted_file_limit   10   (default)
+  failure_loop_limit        3   (default)
+  bulk_edit_limit           5   (modified ↑ from 3)
+
+Recommendations
+  ✓ No issues detected. Session quality looks healthy.
+```
 
 ## Examples
 

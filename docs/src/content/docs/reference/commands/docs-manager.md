@@ -1,6 +1,6 @@
 ---
 title: "/docs-manager"
-description: "/docs-manager — claudetools documentation."
+description: "Documentation management command — audit, archive, generate index, and enforce standardized structure across project docs."
 ---
 Manage project documentation with standardized structure, auditing, archiving, and index generation.
 
@@ -29,6 +29,34 @@ The `audit` command scans for:
 - Naming convention violations
 - Generic or missing titles
 - Empty files
+
+## Quick example
+
+```
+/docs-manager audit
+```
+
+**Claude responds:**
+
+```
+docs/ audit — 3 issues found
+
+  docs/api/authentication.md
+    ✗ Missing front matter (no title or description)
+
+  docs/guides/setup.md
+    ✗ Stale date: last_updated 2023-04-12 (over 12 months ago)
+
+  docs/reference/webhooks.md
+    ✗ Generic title: "Webhooks" — consider a more descriptive title
+
+  docs/index.md                 ✓
+  docs/guides/quickstart.md     ✓
+  docs/api/endpoints.md         ✓
+  ... (14 more files, all passing)
+
+Run /docs-manager reindex to regenerate index files.
+```
 
 ## Examples
 

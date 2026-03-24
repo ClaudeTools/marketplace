@@ -1,7 +1,18 @@
 ---
 title: "Debug a Bug"
 description: "Walk through a real bug investigation — REPRODUCE through CONFIRM with actual prompts and output."
+sidebar:
+  order: 6
 ---
+
+**Difficulty: Intermediate**
+
+:::note[Prerequisites]
+- [claudetools installed](../getting-started/installation.md) — plugin active in Claude Code
+- [Core Concepts](../getting-started/core-concepts.md) — understanding hooks and the investigating-bugs skill
+- [Explore a Codebase](explore-a-codebase.md) — the OBSERVE step relies on codebase-pilot navigation
+:::
+
 
 A full walkthrough of the investigating-bugs protocol using a realistic example. See the prompts, the output, and where things go wrong the first time.
 
@@ -144,4 +155,4 @@ The two-strike rule exists to prevent momentum from carrying Claude past a wrong
 
 - [Exploring a Codebase](explore-a-codebase.md) — map the code before diving into a bug
 - [Run a Security Audit](run-security-audit.md) — find security-class bugs proactively
-- [Reference: investigating-bugs skill](../../reference/skills/investigating-bugs/index.md)
+- [Reference: investigating-bugs skill](../../reference/skills/investigating-bugs.md)

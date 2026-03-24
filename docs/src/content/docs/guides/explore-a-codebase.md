@@ -1,7 +1,17 @@
 ---
 title: "Explore a Codebase"
-description: "Explore a Codebase — claudetools documentation."
+description: "Map an unfamiliar project's architecture, trace request flows, find dead code, and assess change blast radius using codebase-pilot."
+sidebar:
+  order: 5
 ---
+
+**Difficulty: Beginner**
+
+:::note[Prerequisites]
+- [claudetools installed](../getting-started/installation.md) — plugin active in Claude Code
+- [Core Concepts](../getting-started/core-concepts.md) — specifically the Codebase Pilot section
+:::
+
 
 Use codebase-pilot to navigate an unfamiliar project — map its structure, trace how a request flows, find dead code, and understand change blast radius — all through natural conversation.
 

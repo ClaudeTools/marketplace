@@ -1,6 +1,6 @@
 ---
 title: "Indexing"
-description: "Indexing — claudetools documentation."
+description: "How codebase-pilot indexes your project — when indexing runs, what triggers reindexing, and how to inspect or reset the index."
 ---
 ## When indexing happens
 

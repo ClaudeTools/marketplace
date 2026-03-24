@@ -1,6 +1,6 @@
 ---
 title: "Agent Mesh"
-description: "Agent Mesh — claudetools documentation."
+description: "Cross-session coordination system for multiple Claude agents — file locks, message passing, shared decisions, and conflict prevention."
 ---
 Cross-session agent coordination system. Enables multiple Claude agents working in the same repository to discover each other, send messages, lock files, and share architectural decisions — preventing conflicts and redundant work.
 

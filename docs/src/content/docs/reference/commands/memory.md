@@ -1,6 +1,6 @@
 ---
 title: "/memory"
-description: "/memory — claudetools documentation."
+description: "Manage persistent cross-session developer memory — add, search, decay, prune, and sync memory entries to CLAUDE.md."
 ---
 Manage developer memory — persistent cross-session knowledge injected into every conversation via CLAUDE.md.
 
@@ -33,6 +33,38 @@ Manage developer memory — persistent cross-session knowledge injected into eve
 | "forget about..." | Treated as `remove` |
 | "update your memory..." | Treated as `replace` |
 | "what do you remember?" | Treated as `view` with summary |
+
+## Quick example
+
+```
+/memory view
+```
+
+**Claude responds:**
+
+```
+Memory entries (6)
+
+  1. Prefers pnpm over npm for package management
+  2. Uses TypeScript strict mode in all projects
+  3. Runs tests with vitest, not jest
+  4. API keys stored in .env.local, never committed
+  5. Database migrations use Drizzle ORM
+  6. Deploys to Fly.io — uses fly deploy, not Docker directly
+```
+
+```
+/memory add "Always use kebab-case for branch names"
+```
+
+**Claude responds:**
+
+```
+Added memory entry:
+  7. Always uses kebab-case for branch names
+
+Memory regenerated — CLAUDE.md updated.
+```
 
 ## Examples
 

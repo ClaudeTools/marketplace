@@ -1,6 +1,6 @@
 ---
 title: "Extending"
-description: "Extending — claudetools documentation."
+description: "Write custom hooks, validators, skills, and agents — hook exit codes, JSON block format, and how to compose new workflows."
 ---
 How to write custom hooks, validators, skills, and agents.
 

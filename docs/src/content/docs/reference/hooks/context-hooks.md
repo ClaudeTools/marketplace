@@ -1,8 +1,12 @@
 ---
 title: "Context Hooks"
-description: "Context Hooks — claudetools documentation."
+description: "Hooks that manage session context — project state injection at startup, file read tracking, memory indexing, and source reindexing on edit."
 ---
 Hooks that manage session context — injecting project state at startup, tracking file reads and edits, maintaining the memory index, and triggering reindexing when source files change.
+
+## What this protects you from
+
+Context hooks prevent Claude from starting each session blind. Without them, every conversation would begin with no knowledge of what tasks are in progress, what files were recently changed, or whether another agent is working in the same repo. These hooks automatically inject relevant state at session start and keep the project index up to date as files change — so Claude's answers stay accurate throughout the session without you having to re-explain the situation.
 
 ---
 

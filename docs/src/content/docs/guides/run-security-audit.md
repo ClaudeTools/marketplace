@@ -1,7 +1,18 @@
 ---
 title: "Run a Security Audit"
 description: "Scan for secrets, injection vulnerabilities, dead security controls, and dependency CVEs — with file:line evidence for every finding."
+sidebar:
+  order: 12
 ---
+
+**Difficulty: Advanced**
+
+:::note[Prerequisites]
+- [claudetools installed](../getting-started/installation.md) — plugin active in Claude Code
+- [Core Concepts](../getting-started/core-concepts.md) — understanding agents and the security-pipeline
+- [Explore a Codebase](explore-a-codebase.md) — security-scan and dead-code use the same codebase-pilot tooling
+:::
+
 
 Use the security-pipeline agent for a full codebase audit, or ask Claude directly for a targeted check — producing structured findings with `file:line` evidence for every issue.
 

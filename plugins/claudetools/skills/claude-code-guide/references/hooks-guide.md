@@ -239,12 +239,10 @@ hook_init
 
 # Phase 2: Source validators
 source "$SCRIPT_DIR/validators/blind-edit.sh"
-source "$SCRIPT_DIR/validators/active-task.sh"
 source "$SCRIPT_DIR/validators/task-scope.sh"
 
 # Phase 3: Run validators in order — stop on first block
 run_pretool_validator "blind-edit-guard"    validate_blind_edit
-run_pretool_validator "require-active-task" validate_active_task
 run_pretool_validator "enforce-task-scope"  validate_task_scope
 
 exit 0
@@ -364,7 +362,7 @@ sid=$(get_session_id "$INPUT")
 | Hook | Event | What it does |
 |---|---|---|
 | `pre-bash-gate.sh` | PreToolUse:Bash | Dispatches dangerous-bash, ai-safety, and unasked-restructure validators |
-| `pre-edit-gate.sh` | PreToolUse:Edit\|Write | Dispatches blind-edit, active-task, task-scope, research-backing, bulk-edit validators |
+| `pre-edit-gate.sh` | PreToolUse:Edit\|Write | Dispatches blind-edit, task-scope, research-backing, bulk-edit, prefer-edit, mesh-lock validators |
 | `track-file-reads.sh` | PostToolUse:Read | Records reads to session-scoped JSONL; powers the blind-edit validator |
 | `session-stop-dispatcher.sh` | Stop | Runs task-quality and stop-gate; blocks stopping with incomplete work |
 | `session-index.sh` | SessionStart | Builds/updates codebase navigation index (30s timeout) |

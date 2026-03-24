@@ -1,6 +1,6 @@
 ---
 title: "/claude-code-guide"
-description: "/claude-code-guide — claudetools documentation."
+description: "Best practices reference for building Claude Code extensions — skills, hooks, agents, plugins, MCP servers, CLAUDE.md, memory, and task systems."
 ---
 Best practices reference for building Claude Code extensions — skills, hooks, agents, plugins, slash commands, scripts, MCP servers, CLAUDE.md, memory, and task systems.
 
@@ -35,6 +35,36 @@ Loaded for all invocations (not included in referenced files):
 - Deterministic tooling over AI inference — if a shell command can do it, use it
 - Verify before claiming done — run the checker, don't trust "looks correct"
 - No stubs or placeholders — implement fully or say you can't
+
+## Quick example
+
+```
+/claude-code-guide skill
+```
+
+**Claude responds:**
+
+```
+Loaded: skills-guide.md
+
+A claudetools skill is a markdown file that defines a reusable workflow.
+Claude reads the skill prompt and follows it when invoked via /skill-name.
+
+Anatomy of a skill:
+  SKILL.md        — the workflow prompt (required)
+  scripts/        — helper scripts the prompt can reference (optional)
+  assets/         — static files (optional)
+
+Minimal skill:
+  /plugin/skills/my-skill/SKILL.md
+  ---
+  description: What this skill does
+  ---
+  Do X, then Y, then Z. Use the Bash tool to run checks.
+
+Invoke via:
+  /my-skill [optional arguments]
+```
 
 ## Examples
 

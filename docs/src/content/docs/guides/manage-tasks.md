@@ -1,7 +1,17 @@
 ---
 title: "Manage Tasks"
 description: "Track work across sessions with persistent tasks, subtask decomposition, and handoff summaries."
+sidebar:
+  order: 10
 ---
+
+**Difficulty: Intermediate**
+
+:::note[Prerequisites]
+- [claudetools installed](../getting-started/installation.md) — plugin active in Claude Code
+- [Core Concepts](../getting-started/core-concepts.md) — understanding the task system and agent mesh
+:::
+
 
 Use `/managing-tasks` to create, track, and hand off work across sessions — with persistent storage, cross-session continuity, and AI-assisted decomposition.
 

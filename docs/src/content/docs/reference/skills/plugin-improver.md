@@ -1,12 +1,28 @@
 ---
 title: "Improving Plugin"
-description: "Improving Plugin — claudetools documentation."
+description: "Autonomous self-improvement loop for the claudetools plugin — collects data, analyzes, implements, measures, and reverts regressions."
 ---
 Run a full autonomous self-improvement loop — collect data, verify prior fixes, analyze, prioritize, implement, measure after-state, and log. Every change is measured: improvements are kept, regressions are caught and reverted.
 
 **Trigger:** Use when the user says "improve", "self-improve", "improvement loop", "iterate", or "optimize the plugin".
 
 **Invocation:** `/plugin-improver [--dry-run] [--category CATEGORY]`
+
+---
+
+## When to use this
+
+Use this skill when hook block rates feel too high, too low, or when you've noticed patterns in `/field-review` that suggest a threshold or prompt needs tuning. It's designed to run autonomously — you don't need to know which specific file to change. Start with `--dry-run` to see what it would do before allowing writes; use `--category` if you already know which area needs attention.
+
+---
+
+## Try it now
+
+```
+/plugin-improver --dry-run
+```
+
+Claude will collect 7 days of session metrics, check if prior improvements held, score open findings by impact, and report the top 3 changes it would make — without touching any files. Remove `--dry-run` to let it apply the changes and re-measure.
 
 ---
 

@@ -1,8 +1,12 @@
 ---
 title: "Quality Hooks"
-description: "Quality Hooks — claudetools documentation."
+description: "Hooks that enforce edit quality — stub detection, blind edit prevention, bulk edit limits, and post-write content validation."
 ---
 Hooks that enforce edit quality — preventing blind edits, catching stubs, limiting edit frequency, and validating content after writes.
+
+## What this protects you from
+
+Quality hooks catch the kind of code problems that pass a quick glance but cause real trouble later. Without them, Claude might edit a file it hasn't read (guessing at the structure), ship a function that throws `"Not implemented"`, or write `@ts-ignore` to silence a type error rather than fix it. These hooks run after every write to check for stubs, type escapes, placeholder text, and empty error handlers — so you don't discover the problem in code review or production.
 
 ---
 

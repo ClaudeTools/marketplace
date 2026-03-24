@@ -1,6 +1,6 @@
 ---
 title: "Architecture"
-description: "Architecture — claudetools documentation."
+description: "How claudetools is structured — the dispatcher pattern, event-to-script mapping, gate scripts, and data directory layout."
 ---
 How claudetools is structured and how its components connect.
 

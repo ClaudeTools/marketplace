@@ -1,7 +1,17 @@
 ---
 title: "Design a UI"
 description: "Build production-grade interfaces with a consistent design system, responsive screenshots, and automated contrast auditing."
+sidebar:
+  order: 11
 ---
+
+**Difficulty: Intermediate**
+
+:::note[Prerequisites]
+- [claudetools installed](../getting-started/installation.md) — plugin active in Claude Code
+- A frontend project (React, Next.js, Vite, Astro, or SvelteKit) or a blank directory
+- [Set Up a New Project](setup-new-project.md) — codebase index must be built before design system generation
+:::
 
 Use the frontend-design skill to build landing pages, dashboards, and components — with design direction established before any code is written, and a visual quality loop built in.
 

@@ -1,6 +1,6 @@
 ---
 title: "Security Pipeline"
-description: "Security Pipeline — claudetools documentation."
+description: "Read-only security audit pipeline — scans for secrets, injection vulnerabilities, dead controls, and CVEs with file:line evidence for every finding."
 ---
 Read-only security audit pipeline. Runs a full codebase audit, security scan, and dead-code analysis to produce a structured security findings report.
 

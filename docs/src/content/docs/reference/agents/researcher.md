@@ -1,6 +1,6 @@
 ---
 title: "Researcher"
-description: "Researcher — claudetools documentation."
+description: "External API and library research agent — checks the local codebase first, then fetches and verifies documentation before implementation begins."
 ---
 Research agent for external APIs, libraries, and documentation. Invoked before implementing code that touches external services.
 

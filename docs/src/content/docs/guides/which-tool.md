@@ -5,6 +5,12 @@ sidebar:
   order: 0
 ---
 
+**Difficulty: Beginner**
+
+:::note[Prerequisites]
+- [claudetools installed](../getting-started/installation.md) — plugin active in Claude Code
+:::
+
 Not sure whether to just ask Claude, use a slash command, or spawn an agent? This page maps common tasks to the right approach.
 
 :::tip[The general rule]

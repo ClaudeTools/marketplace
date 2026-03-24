@@ -1,6 +1,6 @@
 ---
 title: "/field-review"
-description: "/field-review — claudetools documentation."
+description: "Field review of the claudetools plugin — reports on hook performance, false positives, bugs, and gaps from real session data."
 ---
 Field review of the claudetools plugin itself — hooks, validators, skills performance, false positives, bugs, gaps, and praise. Generates a local report and optionally submits a sanitized summary to cross-install telemetry.
 
@@ -32,6 +32,43 @@ Generate a sanitized JSON to `.claude/plugins/feedback/claudetools-review-{date}
 Submit if `--submit` was passed or user confirms when asked:
 ```bash
 bash .../submit-feedback.sh .claude/plugins/feedback/claudetools-review-{date}.json
+```
+
+## Quick example
+
+```
+/field-review --days 7
+```
+
+**Claude responds:**
+
+```
+Field Review — last 7 days
+
+## Overall Assessment
+Plugin is performing well. One false positive in blind-edit and a gap in
+test coverage detection. No critical issues.
+
+## What Works Well
+- dangerous-bash catching rm -rf reliably (7 blocks, 0 false positives this week)
+- secrets validator blocking exposed API keys in 2 separate sessions
+- codebase-pilot symbol search accurate and fast on this TypeScript project
+
+## Issues Found
+
+  Component:  blind-edit validator
+  Severity:   low
+  What happened:   Warned on an edit to tsconfig.json that had been read
+                   earlier in the session (read was in a compressed context block)
+  Should have:     Allowed — file was in context
+  Recommendation:  Widen the "already read" detection window
+
+## Recommendations (prioritized)
+1. Investigate blind-edit false positive rate on config files
+2. Add test run detection for pytest (currently only detects npm test, jest)
+
+Report saved to .claude/plugins/feedback/claudetools-review-2026-03-25.md
+Submit? [y/N]
 ```
 
 ## Examples

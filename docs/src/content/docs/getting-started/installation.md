@@ -1,39 +1,192 @@
 ---
 title: "Installation"
-description: "Installation — claudetools documentation."
+description: "Install claudetools in under 2 minutes — prerequisites, one install command, verification steps, and troubleshooting for common problems."
+sidebar:
+  order: 1
 ---
+
+This guide walks you through installing claudetools from scratch. By the end you will have hooks running, skills available, and a working codebase index. Expected time: 2–5 minutes.
+
+---
+
+## Before you begin
+
+claudetools requires three things. Verify each before installing.
+
+### 1. Claude Code is installed
+
+```bash
+claude --version
+```
+
+**Expected output:**
+```
+Claude Code 1.x.x
+```
+
+If you see `command not found`, install Claude Code first from [claude.ai/code](https://claude.ai/code).
+
+### 2. Node.js 18 or higher
+
+```bash
+node --version
+```
+
+**Expected output:**
+```
+v20.11.0
+```
+
+The version must be `v18.0.0` or higher. If it is lower, or `command not found`, see [Troubleshooting](#node-js-version-too-old) below.
+
+### 3. SQLite3 is available
+
+```bash
+sqlite3 --version
+```
+
+**Expected output:**
+```
+3.45.1 2024-01-30 ...
+```
+
+If SQLite3 is missing, see [Troubleshooting](#sqlite3-not-installed) below.
+
+:::tip[jq makes output more readable]
+`jq` is optional but recommended. claudetools uses it to format JSON output from hooks. Install it with your package manager if you want cleaner output.
+:::
+
+---
+
 ## Install
+
+Open a Claude Code session and run:
 
 ```
 /plugin install claudetools@claudetools-marketplace
 ```
 
-No configuration required. Hooks activate immediately after install.
+:::note[What just happened]
+Claude Code downloaded the claudetools plugin from the marketplace and registered it for your account. The plugin is now active for all sessions in any project.
+:::
 
-## What happens on install
+**Expected response from Claude:**
 
-- **Hooks activate** — 51 hooks across 17 lifecycle events start running on every tool call
-- **Skills become available** — invoke via `/skill-name` or let Claude trigger them automatically
-- **Codebase indexing** — the codebase-pilot index builds at the start of your next session
+```
+Plugin installed: claudetools
+  51 hooks registered across 17 lifecycle events
+  7 skills available via /skill-name
+  Codebase indexing will begin at your next session start
+```
 
-## Requirements
+You should see this response within 10–20 seconds. If Claude times out or returns an error, see [Troubleshooting](#plugin-install-fails) below.
 
-| Requirement | Version |
-|-------------|---------|
-| Claude Code | v1.0+ |
-| Node.js | 18+ |
-| SQLite3 | any recent |
-| jq | recommended |
+---
+
+## Platform-specific notes
+
+### macOS
+
+Node.js is best installed via [Homebrew](https://brew.sh):
+
+```bash
+brew install node sqlite3 jq
+```
+
+If you use `nvm`, ensure your active version is 18+:
+
+```bash
+nvm use 20
+node --version  # should print v20.x.x
+```
+
+Claude Code must be launched from the same terminal session where `nvm` set the path — otherwise hooks cannot find `node`. If hooks fail silently on macOS, this is the most common cause.
+
+### Linux
+
+Install via your package manager:
+
+```bash
+# Debian / Ubuntu
+sudo apt install nodejs npm sqlite3 jq
+
+# Fedora / RHEL
+sudo dnf install nodejs sqlite jq
+
+# Arch
+sudo pacman -S nodejs npm sqlite jq
+```
+
+Check that `node` is in the PATH that Claude Code uses. If Claude Code is launched from a desktop shortcut rather than a terminal, environment variables from `.bashrc` or `.zshrc` may not be set. Launch from a terminal instead.
+
+### Windows (WSL2)
+
+claudetools runs inside WSL2. Open your WSL2 terminal and install there:
+
+```bash
+sudo apt install nodejs npm sqlite3 jq
+```
+
+Open Claude Code from within WSL2 (`code .` from your WSL terminal), not from the Windows Start menu. The Windows-side Claude Code does not see the WSL filesystem the same way.
+
+:::caution[Do not mix Windows and WSL paths]
+If your project is in `C:\Users\...`, clone or move it to a WSL path like `/home/yourname/projects/` before running claudetools. Hooks that traverse the project tree behave unexpectedly across filesystem boundaries.
+:::
+
+---
 
 ## Verify the install
 
-Run `/session-dashboard` after your first session to confirm hooks are firing. You should see hook fire counts, block rates, and tool success metrics.
+Open a new Claude Code session in any project directory and run:
+
+```
+/session-dashboard
+```
+
+**Expected output:**
+
+```
+Session Health — 0 min 12 sec
+
+Plugin status:    active
+Hooks registered: 51
+Skills loaded:    7
+Tasks active:     0
+Hook fires:       2  (session-start hooks)
+Hook blocks:      0
+```
+
+:::note[What to look for]
+- `Plugin status: active` — hooks are registered and running
+- `Hooks registered: 51` — all hooks loaded (fewer means something went wrong during install)
+- `Skills loaded: 7` — all skills available
+:::
+
+If the dashboard shows fewer than 51 hooks or skills loaded is 0, see [Troubleshooting](#hooks-not-firing) below.
+
+---
+
+## What happens on every session start
+
+When you open a Claude Code session after installing claudetools:
+
+1. **51 hooks register** across 17 lifecycle events — safety, quality, process, and context hooks all activate
+2. **Skills become available** — `/exploring-codebase`, `/investigating-bugs`, `/prompt-improver`, and 4 more respond to explicit invocation or trigger automatically based on intent
+3. **Codebase indexing starts** in the background — `session-index.sh` runs `codebase-pilot index` to build a tree-sitter + SQLite index of your project. For large projects this takes 10–30 seconds.
+
+You will not see any of this happen — claudetools is silent when everything works correctly.
+
+---
 
 ## Update
 
 ```
 /plugin update claudetools
 ```
+
+This pulls the latest version from the marketplace and re-registers all hooks. Your existing configuration and memory are preserved.
+
+---
 
 ## Quiet mode
 
@@ -43,4 +196,111 @@ Suppress non-safety hooks for research sessions where hook output would be distr
 CLAUDE_HOOKS_QUIET=1 claude
 ```
 
-Safety hooks always run regardless of quiet mode.
+:::note
+Safety hooks always run regardless of quiet mode. Blocks for `rm -rf`, hardcoded secrets, and sensitive file access cannot be suppressed.
+:::
+
+---
+
+## Troubleshooting
+
+### Plugin install fails
+
+**Symptom:** `/plugin install claudetools@claudetools-marketplace` returns an error or times out.
+
+**Fixes:**
+
+1. Check your internet connection — the marketplace requires outbound HTTPS to `github.com`.
+2. Verify Claude Code is v1.0 or higher: `claude --version`
+3. Try reinstalling: `/plugin uninstall claudetools` then `/plugin install claudetools@claudetools-marketplace`
+4. If the error mentions authentication, your Claude Code session token may have expired. Run `claude auth` to re-authenticate.
+
+---
+
+### Node.js version too old
+
+**Symptom:** hooks fail with a syntax error like `SyntaxError: Unexpected token '?'` or `Error: node: version 16.x.x is too old`.
+
+**Fix — macOS:**
+
+```bash
+brew upgrade node
+# or with nvm:
+nvm install 20 && nvm use 20
+```
+
+**Fix — Linux (Ubuntu/Debian):**
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+```
+
+After upgrading, verify:
+
+```bash
+node --version  # must be v18.0.0 or higher
+```
+
+Then open a new Claude Code session — hooks load `node` at session start, so an existing session will still use the old version.
+
+---
+
+### SQLite3 not installed
+
+**Symptom:** `/session-dashboard` returns an error like `sqlite3: command not found` or `metrics database unavailable`.
+
+**Fix — macOS:**
+
+```bash
+brew install sqlite3
+```
+
+**Fix — Linux:**
+
+```bash
+sudo apt install sqlite3       # Debian/Ubuntu
+sudo dnf install sqlite        # Fedora
+sudo pacman -S sqlite          # Arch
+```
+
+After installing, open a new Claude Code session. The metrics database initialises automatically on first run.
+
+:::tip
+If you cannot install SQLite3 system-wide, claudetools degrades gracefully — safety and quality hooks still run, but the session dashboard and telemetry features are unavailable.
+:::
+
+---
+
+### Hooks not firing
+
+**Symptom:** Claude behaves the same as before install. No blocks, no hook output, `/session-dashboard` shows 0 hook fires even after several tool calls.
+
+**Fixes, in order:**
+
+1. **Check quiet mode** — if `CLAUDE_HOOKS_QUIET=1` is set in your environment, non-safety hooks are suppressed. Run `echo $CLAUDE_HOOKS_QUIET` to check, then `unset CLAUDE_HOOKS_QUIET`.
+
+2. **Verify the plugin is active** — run `/plugin list` and confirm `claudetools` appears. If not, reinstall.
+
+3. **Check that `node` is in PATH** — hooks are shell scripts that call `node`. If Claude Code was launched from a context where your shell's PATH is not set (e.g., a desktop launcher), hooks cannot find `node`. Launch Claude Code from a terminal instead:
+
+   ```bash
+   cd your-project && claude
+   ```
+
+4. **Check `hooks.json` is intact** — if the plugin files were partially installed, the hook registry may be corrupt. Reinstall to fix:
+
+   ```
+   /plugin uninstall claudetools
+   /plugin install claudetools@claudetools-marketplace
+   ```
+
+After each fix, open a new Claude Code session and run `/session-dashboard` to check whether hooks are now registering.
+
+---
+
+## Next steps
+
+- **Take a 5-minute tour** — [Quick Tour](quick-tour.md) walks through hooks, skills, and the session dashboard with real examples
+- **Understand the building blocks** — [Core Concepts](core-concepts.md) explains hooks, skills, agents, and the codebase index
+- **Set up your first project** — [Set Up a New Project](../guides/setup-new-project.md) covers indexing, CLAUDE.md, and first tasks

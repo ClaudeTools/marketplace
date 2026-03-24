@@ -1,6 +1,6 @@
 ---
 title: "Bugfix Pipeline"
-description: "Bugfix Pipeline — claudetools documentation."
+description: "Full-cycle bug fix pipeline — orchestrates REPRODUCE, INVESTIGATE, FIX, REVIEW, and CONFIRM with mandatory evidence at every step."
 ---
 Full-cycle bug fix pipeline. Orchestrates reproduction, investigation, fix implementation, review, and confirmation.
 

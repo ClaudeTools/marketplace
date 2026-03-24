@@ -3,44 +3,70 @@ title: claudetools
 description: Zero-config guardrails, skills, and agent pipelines for Claude Code.
 template: splash
 hero:
-  tagline: 51 hooks. 7 skills. 11 agents. Semantic code navigation across 14 languages. Zero configuration.
+  tagline: Claude Code that catches mistakes, navigates your codebase, and follows structured workflows — automatically.
   actions:
-    - text: Get Started
-      link: /marketplace/getting-started/installation/
+    - text: Quick Tour (5 min)
+      link: /marketplace/getting-started/quick-tour/
       icon: right-arrow
       variant: primary
+    - text: Install
+      link: /marketplace/getting-started/installation/
+      icon: rocket
+      variant: secondary
     - text: View on GitHub
       link: https://github.com/ClaudeTools/marketplace
       icon: external
       variant: minimal
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-## Install
+## Get started in one command
 
 ```bash
 /plugin install claudetools@claudetools-marketplace
 ```
 
-Hooks activate immediately. Skills available via `/skill-name`. No configuration needed.
+Hooks activate immediately. No configuration. No restart.
 
 ---
 
-## What's included
+## Where to start
+
+<CardGrid>
+  <LinkCard
+    title="New to claudetools?"
+    description="Install in 60 seconds, then take the Quick Tour — real prompts, real hooks firing, real results."
+    href="/marketplace/getting-started/installation/"
+  />
+  <LinkCard
+    title="Know the basics?"
+    description="Pick a workflow guide: debug a bug, build a feature, review code, run a security audit."
+    href="/marketplace/guides/debug-a-bug/"
+  />
+  <LinkCard
+    title="Looking something up?"
+    description="Full reference for every hook, skill, agent, and CLI command."
+    href="/marketplace/reference/hooks/"
+  />
+</CardGrid>
+
+---
+
+## What claudetools fixes
 
 <CardGrid stagger>
-  <Card title="Guardrail Hooks" icon="shield">
-    51 hooks in 4 categories — safety, quality, process, context. Run automatically on every tool call.
+  <Card title="Claude breaks your build" icon="shield">
+    Ever had Claude run `rm -rf` or push directly to main? Safety hooks intercept destructive commands before they execute — and explain what went wrong.
   </Card>
-  <Card title="Intelligent Skills" icon="puzzle">
-    7 workflow skills Claude triggers automatically. Debugging, codebase exploration, prompt engineering, UI design, task management.
+  <Card title="Debugging goes in circles" icon="warning">
+    Claude guesses, reverts, guesses again. The investigating-bugs skill enforces a 6-step protocol: reproduce first, fix last. No more patch-and-pray.
   </Card>
-  <Card title="Agent Pipelines" icon="rocket">
-    4 full-cycle pipelines (feature, bugfix, security, refactor) plus 7 standalone agents.
+  <Card title="Unfamiliar codebases take forever" icon="magnifier">
+    Reading file by file to understand a project wastes tokens and time. Codebase Pilot indexes your repo with tree-sitter — find symbols, trace imports, map architecture in seconds.
   </Card>
-  <Card title="Codebase Pilot" icon="magnifier">
-    Tree-sitter + SQLite semantic indexing across 14 languages. Find symbols, trace imports, detect dead code.
+  <Card title="Long sessions lose context" icon="puzzle">
+    Claude forgets what it decided three messages ago. The memory system carries decisions, preferences, and project state across every session automatically.
   </Card>
 </CardGrid>
 

@@ -1,12 +1,28 @@
 ---
 title: "Improving Prompts"
-description: "Improving Prompts — claudetools documentation."
+description: "Skill that transforms rough input into structured XML prompts — execute immediately, review first, or convert into a tracked task tree."
 ---
 Transforms rough user input into structured XML prompts and executes them. Handles triage, codebase context gathering, generation via subagent, validation, and execution.
 
 **Trigger:** Use when the user says "improve prompt", "make this work better", "prompt engineer", or "structure a prompt".
 
 **Invocation:** `/prompt-improver [plan|task] [prompt-text or description]`
+
+---
+
+## When to use this
+
+Use this skill when you have a rough idea of what you want but the prompt you'd write is vague, missing context, or likely to produce a shallow result. It's also useful before kicking off a long multi-step task — use `task` mode to convert a rough description into a structured task tree with acceptance criteria before anything runs. If you're about to paste a one-liner into chat and hope for the best, run it through here first.
+
+---
+
+## Try it now
+
+```
+/prompt-improver plan Refactor the payment module to use the new Stripe SDK
+```
+
+Claude will generate a structured XML prompt, show you the full result with its assumptions, then offer to execute, revise, or discard it. Switch to `/prompt-improver task ...` to convert the same input into a persistent tracked task tree instead.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "/logs"
-description: "/logs — claudetools documentation."
+description: "Query Claude Code session logs — extract /btw side-questions, conversation history, tool usage stats, errors, and full-text search."
 ---
 Extract and query Claude Code session logs — `/btw` side-questions, conversation history, tool usage, errors, and search.
 
@@ -31,6 +31,39 @@ Default subcommand (no argument): `summary`
 | `--all` | Include all projects |
 | `--session ID` | Filter to a specific session |
 | `--from VALUE` | Date filter: `today`, `yesterday`, `"N days ago"`, `this week`, `YYYY-MM-DD` |
+
+## Quick example
+
+```
+/logs btw
+```
+
+**Claude responds:**
+
+```
+/btw — last side question (this session)
+
+  Q: why does this test file import from ../../utils/test-helpers?
+  A: That path resolves to src/utils/test-helpers.ts, a shared module with
+     mock factory functions (createMockUser, createMockOrder, etc.) used across
+     all test suites. It's not in the same directory because it's shared, not
+     local to the payments test suite.
+```
+
+```
+/logs errors
+```
+
+**Claude responds:**
+
+```
+Errors — last 10 sessions
+
+  2026-03-25  Edit failed: file path not found (src/utils/formater.ts — likely typo)
+  2026-03-24  Bash failed: jest --testPathPattern payments (exit 1 — see conversation)
+  2026-03-24  Edit failed: old_string not found in auth.ts (stale context)
+  2026-03-22  Bash failed: npx tsc --noEmit (3 type errors — resolved in session)
+```
 
 ## Examples
 

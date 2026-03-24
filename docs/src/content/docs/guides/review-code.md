@@ -1,7 +1,17 @@
 ---
 title: "Review Code"
-description: "Review Code — claudetools documentation."
+description: "Run a structured 4-pass code review on a branch, a file, or uncommitted changes — correctness, security, performance, maintainability."
+sidebar:
+  order: 8
 ---
+
+**Difficulty: Intermediate**
+
+:::note[Prerequisites]
+- [claudetools installed](../getting-started/installation.md) — plugin active in Claude Code
+- A git repository with code changes to review (a branch, file, or uncommitted diff)
+:::
+
 
 Use `/code-review` to run a structured 4-pass review — correctness, security, performance, maintainability — on a branch, a file, or your uncommitted changes.
 
@@ -129,4 +139,4 @@ Claude focuses the 4 passes on that single file:
 
 - [Build a Feature](build-a-feature.md) — the feature pipeline runs code-review automatically after implementation
 - [Run a Security Audit](run-security-audit.md) — full codebase security scan, not just changed files
-- [Reference: code-review skill](../reference/skills.md)
+- [Reference: /code-review command](../reference/commands/code-review.md)

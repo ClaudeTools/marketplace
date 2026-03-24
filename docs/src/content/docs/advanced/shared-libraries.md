@@ -1,6 +1,6 @@
 ---
 title: "Shared Libraries"
-description: "Shared Libraries — claudetools documentation."
+description: "Reusable shell modules sourced by hook scripts — adaptive weights, project detection, database initialization, and telemetry helpers."
 ---
 Reusable shell modules in `plugin/scripts/lib/`. All are designed to be sourced (`source lib/foo.sh`), not executed directly.
 

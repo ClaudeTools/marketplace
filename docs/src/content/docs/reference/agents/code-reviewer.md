@@ -1,6 +1,6 @@
 ---
 title: "Code Reviewer"
-description: "Code Reviewer — claudetools documentation."
+description: "Read-only code review agent — 4-pass structured review using codebase-pilot for context before flagging correctness, security, and performance issues."
 ---
 Read-only code review agent. Invoked for structured code quality review without modifying files.
 

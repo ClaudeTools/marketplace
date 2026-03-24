@@ -1,6 +1,6 @@
 ---
 title: "Task System"
-description: "Task System — claudetools documentation."
+description: "MCP server for persistent task tracking — cross-session continuity, dependency management, history audit log, and quality gate integration."
 ---
 MCP server providing persistent task tracking with cross-session continuity, dependency management, history, and quality gate integration. Tasks persist in `.tasks/` and survive context compaction.
 

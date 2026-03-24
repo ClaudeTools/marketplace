@@ -1,6 +1,6 @@
 ---
 title: "Validators"
-description: "Validators — claudetools documentation."
+description: "26 modular gate functions — every validator, its severity, which gate calls it, and what it checks."
 ---
 26 modular check functions in `plugin/scripts/validators/`. Each validator is sourced by a gate dispatcher and returns exit code 0 (allow), 1 (warn), or 2 (block).
 

@@ -1,6 +1,6 @@
 ---
 title: "/code-review"
-description: "/code-review — claudetools documentation."
+description: "Structured 4-pass code review command — correctness, security, performance, and maintainability. Read-only, no file modifications."
 ---
 Structured 4-pass code review covering correctness, security, performance, and maintainability. Read-only — does not modify files.
 
@@ -42,6 +42,33 @@ Structured 4-pass code review covering correctness, security, performance, and m
 ```
 
 Categories with no findings are omitted. The Positive section is always included.
+
+## Quick example
+
+```
+/code-review src/api/payments.ts
+```
+
+**Claude responds:**
+
+```
+## Code Review: src/api/payments.ts
+
+### Critical (must fix)
+- payments.ts:84  — SQL query built with string concatenation; use parameterized queries
+- payments.ts:127 — Stripe secret key read from process.env without validation; throws at runtime if unset
+
+### Important (should fix)
+- payments.ts:43  — refundPayment() catches Error but re-throws as a plain string; callers can't distinguish error types
+- payments.ts:99  — no idempotency key on charge creation; duplicate charges possible if request retried
+
+### Suggestions (nice to have)
+- payments.ts:15  — extracting the retry logic into a shared helper would reduce duplication with subscriptions.ts
+
+### Positive
+- Consistent use of db transactions for charge + ledger updates
+- Amount validation on entry (line 31) before any external calls
+```
 
 ## Examples
 

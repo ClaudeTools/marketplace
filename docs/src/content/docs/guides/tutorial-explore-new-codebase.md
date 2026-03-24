@@ -1,0 +1,190 @@
+---
+title: "Tutorial: Explore a New Codebase"
+description: "Use codebase-pilot to understand an unfamiliar project — map the structure, find key symbols, trace imports, and get oriented in under 10 minutes."
+sidebar:
+  order: 2
+---
+
+**Goal:** Open an unfamiliar project and build a mental model of it using codebase-pilot — without reading every file manually.
+
+**Prerequisites:**
+- claudetools installed — see [Installation](/getting-started/installation/)
+- Familiar with codebase-pilot — see [Core Concepts](/getting-started/core-concepts/#codebase-pilot)
+
+**Time estimate:** ~10 minutes
+
+---
+
+## The scenario
+
+You've just been handed a Node.js API project you've never seen before. It has maybe 40 files across a few directories. Your job is to understand how it's structured well enough to start contributing. You don't want to read every file — you want to orient yourself efficiently.
+
+---
+
+## Step 1 — Ask for a project overview
+
+Start with the broadest possible question:
+
+> **You:** "I just joined this project. Give me a high-level map of how it's structured."
+
+:::note[What just happened: codebase-pilot map]
+Claude runs `codebase-pilot map` against the indexed project. This returns languages detected, entry points, key exports, directory breakdown, and approximate size — without reading individual files.
+:::
+
+> **Claude:** "Here's what I can see:
+>
+> **Languages:** TypeScript (primary), SQL (migrations)
+>
+> **Entry points:**
+> - `src/index.ts` — Express server bootstrap
+> - `src/worker.ts` — Background job processor
+>
+> **Top-level directories:**
+> - `src/routes/` — 8 route handlers
+> - `src/services/` — 12 service classes
+> - `src/models/` — 6 data model definitions
+> - `src/middleware/` — 4 middleware functions
+> - `migrations/` — 14 SQL migration files
+>
+> **Key exports from `src/index.ts`:** `app`, `startServer`
+>
+> This looks like a layered Express API: routes call services, services use models, models talk to the database. The worker appears to process background jobs independently."
+
+You now know the structure without reading a single file.
+
+---
+
+## Step 2 — Find a specific symbol
+
+You've been asked to add a new endpoint for user profile updates. Before writing anything, find where user-related logic lives:
+
+> **You:** "Where is user authentication handled? Find the auth symbol."
+
+> **Claude:** "Running `codebase-pilot find-symbol "authenticate"`...
+>
+> ```
+> src/middleware/auth.ts:12    authenticate     function
+> src/services/auth-service.ts:34   AuthService.verify   method
+> src/routes/auth.ts:8         POST /auth/login    route handler
+> ```
+>
+> There are three relevant locations:
+> - **`src/middleware/auth.ts:12`** — the middleware function that guards routes
+> - **`src/services/auth-service.ts:34`** — the service that verifies credentials
+> - **`src/routes/auth.ts:8`** — the login endpoint itself"
+
+You now have precise locations without grepping manually or reading every file.
+
+---
+
+## Step 3 — Trace what depends on a symbol
+
+You want to add profile update logic to `UserService`, but first you need to know what currently uses it — to avoid breaking callers:
+
+> **You:** "What uses UserService? Show me everything that depends on it."
+
+> **Claude:** "Running `codebase-pilot find-usages "UserService"`...
+>
+> ```
+> src/routes/users.ts:3       import { UserService }
+> src/routes/auth.ts:5        import { UserService }
+> src/worker.ts:9             import { UserService }
+> tests/services/user.test.ts:2  import { UserService }
+> ```
+>
+> Four files import `UserService`:
+> - **`routes/users.ts`** — probably the main user CRUD routes
+> - **`routes/auth.ts`** — uses it for login (fetching user by email)
+> - **`worker.ts`** — background job, likely for email sending or cleanup
+> - **`tests/`** — the test file you'll need to update"
+
+:::note[Why this matters]
+Before adding a method to `UserService`, you now know exactly which files to check for affected behavior. You won't discover a hidden dependency three commits later.
+:::
+
+---
+
+## Step 4 — Understand a specific file
+
+You want to understand `src/routes/users.ts` before editing it:
+
+> **You:** "Give me an overview of `src/routes/users.ts` — what's in it without reading the whole thing."
+
+> **Claude:** "Running `codebase-pilot file-overview "src/routes/users.ts"`...
+>
+> ```
+> src/routes/users.ts
+> ├── imports      UserService, validateBody, authenticate (3 imports)
+> ├── GET /users          listUsers       line 12
+> ├── GET /users/:id      getUser         line 28
+> ├── POST /users         createUser      line 44
+> ├── PATCH /users/:id    updateUser      line 63
+> └── DELETE /users/:id   deleteUser      line 81
+> ```
+>
+> Five route handlers. All of them use the `authenticate` middleware. The `PATCH /users/:id` route at line 63 is likely where you'll add the profile update logic."
+
+You know exactly where to go before opening the file.
+
+---
+
+## Step 5 — Find connected files
+
+You're about to edit `src/services/user-service.ts`. Before you do, find everything connected to it:
+
+> **You:** "What files are connected to `src/services/user-service.ts`? Imports and what it imports."
+
+> **Claude:** "Running `codebase-pilot related-files "src/services/user-service.ts"`...
+>
+> **Imports (what this file depends on):**
+> - `src/models/user.ts` — User model
+> - `src/lib/db.ts` — database client
+> - `src/lib/hash.ts` — password hashing utility
+>
+> **Imported by (what depends on this file):**
+> - `src/routes/users.ts`
+> - `src/routes/auth.ts`
+> - `src/worker.ts`
+> - `tests/services/user.test.ts`"
+
+You now have the full picture of what this file touches and what touches it — before writing a single line.
+
+---
+
+## Step 6 — Ask a synthesis question
+
+You've gathered enough information to ask a higher-level question:
+
+> **You:** "Based on what you've found, where should I add a `getUserProfile` method — in UserService, a new ProfileService, or somewhere else?"
+
+> **Claude:** "Based on the structure:
+>
+> - `UserService` already handles user fetching and mutation. A `getUserProfile` method fits naturally there — it avoids a new service dependency in the routes.
+> - If profile logic becomes complex (avatar uploads, preferences, social links), a `ProfileService` that delegates identity-only lookups to `UserService` would be the right split.
+>
+> For now: add `getUserProfile` to `UserService` at the bottom of `src/services/user-service.ts`. The `GET /users/:id` route at `routes/users.ts:28` is the most likely caller."
+
+You have a concrete recommendation grounded in the actual project structure — not a generic answer.
+
+---
+
+## What you learned
+
+| Feature | What it did |
+|---------|------------|
+| `codebase-pilot map` | Gave a project overview without reading files |
+| `codebase-pilot find-symbol` | Located `authenticate` and `AuthService.verify` precisely |
+| `codebase-pilot find-usages` | Showed all callers of `UserService` before editing |
+| `codebase-pilot file-overview` | Listed all route handlers in `users.ts` without reading the file |
+| `codebase-pilot related-files` | Mapped dependencies in both directions |
+
+The whole exploration took 6 questions. You didn't read a file until you knew exactly which one and why.
+
+---
+
+## Next steps
+
+- [Tutorial: Your First Bug Fix](tutorial-first-bug-fix.md) — apply this orientation to debugging
+- [Tutorial: Safe Refactor](tutorial-safe-refactor.md) — use codebase-pilot for change-impact before renaming
+- [Explore a Codebase guide](explore-a-codebase.md) — the full exploration guide with more advanced scenarios
+- [Reference: Codebase Pilot CLI](/reference/codebase-pilot/cli-reference/)

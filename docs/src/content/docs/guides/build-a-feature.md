@@ -1,7 +1,18 @@
 ---
 title: "Build a Feature"
 description: "Walk through a real feature build — task creation, parallel implementation, quality hooks, and verification."
+sidebar:
+  order: 7
 ---
+
+**Difficulty: Intermediate**
+
+:::note[Prerequisites]
+- [claudetools installed](../getting-started/installation.md) — plugin active in Claude Code
+- [Core Concepts](../getting-started/core-concepts.md) — understanding agents, skills, and the task system
+- [Manage Tasks](manage-tasks.md) — the pipeline creates and tracks tasks automatically
+:::
+
 
 A realistic walkthrough of building a medium-complexity feature end-to-end. See what Claude actually does at each stage.
 
@@ -154,4 +165,4 @@ Three files created, two files modified, six tests passing. The entire flow from
 - [Manage Tasks](manage-tasks.md) — create and track feature tasks before building
 - [Review Code](review-code.md) — run a standalone code review on any output
 - [Coordinate Agents](coordinate-agents.md) — understand how TeamCreate teammates share decisions
-- [Reference: feature-pipeline agent](../../reference/agents/feature-pipeline/index.md)
+- [Reference: feature-pipeline agent](../../reference/agents/feature-pipeline.md)

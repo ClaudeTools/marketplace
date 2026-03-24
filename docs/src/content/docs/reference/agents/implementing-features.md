@@ -1,6 +1,6 @@
 ---
 title: "Implementing Features"
-description: "Implementing Features — claudetools documentation."
+description: "Implementation agent for multi-file code changes — reads widely before editing, tracks work in tasks, and verifies correctness after every change."
 ---
 Implementation agent for building features and making multi-file code changes.
 

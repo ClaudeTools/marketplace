@@ -1,7 +1,19 @@
 ---
 title: "Coordinate Agents"
 description: "Run multiple Claude agents in parallel with file locks, shared decisions, and message passing."
+sidebar:
+  order: 13
 ---
+
+**Difficulty: Advanced**
+
+:::note[Prerequisites]
+- [claudetools installed](../getting-started/installation.md) — plugin active in Claude Code
+- [Core Concepts](../getting-started/core-concepts.md) — understanding agents and the agent mesh
+- [Manage Tasks](manage-tasks.md) — multi-agent sessions use the task system for coordination
+- [Build a Feature](build-a-feature.md) — the feature-pipeline is the most common multi-agent workflow
+:::
+
 
 Use the agent mesh to coordinate multiple Claude agents working in the same repository simultaneously — checking who is active, locking files, sharing architectural decisions, and passing messages between sessions.
 

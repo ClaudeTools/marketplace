@@ -1,6 +1,6 @@
 ---
 title: "Rules"
-description: "Rules — claudetools documentation."
+description: "File-type-scoped behavioral rules injected into the system prompt — how rules work, where they live, and how to write custom rules."
 ---
 Rules are markdown files injected into the system prompt when Claude is working on matching file types. They provide persistent behavioral guidance without consuming context when irrelevant.
 

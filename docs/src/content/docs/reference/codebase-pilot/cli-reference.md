@@ -1,6 +1,6 @@
 ---
 title: "CLI Reference"
-description: "CLI Reference — claudetools documentation."
+description: "Complete CLI reference for codebase-pilot — every command, flag, and output format for symbol search, import tracing, and dead code detection."
 ---
 All commands use the codebase-pilot CLI:
 

@@ -1,8 +1,12 @@
 ---
 title: "Hooks"
-description: "Hooks — claudetools documentation."
+description: "51 hooks across 17 lifecycle events — complete index organized by category with event names, severity, and link to detailed reference."
 ---
 51 hooks across 17 lifecycle events. Guardrails that run automatically on every tool call.
+
+## What hooks protect you from
+
+Without hooks, Claude Code operates without guardrails — it can run destructive shell commands, overwrite files it hasn't read, commit half-finished work, or write secrets directly into your source. Hooks intercept every tool call before and after it executes, so those mistakes are caught automatically rather than discovered after the fact. You don't need to remember to check; the hooks run whether you think about them or not.
 
 ## Lifecycle Events
 

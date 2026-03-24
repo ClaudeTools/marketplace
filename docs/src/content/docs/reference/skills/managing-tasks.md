@@ -1,12 +1,28 @@
 ---
 title: "Managing Tasks"
-description: "Managing Tasks — claudetools documentation."
+description: "Skill for persistent task tracking with cross-session continuity, dependency management, and session handoff summaries."
 ---
 Extended task management with persistence, cross-session continuity, and validation. Provides a subcommand router on top of the built-in task system.
 
 **Trigger:** Use when the user says `/task-manager`, "task status", "manage tasks", "restore tasks", or "session handoff".
 
 **Invocation:** `/managing-tasks [subcommand] [arguments]`
+
+---
+
+## When to use this
+
+Use this skill when a piece of work is too large to finish in one session, or when you want to track progress across multiple steps without losing context when Claude's memory resets. It's also the right tool at the start of a session — run `restore` to pick up exactly where you left off, with all tasks, subtasks, and decisions still intact. If you're about to ask Claude to do five distinct things, create and decompose a task first.
+
+---
+
+## Try it now
+
+```
+/managing-tasks new Migrate the user authentication module from JWT to session cookies
+```
+
+Claude will gather codebase context, enrich the task description with acceptance criteria and file references, create it in the persistent task system, and offer to decompose it into subtasks. Run `/managing-tasks status` at any point to see where things stand.
 
 ---
 

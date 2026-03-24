@@ -1,6 +1,6 @@
 ---
 title: "Telemetry"
-description: "Telemetry — claudetools documentation."
+description: "What claudetools collects, where events are stored locally, how uploads work, and how to opt out completely."
 ---
 What claudetools collects, where it goes, and how to opt out.
 

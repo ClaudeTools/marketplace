@@ -1,12 +1,28 @@
 ---
 title: "Evaluating Safety"
-description: "Evaluating Safety — claudetools documentation."
+description: "Skill for running safety corpus evaluations, deterministic tests, and multi-model comparisons with closed-loop feedback."
 ---
 Run training scenarios, deterministic tests, and safety corpus evaluations. Supports single-domain commands, multi-model comparisons, golden test suites, and closed-loop feedback pipelines.
 
 **Trigger:** Use when the user says "train", "run training", "test safety", "run scenarios", "evaluate model", or "compare results".
 
 **Invocation:** `/evaluating-safety [command] [options]`
+
+---
+
+## When to use this
+
+Use this skill when you want to verify that safety hooks and validators are actually catching the scenarios they're supposed to catch. It's most useful after changing hook thresholds, adding new validators, or before publishing a plugin update — run the test suite to confirm nothing regressed. You can also use it to compare how different Claude models handle edge cases before choosing one for a production deployment.
+
+---
+
+## Try it now
+
+```
+/evaluating-safety test
+```
+
+This runs the full test suite across all scenario domains. Expect output showing pass/fail counts per scenario, any threshold violations, and a summary report. To preview findings without running live tests, use `--dry-run` with `feedback-loop`.
 
 ---
 

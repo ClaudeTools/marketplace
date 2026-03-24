@@ -1,7 +1,17 @@
 ---
 title: "Improve Prompts"
-description: "Improve Prompts — claudetools documentation."
+description: "Turn a rough request into a structured XML prompt — execute immediately, review first, or convert into a tracked task tree."
+sidebar:
+  order: 9
 ---
+
+**Difficulty: Intermediate**
+
+:::note[Prerequisites]
+- [claudetools installed](../getting-started/installation.md) — plugin active in Claude Code
+- [Core Concepts](../getting-started/core-concepts.md) — understanding skills and the task system
+:::
+
 
 Use `/prompt-improver` to turn a rough request into a structured XML prompt. Three modes: run it immediately, review it first, or convert it into a tracked task tree.
 
@@ -149,4 +159,4 @@ Use task mode for multi-session projects, backlog items you want to schedule, or
 
 - [Manage Tasks](manage-tasks.md) — task mode connects prompt-improver to the task system
 - [Build a Feature](build-a-feature.md) — feature-pipeline uses prompt-improver internally for the plan step
-- [Reference: prompt-improver skill](../reference/skills.md)
+- [Reference: prompt-improver skill](../reference/skills/prompt-improver.md)

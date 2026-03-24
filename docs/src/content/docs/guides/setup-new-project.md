@@ -1,7 +1,17 @@
 ---
 title: "Set Up a New Project"
-description: "Set Up a New Project — claudetools documentation."
+description: "Configure claudetools for a new or existing project — indexing, session dashboard, and a CLAUDE.md that captures project conventions."
+sidebar:
+  order: 4
 ---
+
+**Difficulty: Beginner**
+
+:::note[Prerequisites]
+- [claudetools installed](../getting-started/installation.md) — plugin active in Claude Code
+- A git repository — run `git init` in your project directory if you don't have one yet
+:::
+
 Get claudetools working in a new or existing project — from install through first session, with indexing, session dashboard, and a CLAUDE.md that captures project conventions.
 
 

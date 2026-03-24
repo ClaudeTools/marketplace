@@ -1,6 +1,6 @@
 ---
 title: "Architect"
-description: "Architect — claudetools documentation."
+description: "Read-only architecture review agent — analyses codebase structure, evaluates design trade-offs, and produces structured refactoring plans."
 ---
 Architecture review and planning agent. Invoked for design decisions, refactoring plans, and impact analysis.
 

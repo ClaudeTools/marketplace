@@ -1,6 +1,6 @@
 ---
 title: "Test Writer"
-description: "Test Writer — claudetools documentation."
+description: "Test generation agent — matches existing project patterns and frameworks, focusing on edge cases, error paths, and boundary values."
 ---
 Generate tests following existing project patterns. Invoked when test coverage is needed for new or changed code.
 

@@ -1,8 +1,12 @@
 ---
 title: "Process Hooks"
-description: "Process Hooks — claudetools documentation."
+description: "Hooks that enforce workflow discipline — git commit gates, task management, team coordination, and task completion quality gates."
 ---
 Hooks that enforce workflow process — git discipline, task management, team coordination, and task completion quality gates.
+
+## What this protects you from
+
+Process hooks prevent the workflow failures that are invisible in the moment but painful later. Without them, you might end a session with a dozen changed files and no commits — losing context when the conversation compresses. A task might be marked done before the tests were actually run. Or one agent might start editing a file that another agent is mid-refactor. These hooks run at session boundaries, task completions, and team events to keep work tracked, committed, and coordinated.
 
 ---
 

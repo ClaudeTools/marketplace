@@ -1,12 +1,28 @@
 ---
 title: "Exploring Codebase"
-description: "Exploring Codebase — claudetools documentation."
+description: "Skill that wraps codebase-pilot CLI into workflow modes — symbol search, import tracing, architecture mapping, and dependency analysis."
 ---
 Structured codebase navigation using the codebase-pilot CLI. Wraps CLI commands into workflow modes that chain for deeper understanding.
 
 **Trigger:** Use when the user asks to understand unfamiliar code, find where something is defined, trace what calls a function, explore how a module works, or get a project overview.
 
 **Invocation:** `/exploring-codebase [query or file path]`
+
+---
+
+## When to use this
+
+Use this skill any time you're working in a codebase you don't fully know — whether that's day one on a new project or tracking down where an obscure function is defined. It's also useful mid-task when you need to trace what a change will affect before making it. Rather than reading files one by one and hoping you find the right one, this skill uses the semantic index to answer structural questions directly.
+
+---
+
+## Try it now
+
+```
+/exploring-codebase How does this project handle authentication?
+```
+
+Claude will use codebase-pilot to map the project, find auth-related symbols, trace their import chains, and return a structured summary covering entry points, middleware, token flow, and key files — without reading every file blindly.
 
 ---
 

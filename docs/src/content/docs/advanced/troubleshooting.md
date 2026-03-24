@@ -1,6 +1,6 @@
 ---
 title: "Troubleshooting"
-description: "Troubleshooting — claudetools documentation."
+description: "Solutions to common problems — hooks not firing, codebase-pilot indexing failures, test runner errors, and MCP server issues."
 ---
 Common issues and how to resolve them.
 
@@ -101,4 +101,4 @@ Refresh the token before pushing:
 gh secret set PUBLIC_REPO_TOKEN --repo ClaudeTools/marketplace-dev --body "$(gh auth token)"
 ```
 
-See the [publish workflow reference](/reference/publish/) for the full publish sequence.
+See the project CLAUDE.md for the full publish sequence.

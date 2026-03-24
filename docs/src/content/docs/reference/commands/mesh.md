@@ -1,6 +1,6 @@
 ---
 title: "/mesh"
-description: "/mesh — claudetools documentation."
+description: "Multi-agent coordination command — check active agents, lock files, send messages, and share architectural decisions across worktrees."
 ---
 Coordinate with other Claude agents working in the same repository. Check agent status, send messages, lock files, and share architectural decisions.
 
@@ -45,6 +45,42 @@ Acquire an advisory lock on a file before multi-file changes. Use `who <path>` t
 Store an architectural decision in the shared context store. Use `context --list` to see all shared decisions.
 
 **When to use:** After making an architectural choice that affects the whole codebase.
+
+## Quick example
+
+```
+/mesh status
+```
+
+**Claude responds:**
+
+```
+Agent Mesh — 2 agents active
+
+  frontend-agent  (worktree: feature/redesign)
+    Status:  active
+    Locks:   src/components/Nav.tsx, src/styles/tokens.css
+    Last seen: 4 min ago
+
+  backend-agent  (worktree: feature/auth-rewrite)
+    Status:  idle
+    Locks:   src/middleware/auth.ts
+    Last seen: 12 min ago
+
+Shared decisions:
+  auth-strategy  →  "session-based, not JWT"
+  db-client      →  "use existing PrismaClient singleton"
+```
+
+```
+/mesh send frontend-agent "Heads up — I'm updating the auth token shape, NavBar may need changes"
+```
+
+**Claude responds:**
+
+```
+Message sent to frontend-agent.
+```
 
 ## Examples
 
