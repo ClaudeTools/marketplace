@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
+      - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
 
 permissions:
@@ -27,7 +28,7 @@ jobs:
       - name: Install and build docs
         run: |
           cd docs
-          npm ci
+          npm install
           npx astro build
       - uses: actions/upload-pages-artifact@v3
         with:
