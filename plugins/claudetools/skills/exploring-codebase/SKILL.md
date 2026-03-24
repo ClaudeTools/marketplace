@@ -5,7 +5,7 @@ argument-hint: [query or file path]
 allowed-tools: Read, Bash, Grep, Glob
 metadata:
   author: Owen Innes
-  version: 1.1.0
+  version: 2.0.0
   category: navigation
   tags: [explore, find, trace, navigate, symbols, architecture, dependencies]
 ---
@@ -28,6 +28,10 @@ Before running commands, determine the right mode based on the user's intent:
 | "Where is X defined?" / "Find the function Y" | **find** | `find-symbol`, then `file-overview` on the result |
 | "How does this file/module work?" / "What does X depend on?" | **explore** | `file-overview` + `related-files` |
 | "What uses X?" / "Trace the dependency chain for Y" | **trace** | `find-usages` + `related-files` on each result |
+| "Trace a field through the codebase" / "Where does amount_due get transformed?" | **trace-field** | `trace-field.sh` script |
+| "Which handler serves this route?" / "Trace GET /api/v1/dashboard" | **find-route** | `find-route.sh` script |
+| "Find all queries on the transactions table" | **find-queries** | `find-queries.sh` script |
+| "Compare schema.sql vs types.ts for mismatches" | **diff-schema** | `diff-schema.sh` script |
 | Free-form question about the codebase | **navigate** | `navigate` (query-driven search) |
 
 ## Mode: map
@@ -122,6 +126,62 @@ Common multi-step navigation sequences:
 1. `find-usages` on the symbol being changed → see all consumers
 2. `related-files` on each consumer → see secondary effects
 3. Report the full blast radius before making changes
+
+## Mode: trace-field
+
+Follow a field/variable name across the entire codebase, categorized by role (definition, transformation, query, display).
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/trace-field.sh "amount_due"
+```
+
+Shows every file that references the field, grouped into:
+- **Definitions** — where the field is declared in types/interfaces/schemas
+- **Transforms** — where the field is mapped, converted, or assigned
+- **Queries** — SQL/ORM references (SELECT, WHERE, SUM)
+- **Display** — frontend/UI rendering references
+
+**When to use:** "Where does this value get lost?", "Trace amount_due from API to frontend", "What transforms this field?"
+
+## Mode: find-route
+
+Trace an HTTP route from registration through handler, middleware, to DB calls.
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/find-route.sh "/api/v1/dashboard"
+```
+
+Shows the full chain:
+- Route registration (Express/Hono/framework router)
+- Handler function (located via codebase-pilot find-symbol)
+- Middleware in the chain
+- Database calls in handler files
+
+**When to use:** "Which handler serves GET /api/dashboard?", "Trace this endpoint to its DB queries"
+
+## Mode: find-queries
+
+Find all SQL queries referencing a table and show column usage patterns.
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/find-queries.sh "transactions"
+```
+
+Categorizes queries into SELECT, INSERT/UPDATE/DELETE, WHERE clauses, aggregate functions (SUM/AVG/COUNT), and schema DDL.
+
+**When to use:** "What queries hit the transactions table?", "Which columns are SELECTed from users?", "Find all SUMs on this table"
+
+## Mode: diff-schema
+
+Compare field/column names between two files — SQL schema vs TypeScript interface, or any two type definition files.
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/diff-schema.sh "schema.sql" "types.ts"
+```
+
+Shows fields only in file 1, only in file 2, and in both. Catches schema parity bugs between database definitions and application types.
+
+**When to use:** "Compare the DB schema to the TypeScript types", "Are there column mismatches between these two files?"
 
 ## Context Awareness
 
