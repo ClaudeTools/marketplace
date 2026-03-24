@@ -38,35 +38,35 @@
 
 <br>
 
-## <img src="https://img.shields.io/badge/-Skills-1A7F37?style=flat-square" alt="" height="20"> Skills
+## <img src="https://img.shields.io/badge/-Commands-4338CA?style=flat-square" alt="" height="20"> Slash Commands
 
-7 intelligent workflows that Claude invokes automatically when your task matches, or on-demand via `/skill-name`.
+7 utility commands. Invoke explicitly via `/command-name`.
 
-| | Skill | Command | What it does |
-|---|-------|---------|-------------|
-| <img src="https://img.shields.io/badge/-explore-1D4ED8?style=flat-square" alt=""> | **Explore Codebase** | `/exploring-codebase` | Semantic code navigation via tree-sitter index. Find symbols, trace imports, detect dead code, map architecture, analyse change impact. 14 languages. Modes: map, find-symbol, related-files, dead-code, change-impact, security-scan, complexity-report, full-audit. |
-| <img src="https://img.shields.io/badge/-debug-B91C1C?style=flat-square" alt=""> | **Investigate Bugs** | `/investigating-bugs` | Evidence-based debugging: **reproduce** &rarr; **observe** &rarr; **hypothesize** &rarr; **verify** &rarr; **fix** &rarr; **confirm**. Two-strike rule: if the second fix fails, re-gather evidence from scratch. |
-| <img src="https://img.shields.io/badge/-prompt-92400E?style=flat-square" alt=""> | **Improve Prompts** | `/improving-prompts` | Transform rough instructions into structured XML prompts. Three modes: **execute** (generate and run), **plan** (review first), **task** (create persistent task tree). Auto-detects tech stack and test commands. |
-| <img src="https://img.shields.io/badge/-design-BE185D?style=flat-square" alt=""> | **Design Interfaces** | `/designing-interfaces` | Production UI with generated design systems (palettes, type scales, spacing tokens). Responsive screenshots at 4 breakpoints, contrast auditing, pixel-diff regression. React, Next.js, Vite, Astro, SvelteKit, Tailwind, plain HTML/CSS. |
-| <img src="https://img.shields.io/badge/-tasks-065F46?style=flat-square" alt=""> | **Manage Tasks** | `/managing-tasks` | Persistent tasks with cross-session continuity. Subcommands: new, start, stop, status, restore, decompose, progress, handoff, validate. Auto-enriches tasks with codebase-pilot file references. |
-| <img src="https://img.shields.io/badge/-safety-991B1B?style=flat-square" alt=""> | **Evaluate Safety** | `/evaluating-safety` | Training scenarios, deterministic tests, safety corpus evaluation. Single-domain and parallel (TeamCreate) modes. Cross-model comparison with deviation tracking. |
-| <img src="https://img.shields.io/badge/-improve-155E75?style=flat-square" alt=""> | **Improve Plugin** | `/improving-plugin` | Autonomous 7-phase self-improvement loop: collect data, verify prior fixes, analyse, prioritise, capture baseline, implement, measure after-state. Auto-reverts regressions. |
+| Command | Description |
+|---------|-------------|
+| `/code-review` | 4-pass structured review: correctness, security, performance, maintainability. Confidence-filtered findings with file:line references. |
+| `/session-dashboard` | System health report: hook fire/block rates, tool success/failure, edit churn, token efficiency. |
+| `/field-review` | Plugin self-audit from real session data. Block rates, false positives, dead hooks, skill usage, context overhead. Letter grades per component. |
+| `/memory` | Manage persistent cross-session knowledge. FTS5-backed search, confidence scoring, automatic decay. |
+| `/logs` | Query session logs: conversation history, tool usage, errors, side-questions across sessions. |
+| `/docs-manager` | Documentation audit: staleness detection, index generation, archiving, consistent formatting. |
+| `/claude-code-guide` | Best practices reference for building Claude Code extensions: skills, hooks, agents, plugins, MCP servers. |
 
 <br>
 
-## <img src="https://img.shields.io/badge/-Commands-4338CA?style=flat-square" alt="" height="20"> Slash Commands
+## <img src="https://img.shields.io/badge/-Skills-1A7F37?style=flat-square" alt="" height="20"> Skills
 
-7 utility commands invoked explicitly via `/command-name`.
+7 intelligent workflows. Claude invokes these automatically when your task matches, or use `/skill-name`.
 
-| | Command | What it does |
-|---|---------|-------------|
-| <img src="https://img.shields.io/badge/-review-6D28D9?style=flat-square" alt=""> | `/code-review` | Structured 4-pass review: correctness, security, performance, maintainability. Confidence-filtered findings with file:line references. |
-| <img src="https://img.shields.io/badge/-health-1A7F37?style=flat-square" alt=""> | `/session-dashboard` | System health report: hook fire counts, block rates, tool success/failure rates, edit churn, token efficiency. |
-| <img src="https://img.shields.io/badge/-audit-4338CA?style=flat-square" alt=""> | `/field-review` | Plugin self-audit: grades hook performance from real session data. Block rates, false positives, dead hooks, skill usage, context overhead. |
-| <img src="https://img.shields.io/badge/-memory-5B21B6?style=flat-square" alt=""> | `/memory` | Manage persistent cross-session knowledge. FTS5-backed search, confidence scoring, automatic decay. |
-| <img src="https://img.shields.io/badge/-logs-4B5563?style=flat-square" alt=""> | `/logs` | Query Claude Code session logs: conversation history, tool usage, errors, side-questions. |
-| <img src="https://img.shields.io/badge/-docs-0369A1?style=flat-square" alt=""> | `/docs-manager` | Documentation management: audit staleness, generate indexes, archive outdated content. |
-| <img src="https://img.shields.io/badge/-guide-9A3412?style=flat-square" alt=""> | `/claude-code-guide` | Best practices reference for building Claude Code extensions: skills, hooks, agents, plugins, MCP servers. |
+| Skill | Description |
+|-------|-------------|
+| `/exploring-codebase` | Semantic code navigation via tree-sitter index. Find symbols, trace imports, detect dead code, map architecture, analyse change impact. 14 languages. Modes: map, find-symbol, related-files, dead-code, change-impact, security-scan, complexity-report, full-audit. |
+| `/investigating-bugs` | Evidence-based debugging: **reproduce** &rarr; **observe** &rarr; **hypothesize** &rarr; **verify** &rarr; **fix** &rarr; **confirm**. Two-strike rule: if the second fix fails, re-gather evidence from scratch. |
+| `/improving-prompts` | Transform rough instructions into structured XML prompts. Three modes: **execute** (generate and run), **plan** (review first), **task** (create persistent task tree). Auto-detects tech stack and test commands. |
+| `/designing-interfaces` | Production UI with generated design systems (palettes, type scales, spacing tokens). Responsive screenshots at 4 breakpoints, contrast auditing, pixel-diff regression. React, Next.js, Vite, Astro, SvelteKit, Tailwind, plain HTML/CSS. |
+| `/managing-tasks` | Persistent tasks with cross-session continuity. Subcommands: new, start, stop, status, restore, decompose, progress, handoff, validate. Auto-enriches with codebase-pilot file references. |
+| `/evaluating-safety` | Training scenarios, deterministic tests, safety corpus evaluation. Single-domain and parallel (TeamCreate) modes. Cross-model comparison with deviation tracking. |
+| `/improving-plugin` | Autonomous 7-phase self-improvement: collect, verify prior fixes, analyse, prioritise, baseline, implement, measure. Auto-reverts regressions. |
 
 <br>
 
