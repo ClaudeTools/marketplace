@@ -40,91 +40,33 @@
 
 ## <img src="https://img.shields.io/badge/-Skills-1A7F37?style=flat-square" alt="" height="20"> Skills
 
-14 built-in skills for structured, repeatable workflows. Invoke with `/skill-name`.
+7 intelligent workflows that Claude invokes automatically when your task matches, or on-demand via `/skill-name`.
 
-<details open>
-<summary><img src="https://img.shields.io/badge/-explore-1D4ED8?style=flat-square" alt=""> <strong>Explore Codebase</strong> &mdash; <code>/exploring-codebase</code></summary>
+| | Skill | Command | What it does |
+|---|-------|---------|-------------|
+| <img src="https://img.shields.io/badge/-explore-1D4ED8?style=flat-square" alt=""> | **Explore Codebase** | `/exploring-codebase` | Semantic code navigation via tree-sitter index. Find symbols, trace imports, detect dead code, map architecture, analyse change impact. 14 languages. Modes: map, find-symbol, related-files, dead-code, change-impact, security-scan, complexity-report, full-audit. |
+| <img src="https://img.shields.io/badge/-debug-B91C1C?style=flat-square" alt=""> | **Investigate Bugs** | `/investigating-bugs` | Evidence-based debugging: **reproduce** &rarr; **observe** &rarr; **hypothesize** &rarr; **verify** &rarr; **fix** &rarr; **confirm**. Two-strike rule: if the second fix fails, re-gather evidence from scratch. |
+| <img src="https://img.shields.io/badge/-prompt-92400E?style=flat-square" alt=""> | **Improve Prompts** | `/improving-prompts` | Transform rough instructions into structured XML prompts. Three modes: **execute** (generate and run), **plan** (review first), **task** (create persistent task tree). Auto-detects tech stack and test commands. |
+| <img src="https://img.shields.io/badge/-design-BE185D?style=flat-square" alt=""> | **Design Interfaces** | `/designing-interfaces` | Production UI with generated design systems (palettes, type scales, spacing tokens). Responsive screenshots at 4 breakpoints, contrast auditing, pixel-diff regression. React, Next.js, Vite, Astro, SvelteKit, Tailwind, plain HTML/CSS. |
+| <img src="https://img.shields.io/badge/-tasks-065F46?style=flat-square" alt=""> | **Manage Tasks** | `/managing-tasks` | Persistent tasks with cross-session continuity. Subcommands: new, start, stop, status, restore, decompose, progress, handoff, validate. Auto-enriches tasks with codebase-pilot file references. |
+| <img src="https://img.shields.io/badge/-safety-991B1B?style=flat-square" alt=""> | **Evaluate Safety** | `/evaluating-safety` | Training scenarios, deterministic tests, safety corpus evaluation. Single-domain and parallel (TeamCreate) modes. Cross-model comparison with deviation tracking. |
+| <img src="https://img.shields.io/badge/-improve-155E75?style=flat-square" alt=""> | **Improve Plugin** | `/improving-plugin` | Autonomous 7-phase self-improvement loop: collect data, verify prior fixes, analyse, prioritise, capture baseline, implement, measure after-state. Auto-reverts regressions. |
 
-Semantic code navigation powered by codebase-pilot. Find symbol definitions, trace import chains, map project architecture, detect dead code, analyse change impact, and check circular dependencies. Uses tree-sitter AST parsing across 14 languages. Modes: map, find-symbol, file-overview, related-files, navigate, dead-code, change-impact, security-scan, complexity-report, full-audit.
-</details>
+<br>
 
-<details>
-<summary><img src="https://img.shields.io/badge/-debug-B91C1C?style=flat-square" alt=""> <strong>Investigate Bugs</strong> &mdash; <code>/investigating-bugs</code></summary>
+## <img src="https://img.shields.io/badge/-Commands-4338CA?style=flat-square" alt="" height="20"> Slash Commands
 
-Evidence-based debugging that enforces a strict protocol: **REPRODUCE** the error, **OBSERVE** the code and logs, **HYPOTHESIZE** with evidence, **VERIFY** the hypothesis before fixing, **FIX** the root cause, **CONFIRM** with tests. Two-strike rule: if the second fix fails, step back and re-gather evidence from scratch.
-</details>
+7 utility commands invoked explicitly via `/command-name`.
 
-<details>
-<summary><img src="https://img.shields.io/badge/-review-6D28D9?style=flat-square" alt=""> <strong>Code Review</strong> &mdash; <code>/code-review</code></summary>
-
-Structured 4-pass review covering correctness, security, performance, and maintainability. Each pass uses confidence-based filtering to surface only high-priority findings. Outputs file:line references with severity ratings.
-</details>
-
-<details>
-<summary><img src="https://img.shields.io/badge/-prompt-92400E?style=flat-square" alt=""> <strong>Improve Prompts</strong> &mdash; <code>/improving-prompts</code></summary>
-
-Transforms rough instructions into structured XML prompts using prompting science (examples with reasoning, escape clauses, verification blocks). Three modes: **execute** (generate and run immediately), **plan** (generate, review, then decide), **task** (generate and create persistent task tree for later execution). Auto-detects tech stack, test commands, and project conventions.
-</details>
-
-<details>
-<summary><img src="https://img.shields.io/badge/-design-BE185D?style=flat-square" alt=""> <strong>Design Interfaces</strong> &mdash; <code>/designing-interfaces</code></summary>
-
-Production-grade frontend UI with design intent. Generates CSS design systems (colour palettes, type scales, spacing tokens) from a theme seed. Includes responsive screenshot capture at 4 breakpoints, contrast matrix auditing, pixel-diff regression testing, and accessibility checks. Supports React, Next.js, Vite, Astro, SvelteKit, Tailwind CSS, and plain HTML/CSS. Build mode for new projects, maintain mode for existing ones.
-</details>
-
-<details>
-<summary><img src="https://img.shields.io/badge/-tasks-065F46?style=flat-square" alt=""> <strong>Manage Tasks</strong> &mdash; <code>/managing-tasks</code></summary>
-
-Persistent task system with cross-session continuity. Subcommands: **new** (create with codebase-pilot enrichment), **start** (pick next task and spawn team), **stop** (mark done, record files touched), **status** (markdown report), **restore** (recover tasks from prior session), **decompose** (AI-assisted breakdown into 3-7 subtasks), **progress** (narrative progress tracking), **handoff** (session summary for next developer), **validate** (deterministic task quality checks).
-</details>
-
-<details>
-<summary><img src="https://img.shields.io/badge/-safety-991B1B?style=flat-square" alt=""> <strong>Evaluate Safety</strong> &mdash; <code>/evaluating-safety</code></summary>
-
-Run training scenarios, deterministic tests, and safety corpus evaluations. Single-domain commands: test, code, noncode, edge, headless, golden, compare. Parallel commands (uses TeamCreate): all, compare-models, cross-model, golden-cross-model. Produces pass/fail reports per scenario with deviation tracking.
-</details>
-
-<details>
-<summary><img src="https://img.shields.io/badge/-improve-155E75?style=flat-square" alt=""> <strong>Improve Plugin</strong> &mdash; <code>/improving-plugin</code></summary>
-
-Autonomous 7-phase self-improvement loop: collect data, verify prior changes, analyse findings, prioritise by impact, capture baseline metrics, implement fixes, measure after-state. Categorises findings (hook-coverage, noise-reduction, safety-corpus, etc.) and logs outcomes with before/after measurement. Reverts regressions automatically.
-</details>
-
-<details>
-<summary><img src="https://img.shields.io/badge/-health-1A7F37?style=flat-square" alt=""> <strong>Session Dashboard</strong> &mdash; <code>/session-dashboard</code></summary>
-
-Human-readable report of system health: hook fire counts and block rates, tool success/failure rates, edit churn metrics, memory injection stats, and token efficiency. Useful for diagnosing noisy hooks or identifying workflow friction.
-</details>
-
-<details>
-<summary><img src="https://img.shields.io/badge/-audit-4338CA?style=flat-square" alt=""> <strong>Field Review</strong> &mdash; <code>/field-review</code></summary>
-
-Plugin self-audit that grades hook performance from real session data. Reports block rates (target <10% for non-safety hooks), false positive patterns, dead hooks (0-fire entries), skill usage rates, and context token overhead. Produces an overall letter grade per component.
-</details>
-
-<details>
-<summary><img src="https://img.shields.io/badge/-memory-5B21B6?style=flat-square" alt=""> <strong>Memory</strong> &mdash; <code>/memory</code></summary>
-
-Manage persistent cross-session knowledge. Search, create, update, and delete memory entries. FTS5-backed full-text search with confidence scoring and automatic decay for stale entries.
-</details>
-
-<details>
-<summary><img src="https://img.shields.io/badge/-logs-4B5563?style=flat-square" alt=""> <strong>Logs</strong> &mdash; <code>/logs</code></summary>
-
-Extract and query Claude Code session logs. Search conversation history, tool usage patterns, errors, and side-questions across sessions.
-</details>
-
-<details>
-<summary><img src="https://img.shields.io/badge/-docs-0369A1?style=flat-square" alt=""> <strong>Docs Manager</strong> &mdash; <code>/docs-manager</code></summary>
-
-Manage project documentation with standardised structure. Audit existing docs for staleness, generate index files, archive outdated content, and maintain consistent formatting.
-</details>
-
-<details>
-<summary><img src="https://img.shields.io/badge/-guide-9A3412?style=flat-square" alt=""> <strong>Claude Code Guide</strong> &mdash; <code>/claude-code-guide</code></summary>
-
-Best practices reference for building Claude Code extensions. Covers skills, hooks, agents, plugins, slash commands, scripts, MCP servers, CLAUDE.md, memory, and task systems.
-</details>
+| | Command | What it does |
+|---|---------|-------------|
+| <img src="https://img.shields.io/badge/-review-6D28D9?style=flat-square" alt=""> | `/code-review` | Structured 4-pass review: correctness, security, performance, maintainability. Confidence-filtered findings with file:line references. |
+| <img src="https://img.shields.io/badge/-health-1A7F37?style=flat-square" alt=""> | `/session-dashboard` | System health report: hook fire counts, block rates, tool success/failure rates, edit churn, token efficiency. |
+| <img src="https://img.shields.io/badge/-audit-4338CA?style=flat-square" alt=""> | `/field-review` | Plugin self-audit: grades hook performance from real session data. Block rates, false positives, dead hooks, skill usage, context overhead. |
+| <img src="https://img.shields.io/badge/-memory-5B21B6?style=flat-square" alt=""> | `/memory` | Manage persistent cross-session knowledge. FTS5-backed search, confidence scoring, automatic decay. |
+| <img src="https://img.shields.io/badge/-logs-4B5563?style=flat-square" alt=""> | `/logs` | Query Claude Code session logs: conversation history, tool usage, errors, side-questions. |
+| <img src="https://img.shields.io/badge/-docs-0369A1?style=flat-square" alt=""> | `/docs-manager` | Documentation management: audit staleness, generate indexes, archive outdated content. |
+| <img src="https://img.shields.io/badge/-guide-9A3412?style=flat-square" alt=""> | `/claude-code-guide` | Best practices reference for building Claude Code extensions: skills, hooks, agents, plugins, MCP servers. |
 
 <br>
 
