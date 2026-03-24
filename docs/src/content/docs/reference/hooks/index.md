@@ -38,3 +38,11 @@ Hooks are organized into 4 categories by purpose:
 - [**Quality**](/reference/hooks/quality-hooks/) — Catches stubs, type abuse, edit churn, incomplete work
 - [**Process**](/reference/hooks/process-hooks/) — Enforces read-before-edit, commit hygiene, scope discipline
 - [**Context**](/reference/hooks/context-hooks/) — Prevents redundant reads, injects memory, tracks telemetry
+
+---
+
+## Related
+
+- [Core Concepts — Hooks](/getting-started/core-concepts/#hooks) — introduction to hooks and their four categories
+- [Configuration](/advanced/configuration/) — tune hook thresholds and quiet mode
+- [Advanced: Validators](/advanced/validators/) — companion validators that run alongside hooks

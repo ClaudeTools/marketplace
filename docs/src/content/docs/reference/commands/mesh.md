@@ -2,6 +2,9 @@
 title: "/mesh"
 description: "Multi-agent coordination command — check active agents, lock files, send messages, and share architectural decisions across worktrees."
 ---
+
+> **Status:** 🆕 New in v4.0 — migrated to native command format in the v4.0.0 release
+
 Coordinate with other Claude agents working in the same repository. Check agent status, send messages, lock files, and share architectural decisions.
 
 ## Invocation
@@ -97,3 +100,9 @@ Message sent to frontend-agent.
 - All mesh commands are best-effort. If the CLI is unavailable, report the issue but continue with the task.
 - The underlying CLI is at `plugin/agent-mesh/cli.js` (see [Agent Mesh](../agent-mesh.md)).
 - Locks are advisory — the system does not prevent simultaneous edits, but hooks warn when a locked file is edited.
+
+## Related
+
+- [Coordinate Agents guide](/guides/coordinate-agents/) — walkthrough of multi-agent mesh coordination with real output
+- [Reference: agent-mesh](/reference/agent-mesh/) — full CLI reference for the underlying agent mesh
+- [Reference: managing-tasks skill](/reference/skills/managing-tasks/) — pairs with mesh for multi-session parallel work

@@ -2,6 +2,9 @@
 title: "Evaluating Safety"
 description: "Skill for running safety corpus evaluations, deterministic tests, and multi-model comparisons with closed-loop feedback."
 ---
+
+> **Status:** 🆕 New in v3.1 — added with the training infrastructure in the v3.1.0 release
+
 Run training scenarios, deterministic tests, and safety corpus evaluations. Supports single-domain commands, multi-model comparisons, golden test suites, and closed-loop feedback pipelines.
 
 **Trigger:** Use when the user says "train", "run training", "test safety", "run scenarios", "evaluate model", or "compare results".

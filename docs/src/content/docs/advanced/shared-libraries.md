@@ -92,3 +92,11 @@ Worktree-aware path and session identity utilities.
 | `is_worktree()` | `0` if inside a git worktree, `1` otherwise |
 | `get_session_id([input])` | Session ID from hook input JSON, `$SESSION_ID`, or `$PPID` in that priority order |
 | `session_tmp_path(name)` | `/tmp/claude-{name}-{session_id}` — stable temp path scoped to the session |
+
+---
+
+## Related
+
+- [Advanced: Architecture](architecture.md) — how validators are wired into gate dispatchers
+- [Advanced: Extending claudetools](extending.md) — step-by-step guide to adding custom validators
+- [Advanced: Validators](validators.md) — all built-in validators and their exit code contracts

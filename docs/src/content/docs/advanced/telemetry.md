@@ -56,3 +56,11 @@ The DB is local-only — it is not uploaded.
 ## Opting Out
 
 Set `CLAUDE_HOOKS_QUIET=1` to suppress non-safety hooks entirely, which also prevents telemetry events from being emitted. To disable only the upload step, remove or rename `scripts/lib/telemetry-sync.sh`.
+
+---
+
+## Related
+
+- [Configuration](configuration.md) — `CLAUDE_HOOKS_QUIET` and other environment settings
+- [Reference: /logs command](/reference/commands/logs/) — query locally stored session logs
+- [Reference: /session-dashboard command](/reference/commands/session-dashboard/) — local metrics view using the metrics.db data

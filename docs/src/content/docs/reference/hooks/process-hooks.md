@@ -87,3 +87,11 @@ Ensures the `/mesh status` command always shows an accurate picture of active ag
 **Script:** `scripts/doc-stale-detector.sh`
 
 Runs at session start. Scans documentation files for stale dates or outdated content based on recent git changes. Emits warnings for docs that reference changed files but have not been updated.
+
+---
+
+## Related
+
+- [Safety Hooks](safety-hooks.md) — destructive command blocking and secret detection
+- [Quality Hooks](quality-hooks.md) — edit quality enforcement (stubs, blind edits, churn)
+- [Hooks Overview](index.md) — full lifecycle event reference

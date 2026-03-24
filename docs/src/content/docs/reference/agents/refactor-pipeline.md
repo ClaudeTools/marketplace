@@ -2,6 +2,9 @@
 title: "Refactor Pipeline"
 description: "Safe refactor pipeline — impact analysis, step decomposition, parallel implementation, and regression verification for cross-cutting changes."
 ---
+
+> **Status:** ✅ Stable — included in all claudetools versions
+
 Safe refactor pipeline. Orchestrates change-impact analysis, step decomposition, parallel implementation, and regression verification.
 
 ## Purpose
@@ -78,3 +81,9 @@ All checks must pass with zero regressions.
 ```
 Use the refactor-pipeline agent to rename UserRecord to UserProfile across the entire codebase.
 ```
+
+## Related
+
+- [Explore a Codebase guide](/guides/explore-a-codebase/) — use change-impact analysis before starting a refactor
+- [Feature Pipeline](feature-pipeline.md) — full-cycle pipeline for new features
+- [Reference: codebase-pilot CLI](/reference/codebase-pilot/cli-reference/) — the change-impact and circular-deps commands this pipeline relies on

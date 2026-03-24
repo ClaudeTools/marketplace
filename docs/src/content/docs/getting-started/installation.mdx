@@ -5,6 +5,8 @@ sidebar:
   order: 1
 ---
 
+import { Steps } from '@astrojs/starlight/components';
+
 This guide walks you through installing claudetools from scratch. By the end you will have hooks running, skills available, and a working codebase index. Expected time: 2–5 minutes.
 
 ---
@@ -13,44 +15,48 @@ This guide walks you through installing claudetools from scratch. By the end you
 
 claudetools requires three things. Verify each before installing.
 
-### 1. Claude Code is installed
+<Steps>
 
-```bash
-claude --version
-```
+1. **Claude Code is installed**
 
-**Expected output:**
-```
-Claude Code 1.x.x
-```
+   ```bash
+   claude --version
+   ```
 
-If you see `command not found`, install Claude Code first from [claude.ai/code](https://claude.ai/code).
+   **Expected output:**
+   ```
+   Claude Code 1.x.x
+   ```
 
-### 2. Node.js 18 or higher
+   If you see `command not found`, install Claude Code first from [claude.ai/code](https://claude.ai/code).
 
-```bash
-node --version
-```
+2. **Node.js 18 or higher**
 
-**Expected output:**
-```
-v20.11.0
-```
+   ```bash
+   node --version
+   ```
 
-The version must be `v18.0.0` or higher. If it is lower, or `command not found`, see [Troubleshooting](#node-js-version-too-old) below.
+   **Expected output:**
+   ```
+   v20.11.0
+   ```
 
-### 3. SQLite3 is available
+   The version must be `v18.0.0` or higher. If it is lower, or `command not found`, see [Troubleshooting](#node-js-version-too-old) below.
 
-```bash
-sqlite3 --version
-```
+3. **SQLite3 is available**
 
-**Expected output:**
-```
-3.45.1 2024-01-30 ...
-```
+   ```bash
+   sqlite3 --version
+   ```
 
-If SQLite3 is missing, see [Troubleshooting](#sqlite3-not-installed) below.
+   **Expected output:**
+   ```
+   3.45.1 2024-01-30 ...
+   ```
+
+   If SQLite3 is missing, see [Troubleshooting](#sqlite3-not-installed) below.
+
+</Steps>
 
 :::tip[jq makes output more readable]
 `jq` is optional but recommended. claudetools uses it to format JSON output from hooks. Install it with your package manager if you want cleaner output.
@@ -170,11 +176,31 @@ If the dashboard shows fewer than 51 hooks or skills loaded is 0, see [Troublesh
 
 When you open a Claude Code session after installing claudetools:
 
+<Steps>
+
 1. **51 hooks register** across 17 lifecycle events — safety, quality, process, and context hooks all activate
+
 2. **Skills become available** — `/exploring-codebase`, `/investigating-bugs`, `/prompt-improver`, and 4 more respond to explicit invocation or trigger automatically based on intent
+
 3. **Codebase indexing starts** in the background — `session-index.sh` runs `codebase-pilot index` to build a tree-sitter + SQLite index of your project. For large projects this takes 10–30 seconds.
 
+</Steps>
+
 You will not see any of this happen — claudetools is silent when everything works correctly.
+
+<details>
+<summary>How does codebase-pilot index your project? (Advanced)</summary>
+
+At session start, `session-index.sh` runs `codebase-pilot index` against your project root. It uses tree-sitter parsers for 14 languages (TypeScript, JavaScript, Python, Go, Rust, Java, Kotlin, Ruby, C#, PHP, Swift, C/C++, Bash) to build a symbol table stored in a SQLite database at `.codebase-pilot/index.db`.
+
+The index captures:
+- Function and class declarations with file path and line number
+- Import/export relationships between files
+- Symbol call sites (what calls what)
+
+On subsequent sessions, only changed files are re-indexed (incremental update via file modification timestamps). The index is never uploaded — it lives entirely in your local project directory.
+
+</details>
 
 ---
 

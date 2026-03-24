@@ -43,3 +43,11 @@ Run `codebase-pilot doctor` to diagnose issues:
 - Tree-sitter grammars available
 - Index exists and contains files
 - Index is fresh (not stale)
+
+---
+
+## Related
+
+- [CLI Reference](cli-reference.md) — all codebase-pilot commands and flags
+- [Supported Languages](supported-languages.md) — which file types get indexed
+- [Reference: Context Hooks](/reference/hooks/context-hooks/#reindex-on-edit) — the hook that triggers incremental reindexing after edits

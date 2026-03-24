@@ -113,3 +113,11 @@ Agents are considered stale when:
 - Their last heartbeat is more than 30 minutes old
 
 Stale agents are automatically removed by `list`. The 30-minute threshold accommodates long-running hooks where the Claude process is alive but not actively heartbeating.
+
+---
+
+## Related
+
+- [Coordinate Agents guide](/guides/coordinate-agents/) — walkthrough of mesh coordination with real output
+- [Reference: /mesh command](/reference/commands/mesh/) — the human-facing slash command interface to this CLI
+- [Reference: Process Hooks](/reference/hooks/process-hooks/) — the hooks that auto-register and deregister agents

@@ -2,6 +2,9 @@
 title: "Test Writer"
 description: "Test generation agent — matches existing project patterns and frameworks, focusing on edge cases, error paths, and boundary values."
 ---
+
+> **Status:** ✅ Stable — included in all claudetools versions
+
 Generate tests following existing project patterns. Invoked when test coverage is needed for new or changed code.
 
 ## Purpose
@@ -43,3 +46,9 @@ Use the test-writer agent to add tests for the new invoice pagination logic in s
 ```
 
 The agent reads the existing invoice test file, understands the pagination implementation, and writes tests covering: the default page size, explicit page and limit parameters, the last page with fewer results than the limit, and invalid page values returning a 400 error.
+
+## Related
+
+- [Build a Feature guide](/guides/build-a-feature/) — test-writer is the final step in the feature pipeline
+- [Reference: code-reviewer agent](code-reviewer.md) — code review often precedes test writing in the pipeline
+- [Reference: bugfix-pipeline agent](bugfix-pipeline.md) — adds a regression test as part of the fix confirmation step

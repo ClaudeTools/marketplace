@@ -2,6 +2,9 @@
 title: "/claude-code-guide"
 description: "Best practices reference for building Claude Code extensions — skills, hooks, agents, plugins, MCP servers, CLAUDE.md, memory, and task systems."
 ---
+
+> **Status:** 🆕 New in v4.0 — migrated to native command format in the v4.0.0 release
+
 Best practices reference for building Claude Code extensions — skills, hooks, agents, plugins, slash commands, scripts, MCP servers, CLAUDE.md, memory, and task systems.
 
 ## Invocation
@@ -74,3 +77,9 @@ Invoke via:
 /claude-code-guide mcp-server
 /claude-code-guide plugin
 ```
+
+## Related
+
+- [Advanced: Extending claudetools](/advanced/extending/) — how to add your own hooks, skills, and agents
+- [Reference: Hooks](/reference/hooks/) — hook lifecycle reference for building new hooks
+- [Reference: Skills](/reference/skills/) — skill patterns for building new workflows

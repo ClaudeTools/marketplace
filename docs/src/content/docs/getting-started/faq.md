@@ -86,3 +86,11 @@ Run `/field-review` to audit recent hook decisions and reclassify false positive
 ### I'm getting "database is locked" errors — what do I do?
 
 The metrics DB uses WAL mode with a 5-second busy timeout — concurrent locks from multiple sessions usually self-resolve. If it persists, run `sqlite3 data/metrics.db "PRAGMA wal_checkpoint(TRUNCATE);"`. See [Troubleshooting — Metrics DB Locked](/marketplace/advanced/troubleshooting/#metrics-db-locked).
+
+---
+
+## Related
+
+- [Installation](installation.md) — prerequisites, install steps, and verification
+- [Core Concepts](core-concepts.md) — understand hooks, skills, and agents
+- [Troubleshooting](/advanced/troubleshooting/) — deeper fixes for hooks, indexing, and DB issues

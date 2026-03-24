@@ -1,0 +1,151 @@
+---
+title: "Tutorial: Your First Bug Fix"
+description: "Step-by-step walkthrough of finding and fixing a real bug with claudetools — see hooks fire, watch codebase-pilot locate code, follow the full debugging protocol."
+sidebar:
+  order: 1
+---
+
+import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+
+**Goal:** Fix a broken login endpoint using claudetools. You'll see how the debugging skill activates automatically, how codebase-pilot finds the right file, and how hooks catch issues before they ship.
+
+**Prerequisites:**
+- claudetools installed — see [Installation](/getting-started/installation/)
+- Familiar with the core building blocks — see [Core Concepts](/getting-started/core-concepts/)
+
+**Time estimate:** ~10 minutes
+
+---
+
+## The scenario
+
+<Tabs>
+  <TabItem label="Node.js / Express">
+    You're working on a small Express API. Users are reporting that login fails silently — they submit valid credentials and nothing happens. No error, no redirect, just a blank response. It started after your team added rate limiting yesterday.
+  </TabItem>
+  <TabItem label="Python / Flask">
+    You're working on a Flask API. Users are reporting that login fails silently — they submit valid credentials and nothing happens. No error in logs, just an empty response. It started after your team added a `@limiter.limit` decorator to the auth routes yesterday.
+  </TabItem>
+</Tabs>
+
+---
+
+<Steps>
+
+1. **Describe the problem in plain language**
+
+   Type this to Claude:
+
+   > **You:** "Login is broken — users submit the form and get a blank response. No error in the console. It started after we added rate limiting yesterday."
+
+   You don't need to diagnose it first. Mention the symptom and when it started — that's enough.
+
+   :::note[What just happened: skill auto-activates]
+   Claude detected "broken" and "started after" — keywords that trigger the [investigating-bugs skill](/reference/skills/investigating-bugs/) automatically. The 6-step protocol (REPRODUCE → OBSERVE → HYPOTHESIZE → VERIFY → FIX → CONFIRM) is now active. Claude cannot skip ahead or jump to a fix without evidence.
+   :::
+
+2. **Watch codebase-pilot locate the code**
+
+   Claude doesn't guess at file paths. It queries the [codebase-pilot](/getting-started/core-concepts/#codebase-pilot) index:
+
+   > **Claude:** "REPRODUCE: Searching for the login route handler..."
+   >
+   > ```
+   > codebase-pilot find-symbol "login"
+   > → src/routes/auth.ts:23  POST /auth/login  loginHandler
+   > ```
+   >
+   > "Found it. Reading `src/routes/auth.ts`..."
+
+   The index returns the exact file and line number. Claude reads the handler, then checks git history for what changed:
+
+   > ```bash
+   > git log --oneline --since="1 day ago" -- src/middleware/rate-limit.ts
+   > # b7e3c1a feat: add rate limiting to all auth routes
+   > ```
+   >
+   > "The rate limiting middleware was added yesterday. Let me check how it's wired in."
+
+3. **Watch the observation unfold**
+
+   > **Claude:** "OBSERVE: Reading `src/middleware/rate-limit.ts`...
+   >
+   > The middleware calls `res.status(429).end()` when the limit is exceeded — but it's mounted *before* the body parser in `app.ts:14`. That means on the **first** request, before any limit is hit, the body parser hasn't run yet and `req.body` is `undefined`.
+   >
+   > The login handler reads `req.body.email` — when body is undefined, this throws a silent TypeError that the error handler swallows and responds with... nothing."
+
+   :::note[What just happened: OBSERVE phase]
+   Claude didn't guess. It traced the middleware execution order by reading `app.ts` and checking how the router is assembled. This is why [codebase-pilot](/getting-started/core-concepts/#codebase-pilot) matters — Claude can trace actual imports rather than guessing at folder conventions.
+   :::
+
+4. **The hypothesis and verification**
+
+   > **Claude:** "HYPOTHESIZE: The rate limiting middleware is mounted at position 2 in `app.ts`, before `express.json()` at position 4. Any route that hits the rate limiter before the body parser runs will have `req.body === undefined`. The login handler crashes silently because `req.body.email` throws a TypeError that propagates to the generic error handler, which returns an empty 200.
+   >
+   > VERIFY: Confirming middleware order in `app.ts`..."
+
+   ```typescript {3-4}
+   // app.ts — current order (broken)
+   app.use(cors());
+   app.use(rateLimiter);      // ← position 2: body not parsed yet
+   app.use(express.json());   // ← position 4: too late
+   app.use('/auth', authRouter);
+   ```
+
+   > "Confirmed. Moving `rateLimiter` after `express.json()` will fix it."
+
+5. **The fix**
+
+   > **Claude:** "FIX: Reordering middleware in `app.ts` — moving `rateLimiter` to position 3, after `express.json()`."
+
+   :::note[What just happened: hook fires]
+   Before writing the edit, a [hook](/getting-started/core-concepts/#hook) fires: **read-before-edit**. Since Claude already read `app.ts` in step 2, it passes. If Claude had tried to edit without reading, the hook would have blocked it:
+   > `[PreToolUse] read-before-edit: cannot edit app.ts — file not in read history. Read it first.`
+   :::
+
+   After the edit:
+
+   ```typescript {3-4}
+   // app.ts — fixed order
+   app.use(cors());
+   app.use(express.json());   // ← body parsed first
+   app.use(rateLimiter);      // ← rate limiter can now read req.body
+   app.use('/auth', authRouter);
+   ```
+
+6. **Confirmation**
+
+   > **Claude:** "CONFIRM: Running typecheck and login-related tests..."
+
+   ```bash {5-7}
+   npx tsc --noEmit
+   # ✓ No errors
+
+   npm test -- --grep "login"
+   # ✓ POST /auth/login returns 200 with valid credentials
+   # ✓ POST /auth/login returns 401 with wrong password
+   # ✓ POST /auth/login returns 429 after 10 attempts
+   ```
+
+   > "All three scenarios pass. The blank response on login is resolved."
+
+</Steps>
+
+---
+
+## What you learned
+
+| Feature | What it did |
+|---------|------------|
+| [investigating-bugs skill](/reference/skills/investigating-bugs/) | Auto-activated on keywords, enforced REPRODUCE→CONFIRM sequence |
+| [codebase-pilot](/reference/codebase-pilot/cli-reference/) | Located `loginHandler` by symbol name, not by filename guessing |
+| [read-before-edit hook](/reference/hooks/process-hooks/) | Blocked editing without prior read (passed here because read was done) |
+| Git history tracing | Found the rate-limiting commit as the starting point for investigation |
+
+---
+
+## Next steps
+
+- [Debug a Bug](debug-a-bug.md) — deeper walkthrough with a failed first hypothesis
+- [Tutorial: Explore a New Codebase](tutorial-explore-new-codebase.mdx) — map unfamiliar code before diving in
+- [Reference: investigating-bugs skill](/reference/skills/investigating-bugs/)

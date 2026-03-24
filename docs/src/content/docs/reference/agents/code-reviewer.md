@@ -2,6 +2,9 @@
 title: "Code Reviewer"
 description: "Read-only code review agent — 4-pass structured review using codebase-pilot for context before flagging correctness, security, and performance issues."
 ---
+
+> **Status:** ✅ Stable — included in all claudetools versions
+
 Read-only code review agent. Invoked for structured code quality review without modifying files.
 
 ## Purpose
@@ -56,3 +59,9 @@ Use the code-reviewer agent to review the changes in src/auth/ and src/middlewar
 ```
 
 The reviewer checks the auth changes for correctness and security issues, traces how session.ts is used across the codebase, and returns a structured report with severity-tagged findings and file:line references.
+
+## Related
+
+- [Review Code guide](/guides/review-code/) — walkthrough of a structured 4-pass review with real output
+- [Security Pipeline](security-pipeline.md) — full codebase audit including dead security controls and CVEs
+- [Reference: /code-review command](/reference/commands/code-review/) — the slash command equivalent for quick reviews

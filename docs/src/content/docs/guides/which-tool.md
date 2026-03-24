@@ -193,3 +193,9 @@ Each agent session runs in its own worktree with no git conflicts. The mesh coor
 | `frontend-design` | Build production UI with design system, preview loop, contrast audit |
 | `investigating-bugs` | Evidence-based root cause analysis for bugs |
 | `agent-mesh` | File locks, message passing, and shared decisions across agents |
+
+## Related
+
+- [Core Concepts](../getting-started/core-concepts.md) — understand the building blocks behind each tool
+- [Quick Tour](../getting-started/quick-tour.md) — see hooks, skills, and the session dashboard in action
+- [Coordinate Agents](coordinate-agents.md) — go deeper on multi-agent workflows

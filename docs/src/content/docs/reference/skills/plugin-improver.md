@@ -2,6 +2,9 @@
 title: "Improving Plugin"
 description: "Autonomous self-improvement loop for the claudetools plugin — collects data, analyzes, implements, measures, and reverts regressions."
 ---
+
+> **Status:** ✅ Stable — included in all claudetools versions
+
 Run a full autonomous self-improvement loop — collect data, verify prior fixes, analyze, prioritize, implement, measure after-state, and log. Every change is measured: improvements are kept, regressions are caught and reverted.
 
 **Trigger:** Use when the user says "improve", "self-improve", "improvement loop", "iterate", or "optimize the plugin".

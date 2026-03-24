@@ -2,6 +2,9 @@
 title: "Feature Pipeline"
 description: "Full-cycle feature pipeline — coordinates exploration, planning, parallel implementation, review, and verification for multi-file features."
 ---
+
+> **Status:** ✅ Stable — included in all claudetools versions
+
 Full-cycle feature development pipeline. Orchestrates exploration, planning, implementation, review, and verification end-to-end.
 
 ## Purpose
@@ -70,3 +73,9 @@ Use the feature-pipeline agent to add rate limiting to the API endpoints.
 ```
 
 The pipeline will explore the existing API structure, plan the implementation (middleware, config, tests), spawn teammates to build each layer, review the result, and verify typecheck and tests pass.
+
+## Related
+
+- [Build a Feature guide](/guides/build-a-feature/) — walkthrough of the feature pipeline with real output
+- [Refactor Pipeline](refactor-pipeline.md) — safe refactor pipeline for cross-cutting changes
+- [Reference: implementing-features agent](implementing-features.md) — the teammate this pipeline spawns

@@ -2,6 +2,9 @@
 title: "Security Pipeline"
 description: "Read-only security audit pipeline — scans for secrets, injection vulnerabilities, dead controls, and CVEs with file:line evidence for every finding."
 ---
+
+> **Status:** ✅ Stable — included in all claudetools versions
+
 Read-only security audit pipeline. Runs a full codebase audit, security scan, and dead-code analysis to produce a structured security findings report.
 
 ## Purpose
@@ -78,3 +81,9 @@ Produces a structured report with four sections:
 ```
 Run the security-pipeline agent before we cut the v2.0 release branch.
 ```
+
+## Related
+
+- [Run a Security Audit guide](/guides/run-security-audit/) — walkthrough of the security pipeline with real output
+- [Reference: exploring-codebase skill](/reference/skills/exploring-codebase/) — the skill that powers the scan and dead-code steps
+- [Bugfix Pipeline](bugfix-pipeline.md) — use after the audit to resolve critical findings

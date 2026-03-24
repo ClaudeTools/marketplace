@@ -2,6 +2,9 @@
 title: "/code-review"
 description: "Structured 4-pass code review command — correctness, security, performance, and maintainability. Read-only, no file modifications."
 ---
+
+> **Status:** 🆕 New in v4.0 — migrated to native command format in the v4.0.0 release
+
 Structured 4-pass code review covering correctness, security, performance, and maintainability. Read-only — does not modify files.
 
 ## Invocation
@@ -77,3 +80,9 @@ Categories with no findings are omitted. The Positive section is always included
 /code-review src/api/payments.ts
 /code-review feature/add-webhooks
 ```
+
+## Related
+
+- [Review Code guide](/guides/review-code/) — walkthrough with real review output across three scenarios
+- [Reference: code-reviewer agent](/reference/agents/code-reviewer/) — deeper review that cross-references the full codebase
+- [Run a Security Audit guide](/guides/run-security-audit/) — full codebase security scan beyond a single diff

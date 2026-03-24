@@ -2,6 +2,9 @@
 title: "Investigating Bugs"
 description: "Skill that enforces a strict 6-step debugging protocol — REPRODUCE, OBSERVE, HYPOTHESIZE, VERIFY, FIX, CONFIRM — with mandatory evidence at each step."
 ---
+
+> **Status:** ✅ Stable — included in all claudetools versions
+
 Evidence-based debugging that enforces a strict six-step protocol. No guessing, no assumptions — every fix must have concrete evidence.
 
 **Trigger:** Use when the user says "debug this", "fix this bug", "why is this failing", "this is broken", "not working", or "unexpected behaviour".

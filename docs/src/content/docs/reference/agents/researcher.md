@@ -2,6 +2,9 @@
 title: "Researcher"
 description: "External API and library research agent — checks the local codebase first, then fetches and verifies documentation before implementation begins."
 ---
+
+> **Status:** ✅ Stable — included in all claudetools versions
+
 Research agent for external APIs, libraries, and documentation. Invoked before implementing code that touches external services.
 
 ## Purpose
@@ -59,3 +62,9 @@ Use the researcher agent to check the current Stripe API for how to handle subsc
 ```
 
 The researcher checks if Stripe SDK usage exists locally first, then searches for the current webhook documentation, verifies the event types and signature verification pattern against multiple sources, and returns a cited findings report the implementing agent can act on.
+
+## Related
+
+- [Reference: implementing-features agent](implementing-features.md) — typically runs after researcher to act on the findings
+- [Feature Pipeline](feature-pipeline.md) — researcher is often the first step before planning
+- [Reference: exploring-codebase skill](/reference/skills/exploring-codebase/) — for local codebase questions rather than external API research

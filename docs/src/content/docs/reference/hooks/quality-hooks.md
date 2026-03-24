@@ -73,3 +73,11 @@ Runs after every agent/subagent completion. Verifies that the subagent completed
 **Script:** `scripts/verify-subagent-independently.sh`
 
 Runs when a subagent stops. Independently verifies the subagent's claimed outcomes (e.g., runs typecheck, checks file existence) rather than trusting the subagent's self-report.
+
+---
+
+## Related
+
+- [Safety Hooks](safety-hooks.md) — destructive command blocking and secret detection
+- [Context Hooks](context-hooks.md) — session state injection and memory tracking
+- [Hooks Overview](index.md) — full lifecycle event reference

@@ -51,3 +51,11 @@ bash ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/scripts/download-grammars.sh
 ```
 
 Run `codebase-pilot doctor` to check which grammars are available.
+
+---
+
+## Related
+
+- [CLI Reference](cli-reference.md) — all codebase-pilot commands
+- [Indexing](indexing.md) — how the index is built and maintained
+- [FAQ — Codebase Pilot](/getting-started/faq/#troubleshooting) — troubleshooting missing symbols and stale index

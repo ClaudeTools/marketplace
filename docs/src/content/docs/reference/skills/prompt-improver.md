@@ -2,6 +2,9 @@
 title: "Improving Prompts"
 description: "Skill that transforms rough input into structured XML prompts — execute immediately, review first, or convert into a tracked task tree."
 ---
+
+> **Status:** ✅ Stable — included in all claudetools versions
+
 Transforms rough user input into structured XML prompts and executes them. Handles triage, codebase context gathering, generation via subagent, validation, and execution.
 
 **Trigger:** Use when the user says "improve prompt", "make this work better", "prompt engineer", or "structure a prompt".

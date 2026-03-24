@@ -66,3 +66,11 @@ The memory system stores project context in two places:
 The `memory-consolidate` validator syncs files to the DB, decays confidence of stale entries, and prunes memories below the `memory_prune_threshold`. The FTS5 virtual table (`memories_fts`) enables full-text search at injection time.
 
 Memory injection happens in `inject-session-context.sh` — memories with confidence above `memory_confidence_inject` (default 0.7) are prepended to the session context at session start.
+
+---
+
+## Related
+
+- [Installation](/getting-started/installation/) — quiet mode and PATH requirements covered in the install guide
+- [Troubleshooting](troubleshooting.md) — common problems caused by misconfiguration
+- [Reference: /memory command](/reference/commands/memory/) — manage memory entries and view what's being injected

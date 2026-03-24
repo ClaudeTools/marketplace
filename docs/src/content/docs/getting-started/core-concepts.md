@@ -9,6 +9,37 @@ The eight building blocks of claudetools, what they do, why they matter, and how
 
 ---
 
+## How it fits together
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                          Claude Code                            │
+│                                                                 │
+│  User types a prompt                                            │
+│       ↓                                                         │
+│  [UserPromptSubmit hooks]  ← inject context, memory, mesh msgs  │
+│       ↓                                                         │
+│  Claude decides a tool call                                     │
+│       ↓                                                         │
+│  [PreToolUse hooks]  ← safety check, read-before-edit, scope   │
+│       ↓          ↓                                              │
+│  BLOCK / WARN    ↓ PASS                                         │
+│              Dispatcher → Validators → Gate decision            │
+│                    ↓                                            │
+│               Tool executes (Edit, Bash, Read…)                 │
+│                    ↓                                            │
+│  [PostToolUse hooks]  ← track reads/edits, reindex, telemetry  │
+│                    ↓                                            │
+│  Skills trigger (investigating-bugs, exploring-codebase…)       │
+│  Agents orchestrate (feature-pipeline, bugfix-pipeline…)        │
+│  Codebase Pilot answers structural queries from the index       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+Hooks fire invisibly on every tool call. Skills and agents build structured workflows on top. The sections below explain each building block in detail.
+
+---
+
 ## Hooks
 
 **51 hooks across 17 lifecycle events.**
@@ -27,6 +58,19 @@ Hooks can block, warn, or annotate. Safety hooks always run. Non-safety hooks ca
 **Analogy:** Hooks are airport security checkpoints. You don't think about them when you walk to the gate — but they silently scan every bag. If something dangerous appears, you're stopped. Otherwise you pass through without friction.
 
 **Why this matters:** Without hooks, Claude operates on trust and good intentions. With hooks, every edit, every commit, and every destructive command passes through a consistent policy layer. You get the same guardrails in a 2am emergency fix as in a calm morning refactor.
+
+<details>
+<summary>How are hooks implemented? (Advanced)</summary>
+
+Each hook is a bash script in `plugin/hooks/`. When a lifecycle event fires (e.g., `PreToolUse`), Claude Code runs the matching scripts sequentially and reads their stdout/exit codes:
+
+- **Exit 0** — pass, no output shown
+- **Exit 0 with JSON** — warning or annotation shown to Claude
+- **Exit 2** — block the tool call (hard stop)
+
+The hook receives the tool name and arguments as JSON on stdin. Safety hooks read this to detect patterns like `rm -rf`, hardcoded API keys, or edits to `.env` files. The dispatcher routes each event to the appropriate hook scripts based on the tool name and event type.
+
+</details>
 
 **Reference:** [Hooks →](/reference/hooks/)
 
@@ -161,6 +205,21 @@ The `exploring-codebase` skill and hooks both query this index. It's what makes 
 
 **Why this matters:** Hallucinated file paths and function names waste time and produce incorrect analysis. Codebase Pilot grounds every symbol query, import trace, and change-impact analysis in the actual current state of your codebase.
 
+<details>
+<summary>How does codebase-pilot build its index? (Advanced)</summary>
+
+At session start, `session-index.sh` runs `codebase-pilot index` against your project root. It uses tree-sitter grammars for each supported language to parse source files into syntax trees, then extracts:
+
+- **Declarations** — function names, class names, exported symbols, with file path and line number
+- **Import/export edges** — which file imports which symbol from which file
+- **Call sites** — where each symbol is referenced (for `find-usages` and `change-impact`)
+
+The extracted data is written to a SQLite database at `.codebase-pilot/index.db`. On subsequent sessions, only files modified since the last index run are re-parsed (incremental update via file modification timestamps). The index is local — it is never uploaded or shared.
+
+When you edit a file, a `PostToolUse` hook calls `codebase-pilot reindex <file>` to update just that file's entries, keeping the index current throughout the session.
+
+</details>
+
 **Reference:** [Codebase Pilot →](/reference/codebase-pilot/indexing/)
 
 ---
@@ -255,3 +314,11 @@ Quick reference for every term used across the claudetools documentation.
 
 **worktree**
 : A git feature that allows multiple branches to be checked out simultaneously in separate directories. claudetools uses worktrees to let multiple agents work the same repository in parallel without interfering with each other.
+
+---
+
+## Related
+
+- [Quick Tour](quick-tour.md) — see hooks, skills, and the session dashboard working in real scenarios
+- [Installation](installation.md) — install claudetools and verify hooks are running
+- [Hooks Reference](/reference/hooks/) — complete index of all 51 hooks across 17 lifecycle events

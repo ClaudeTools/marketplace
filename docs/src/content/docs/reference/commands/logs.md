@@ -2,6 +2,9 @@
 title: "/logs"
 description: "Query Claude Code session logs — extract /btw side-questions, conversation history, tool usage stats, errors, and full-text search."
 ---
+
+> **Status:** 🆕 New in v4.0 — migrated to native command format in the v4.0.0 release
+
 Extract and query Claude Code session logs — `/btw` side-questions, conversation history, tool usage, errors, and search.
 
 ## Invocation
@@ -83,3 +86,9 @@ Errors — last 10 sessions
 
 - Logs appear in `~/.claude/projects/` after at least one session.
 - Output over 50 lines is summarized with an offer to save the full output to a file.
+
+## Related
+
+- [Reference: /session-dashboard command](session-dashboard.md) — aggregated metrics view across sessions
+- [Reference: /field-review command](field-review.md) — qualitative hook performance review using session data
+- [Advanced: Telemetry](/advanced/telemetry/) — how session data is collected and stored

@@ -102,3 +102,11 @@ gh secret set PUBLIC_REPO_TOKEN --repo ClaudeTools/marketplace-dev --body "$(gh 
 ```
 
 See the project CLAUDE.md for the full publish sequence.
+
+---
+
+## Related
+
+- [Installation](/getting-started/installation/) — prerequisites and initial install verification
+- [Configuration](configuration.md) — environment variables and threshold tuning
+- [FAQ](/getting-started/faq/) — quick answers to common questions

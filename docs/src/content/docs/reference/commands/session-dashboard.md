@@ -2,6 +2,9 @@
 title: "/session-dashboard"
 description: "Plugin health report command — session metrics, hook success rates, failure patterns, and token efficiency in a single readable summary."
 ---
+
+> **Status:** 🆕 New in v4.0 — migrated to native command format in the v4.0.0 release
+
 Generate a human-readable health report of the claudetools plugin system — session metrics, success rates, failure patterns, and token efficiency.
 
 ## Invocation
@@ -81,3 +84,9 @@ Recommendations
 - **No metrics.db** — metrics appear after a few sessions with claudetools active.
 - **sqlite3 not installed** — install with `apt install sqlite3` or `brew install sqlite3`.
 - **Fewer than 3 sessions** — recommendations may not be reliable with limited data.
+
+## Related
+
+- [Reference: /logs command](logs.md) — query raw conversation history and tool usage across sessions
+- [Reference: /field-review command](field-review.md) — audit hook decisions for false positives
+- [Installation](/getting-started/installation/) — verify hooks are registered after install

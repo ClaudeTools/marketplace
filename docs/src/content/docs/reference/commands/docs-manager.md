@@ -2,6 +2,9 @@
 title: "/docs-manager"
 description: "Documentation management command — audit, archive, generate index, and enforce standardized structure across project docs."
 ---
+
+> **Status:** 🆕 New in v4.0 — migrated to native command format in the v4.0.0 release
+
 Manage project documentation with standardized structure, auditing, archiving, and index generation.
 
 ## Invocation
@@ -73,3 +76,9 @@ Run /docs-manager reindex to regenerate index files.
 - The `archive` command moves documents with `status: deprecated` in their front matter.
 - `reindex` is useful after adding or removing many documentation files.
 - Run `audit` regularly as part of documentation maintenance.
+
+## Related
+
+- [Advanced: Architecture](/advanced/architecture/) — the hook that enforces doc standards on every file write
+- [Reference: /logs command](logs.md) — check session history when investigating doc-related tool failures
+- [Reference: plugin-improver skill](/reference/skills/plugin-improver/) — improvement loop that uses docs-manager audit data

@@ -76,3 +76,11 @@ Automatically approves low-risk permission requests (e.g., reading files in the 
 **Scripts:** `scripts/failure-pattern-detector.sh`, `scripts/capture-failure.sh`
 
 Runs after every tool failure. The detector identifies recurring failure patterns (e.g., Edit failing repeatedly on the same file) and escalates to a block if the pattern indicates a systemic issue. The capture script records failure data for telemetry and the improvement loop.
+
+---
+
+## Related
+
+- [Quality Hooks](quality-hooks.md) — edit quality enforcement (stubs, blind edits, churn)
+- [Process Hooks](process-hooks.md) — git discipline, task completion, team coordination
+- [Hooks Overview](index.md) — full lifecycle event reference

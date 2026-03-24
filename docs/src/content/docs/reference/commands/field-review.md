@@ -2,6 +2,9 @@
 title: "/field-review"
 description: "Field review of the claudetools plugin — reports on hook performance, false positives, bugs, and gaps from real session data."
 ---
+
+> **Status:** 🆕 New in v4.0 — migrated to native command format in the v4.0.0 release
+
 Field review of the claudetools plugin itself — hooks, validators, skills performance, false positives, bugs, gaps, and praise. Generates a local report and optionally submits a sanitized summary to cross-install telemetry.
 
 ## Invocation
@@ -85,3 +88,9 @@ Submit? [y/N]
 - The full markdown report stays local — be as project-specific as needed.
 - The JSON summary is sanitized for remote submission.
 - If no metrics data exists, proceed with qualitative observations only.
+
+## Related
+
+- [Reference: /session-dashboard command](session-dashboard.md) — quantitative session health metrics
+- [Reference: plugin-improver skill](/reference/skills/plugin-improver/) — automated improvement loop that acts on field-review findings
+- [Advanced: Validators](/advanced/validators/) — components most commonly surfaced in field reviews

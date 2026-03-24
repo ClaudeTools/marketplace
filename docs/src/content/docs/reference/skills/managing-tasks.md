@@ -2,6 +2,9 @@
 title: "Managing Tasks"
 description: "Skill for persistent task tracking with cross-session continuity, dependency management, and session handoff summaries."
 ---
+
+> **Status:** ✅ Stable — included in all claudetools versions
+
 Extended task management with persistence, cross-session continuity, and validation. Provides a subcommand router on top of the built-in task system.
 
 **Trigger:** Use when the user says `/task-manager`, "task status", "manage tasks", "restore tasks", or "session handoff".

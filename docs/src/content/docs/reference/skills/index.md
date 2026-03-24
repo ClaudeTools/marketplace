@@ -16,3 +16,11 @@ description: "7 intelligent workflow skills — triggered automatically or invok
 | [Managing Tasks](managing-tasks.md) | `/managing-tasks` | Persistent tasks with cross-session continuity and handoff summaries |
 | [Evaluating Safety](evaluating-safety.md) | `/evaluating-safety` | Training scenarios, deterministic tests, cross-model safety comparison |
 | [Plugin Improver](plugin-improver.md) | `/plugin-improver` | 7-phase autonomous self-improvement with automatic regression revert |
+
+---
+
+## Related
+
+- [Which Tool Should I Use?](/guides/which-tool/) — when to use a skill vs a slash command vs an agent
+- [Reference: Agents](/reference/agents/) — agents that orchestrate multiple skills end-to-end
+- [Core Concepts — Skills](/getting-started/core-concepts/#skills) — how skills auto-trigger and when to invoke explicitly

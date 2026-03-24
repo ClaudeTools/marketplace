@@ -2,6 +2,9 @@
 title: "Exploring Codebase"
 description: "Skill that wraps codebase-pilot CLI into workflow modes — symbol search, import tracing, architecture mapping, and dependency analysis."
 ---
+
+> **Status:** ✅ Stable — included in all claudetools versions
+
 Structured codebase navigation using the codebase-pilot CLI. Wraps CLI commands into workflow modes that chain for deeper understanding.
 
 **Trigger:** Use when the user asks to understand unfamiliar code, find where something is defined, trace what calls a function, explore how a module works, or get a project overview.

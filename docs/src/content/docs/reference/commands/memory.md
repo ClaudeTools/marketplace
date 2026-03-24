@@ -2,6 +2,9 @@
 title: "/memory"
 description: "Manage persistent cross-session developer memory — add, search, decay, prune, and sync memory entries to CLAUDE.md."
 ---
+
+> **Status:** 🆕 New in v4.0 — migrated to native command format in the v4.0.0 release
+
 Manage developer memory — persistent cross-session knowledge injected into every conversation via CLAUDE.md.
 
 ## Invocation
@@ -85,3 +88,9 @@ Memory regenerated — CLAUDE.md updated.
 - Entries are stored in third person: "Prefers tabs over spaces", not "I prefer tabs".
 - `reset` never deletes `config.yaml` — only content files.
 - The system never draws attention to the memory system in responses unless directly asked.
+
+## Related
+
+- [Core Concepts — Task System](/getting-started/core-concepts/#task-system) — persistent task tracking (complements memory for cross-session state)
+- [Reference: context-hooks](/reference/hooks/context-hooks/) — the hooks that inject memory at session start and on each prompt
+- [FAQ — Memory system](/getting-started/faq/#daily-usage) — answers about memory injection and how to tune it

@@ -151,3 +151,11 @@ Description of the rule and when it applies.
 ## The `claude-code-guide` Command
 
 The `claude-code-guide` skill documents all available hooks, validators, skills, and agents. Run `/claude-code-guide` in the chat to get a live reference of the current plugin configuration. Use it when writing new extensions to check for naming conflicts or to understand the existing hook wiring.
+
+---
+
+## Related
+
+- [Advanced: Architecture](architecture.md) — dispatcher pattern, validator pattern, and skill loading internals
+- [Reference: /claude-code-guide command](/reference/commands/claude-code-guide/) — live reference for hooks, validators, and agents
+- [Advanced: Shared Libraries](shared-libraries.md) — the library functions your custom validators can use

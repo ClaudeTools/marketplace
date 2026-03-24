@@ -103,3 +103,11 @@ Prevents the most common form of token waste in long sessions.
 Run before and after context compaction:
 - `archive-before-compact.sh` — saves critical session state (active tasks, file read list, mesh registrations) to disk before compaction discards it
 - `restore-after-compact.sh` — reloads the saved state after compaction so the session continues without losing context
+
+---
+
+## Related
+
+- [Process Hooks](process-hooks.md) — git discipline, task completion, team coordination
+- [Safety Hooks](safety-hooks.md) — destructive command blocking and secret detection
+- [Hooks Overview](index.md) — full lifecycle event reference

@@ -117,3 +117,11 @@ The `mcp-servers/task-system/` server exposes task management as MCP tools (`tas
 3. At session end, `session-end-dispatcher.sh` calls `telemetry-sync.sh`
 4. `telemetry-sync.sh` batches events and POSTs to `https://telemetry.claudetools.com/v1/events`
 5. The local file is truncated on successful upload; rotated at 10 MB
+
+---
+
+## Related
+
+- [Core Concepts](/getting-started/core-concepts/) — high-level introduction to hooks, validators, skills, and agents
+- [Extending claudetools](extending.md) — add custom validators, skills, and agents
+- [Advanced: Validators](validators.md) — complete validator reference with exit codes

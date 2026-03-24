@@ -44,3 +44,11 @@ description: "26 modular gate functions — every validator, its severity, which
 | `2` | Block | Write human-readable reason to stdout; dispatcher emits block JSON and exits |
 
 Safety-critical gates (`pre-bash-gate`) stop at the first block and do not run subsequent validators. Non-safety gates accumulate all warnings before exiting.
+
+---
+
+## Related
+
+- [Reference: Hooks](/reference/hooks/) — the lifecycle events that trigger these validators
+- [Advanced: Architecture](architecture.md) — how validators are sourced and invoked inside gate dispatchers
+- [Advanced: Extending claudetools](extending.md) — how to add your own validator to a gate

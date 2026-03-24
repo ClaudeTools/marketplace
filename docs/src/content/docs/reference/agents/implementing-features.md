@@ -2,6 +2,9 @@
 title: "Implementing Features"
 description: "Implementation agent for multi-file code changes — reads widely before editing, tracks work in tasks, and verifies correctness after every change."
 ---
+
+> **Status:** ✅ Stable — included in all claudetools versions
+
 Implementation agent for building features and making multi-file code changes.
 
 ## Purpose
@@ -52,3 +55,9 @@ Use the implementing-features agent to add pagination to the /api/invoices endpo
 ```
 
 The agent reads the existing route, understands the response shape, creates tasks for the implementation steps, makes the changes, runs typecheck, runs targeted tests, and commits with a `feat:` message.
+
+## Related
+
+- [Feature Pipeline](feature-pipeline.md) — orchestrates this agent alongside others for end-to-end feature delivery
+- [Build a Feature guide](/guides/build-a-feature/) — see what this agent does inside a pipeline
+- [Reference: code-reviewer agent](code-reviewer.md) — typically runs after implementing-features to review the output

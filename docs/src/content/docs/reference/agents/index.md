@@ -42,3 +42,11 @@ description: "11 specialized agents — 4 full-cycle pipelines (feature, bugfix,
 | [Researcher](/reference/agents/researcher/) | Sonnet | Read-only | External API/library research |
 | [Investigating Bugs](/reference/agents/investigating-bugs/) | Sonnet | Full | Evidence-based debugging |
 | [Exploring Codebase](/reference/agents/exploring-codebase/) | Sonnet | Read-only | Codebase analysis |
+
+---
+
+## Related
+
+- [Which Tool Should I Use?](/guides/which-tool/) — decision guide for choosing between skills, commands, and agents
+- [Reference: Skills](/reference/skills/) — auto-triggered workflow skills that agents rely on
+- [Core Concepts — Agents](/getting-started/core-concepts/#agents) — how agents, pipelines, and teammates relate

@@ -97,3 +97,11 @@ All UI/UX changes must be verified in Chrome after deployment. Never claim UI wo
 **Paths:** `**/*`
 
 When `TeamCreate` is available: all multi-task implementation work must use it. Agent tool without team_name is only for quick read-only exploration. When `TeamCreate` is not available: use Agent tool directly with parallel calls for independent work. All work items must be tracked with TaskCreate before starting. Commit after each completed task. Never end a session with uncommitted changes.
+
+---
+
+## Related
+
+- [Core Concepts — Rules](/getting-started/core-concepts/#rules) — how rules differ from hooks and when each is used
+- [Advanced: Configuration](/advanced/configuration/) — configure rules paths and injection behavior
+- [Reference: Hooks](/reference/hooks/) — hooks enforce specific tool calls; rules govern general behavior

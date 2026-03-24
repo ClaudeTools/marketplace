@@ -2,6 +2,9 @@
 title: "Bugfix Pipeline"
 description: "Full-cycle bug fix pipeline — orchestrates REPRODUCE, INVESTIGATE, FIX, REVIEW, and CONFIRM with mandatory evidence at every step."
 ---
+
+> **Status:** ✅ Stable — included in all claudetools versions
+
 Full-cycle bug fix pipeline. Orchestrates reproduction, investigation, fix implementation, review, and confirmation.
 
 ## Purpose
@@ -74,3 +77,9 @@ The original failing test must now pass. Commits with a `fix:` conventional comm
 ```
 Use the bugfix-pipeline agent to fix the authentication token expiry bug reported in #234.
 ```
+
+## Related
+
+- [Debug a Bug guide](/guides/debug-a-bug/) — walkthrough of the investigating-bugs protocol with real output
+- [Reference: investigating-bugs skill](/reference/skills/investigating-bugs/) — the skill this pipeline wraps
+- [Feature Pipeline](feature-pipeline.md) — full-cycle pipeline for new features

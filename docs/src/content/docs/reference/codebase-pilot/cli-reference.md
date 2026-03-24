@@ -123,3 +123,11 @@ codebase-pilot doctor
 ```
 
 Health check: verifies SQLite, tree-sitter grammars (native + WASM), index existence, and freshness.
+
+---
+
+## Related
+
+- [Codebase Pilot: Indexing](indexing.md) — how the index is built and kept fresh
+- [Reference: exploring-codebase skill](/reference/skills/exploring-codebase/) — the skill that wraps these CLI commands into workflow modes
+- [Explore a Codebase guide](/guides/explore-a-codebase/) — real examples of every major CLI command in use

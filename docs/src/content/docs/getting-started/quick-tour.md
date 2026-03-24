@@ -21,6 +21,17 @@ Open a new Claude Code session. You won't see a splash screen — claudetools is
 Behind the scenes, claudetools set up three things: a set of safety guardrails that run on every command, a memory system that picks up where your last session left off, and a background scan of your project files so Claude can answer structural questions quickly. Nothing to configure.
 :::
 
+<details>
+<summary>What exactly runs at session start? (Advanced)</summary>
+
+When you open a Claude Code session with claudetools installed:
+
+1. **51 hooks register** across 17 lifecycle events (`PreToolUse`, `PostToolUse`, `SessionStart`, `SessionEnd`, and more). Each hook is a shell script that fires automatically — you don't invoke them.
+2. **Skills load** — 7 structured workflows become available, either auto-triggered by Claude or invoked via `/skill-name`.
+3. **`session-index.sh` runs** in the background — it calls `codebase-pilot index` to build or update a tree-sitter + SQLite symbol index of your project. For large projects this takes 10–30 seconds. You won't see it happen.
+
+</details>
+
 **Try it yourself:** After installing, open a new session and try one of the prompts in Minute 2 below.
 
 ---

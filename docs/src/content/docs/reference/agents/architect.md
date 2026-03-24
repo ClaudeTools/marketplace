@@ -2,6 +2,9 @@
 title: "Architect"
 description: "Read-only architecture review agent — analyses codebase structure, evaluates design trade-offs, and produces structured refactoring plans."
 ---
+
+> **Status:** ✅ Stable — included in all claudetools versions
+
 Architecture review and planning agent. Invoked for design decisions, refactoring plans, and impact analysis.
 
 ## Purpose
@@ -49,3 +52,9 @@ Use the architect agent to review whether we should move the auth logic into a d
 ```
 
 The architect reads the current route structure, identifies all auth-related code, analyses the trade-offs of each approach, and produces a recommendation with a migration path — without writing a single line of code.
+
+## Related
+
+- [Explore a Codebase guide](/guides/explore-a-codebase/) — understand structure before requesting architectural review
+- [Refactor Pipeline](refactor-pipeline.md) — execute an architectural change after the architect has designed it
+- [Reference: exploring-codebase skill](/reference/skills/exploring-codebase/) — uses the same codebase-pilot queries

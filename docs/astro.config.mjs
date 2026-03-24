@@ -8,6 +8,9 @@ export default defineConfig({
     starlight({
       title: 'claudetools',
       customCss: ['./src/styles/custom.css'],
+      editLink: {
+        baseUrl: 'https://github.com/ClaudeTools/marketplace-dev/edit/main/docs/',
+      },
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/ClaudeTools/marketplace' },
       ],
@@ -27,6 +30,7 @@ export default defineConfig({
             { slug: 'guides/coordinate-agents' },
             { slug: 'guides/improve-prompts' },
             { slug: 'guides/setup-new-project' },
+            { label: 'Common Recipes', slug: 'guides/recipes' },
           ],
         },
         { label: 'Skills', autogenerate: { directory: 'reference/skills' } },
