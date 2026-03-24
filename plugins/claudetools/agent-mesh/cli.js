@@ -120,7 +120,7 @@ function cmdRegister(opts) {
   atomicWrite(path.join(AGENTS_DIR, id + '.json'), agent);
   // Ensure inbox directory for this agent
   ensureDir(path.join(INBOX_DIR, name));
-  console.log(`Registered agent "${name}" (${id})`);
+  console.error(`Registered agent "${name}" (${id})`);
 }
 
 function cmdDeregister(opts) {
@@ -129,7 +129,7 @@ function cmdDeregister(opts) {
   const agentFile = path.join(AGENTS_DIR, id + '.json');
   if (fs.existsSync(agentFile)) {
     fs.unlinkSync(agentFile);
-    console.log(`Deregistered agent ${id}`);
+    console.error(`Deregistered agent ${id}`);
   } else {
     fail(`Agent ${id} not found`);
   }

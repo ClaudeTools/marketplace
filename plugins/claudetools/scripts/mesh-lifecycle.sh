@@ -54,7 +54,7 @@ case "$ACTION" in
         [[ "$a_wt" == "$WT" ]] || continue
         # PID still alive?
         if kill -0 "$a_pid" 2>/dev/null; then
-          echo "[agent-mesh] COLLISION: ${a_name} (PID ${a_pid}) is active on this worktree"
+          echo "[agent-mesh] COLLISION: ${a_name} (PID ${a_pid}) is active on this worktree" >&2
           hook_log "mesh-lifecycle: collision detected — $a_name (PID $a_pid) on $WT"
         fi
       done

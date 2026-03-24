@@ -136,15 +136,27 @@ if [[ "$_idx_ok" -eq 1 ]]; then
   fi
 fi
 
-if [[ -n "$MAP_OUTPUT" ]]; then
+# Only inject context to stdout on SessionStart/SubagentStart — NOT WorktreeCreate.
+# WorktreeCreate stdout gets concatenated with the worktree path by Claude Code,
+# corrupting the chdir target. All context injection below is gated on this flag.
+_inject_context=1
+if [[ "$HOOK_EVENT" == "WorktreeCreate" ]]; then
+  _inject_context=0
+fi
+
+if [[ "$_inject_context" -eq 1 ]] && [[ -n "$MAP_OUTPUT" ]]; then
   echo "--- Codebase Index (auto-generated) ---"
   echo "$MAP_OUTPUT"
   echo "--- End Codebase Index ---"
 fi
 
-# --- Task-aware context injection ---
+# --- Task-aware context injection (skip on WorktreeCreate) ---
 # On SubagentStart, extract key terms from the agent's task/prompt and inject
 # relevant symbols + file locations so the agent doesn't waste inference searching.
+if [[ "$_inject_context" -eq 0 ]]; then
+  exit 0
+fi
+
 DB_PATH=""
 for d in "$PROJECT_ROOT" "$PROJECT_ROOT/.codeindex"; do
   [[ -f "$d/db.sqlite" ]] && DB_PATH="$d/db.sqlite" && break
