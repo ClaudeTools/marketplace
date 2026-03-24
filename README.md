@@ -11,11 +11,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ClaudeTools/marketplace"><img src="https://img.shields.io/badge/version-6.0.0-7BCC2E?style=for-the-badge" alt="Version"></a>&nbsp;
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="License"></a>&nbsp;
-  <img src="https://img.shields.io/badge/hooks-51-7BCC2E?style=for-the-badge" alt="51 Hooks">&nbsp;
-  <img src="https://img.shields.io/badge/skills-14-7BCC2E?style=for-the-badge" alt="14 Skills">&nbsp;
-  <img src="https://img.shields.io/badge/agents-10-7BCC2E?style=for-the-badge" alt="10 Agents">
+  <a href="https://github.com/ClaudeTools/marketplace"><img src="https://img.shields.io/badge/version-6.0.0-1A7F37?style=for-the-badge" alt="Version"></a>&nbsp;
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-0550AE?style=for-the-badge" alt="License"></a>&nbsp;
+  <img src="https://img.shields.io/badge/hooks-51-1A7F37?style=for-the-badge" alt="51 Hooks">&nbsp;
+  <img src="https://img.shields.io/badge/skills-14-1A7F37?style=for-the-badge" alt="14 Skills">&nbsp;
+  <img src="https://img.shields.io/badge/agents-10-1A7F37?style=for-the-badge" alt="10 Agents">
 </p>
 
 <p align="center">
@@ -24,12 +24,12 @@
   <a href="#-hooks">Hooks</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
   <a href="#-agents">Agents</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
   <a href="#-codebase-pilot">Codebase Pilot</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
-  <a href="#%EF%B8%8F-configuration">Config</a>
+  <a href="#-configuration">Config</a>
 </p>
 
 <br>
 
-## <img src="https://img.shields.io/badge/->_-7BCC2E?style=flat-square" alt="" height="20"> Install
+## <img src="https://img.shields.io/badge/->_-1A7F37?style=flat-square" alt="" height="20"> Install
 
 ```
 /plugin install claudetools@claudetools-marketplace
@@ -39,38 +39,38 @@
 
 <br>
 
-## <img src="https://img.shields.io/badge/-Skills-7BCC2E?style=flat-square" alt="" height="20"> Skills
+## <img src="https://img.shields.io/badge/-Skills-1A7F37?style=flat-square" alt="" height="20"> Skills
 
 14 built-in skills for structured, repeatable workflows.
 
 | | Skill | Command |
 |---|-------|---------|
-| <img src="https://img.shields.io/badge/-explore-2563EB?style=flat-square" alt=""> | **Explore Codebase** | `/exploring-codebase` |
-| <img src="https://img.shields.io/badge/-debug-DC2626?style=flat-square" alt=""> | **Investigate Bugs** | `/investigating-bugs` |
-| <img src="https://img.shields.io/badge/-review-8B5CF6?style=flat-square" alt=""> | **Code Review** | `/code-review` |
-| <img src="https://img.shields.io/badge/-prompt-F59E0B?style=flat-square" alt=""> | **Improve Prompts** | `/improving-prompts` |
-| <img src="https://img.shields.io/badge/-design-EC4899?style=flat-square" alt=""> | **Design Interfaces** | `/designing-interfaces` |
-| <img src="https://img.shields.io/badge/-tasks-10B981?style=flat-square" alt=""> | **Manage Tasks** | `/managing-tasks` |
-| <img src="https://img.shields.io/badge/-safety-EF4444?style=flat-square" alt=""> | **Evaluate Safety** | `/evaluating-safety` |
-| <img src="https://img.shields.io/badge/-improve-06B6D4?style=flat-square" alt=""> | **Improve Plugin** | `/improving-plugin` |
-| <img src="https://img.shields.io/badge/-health-7BCC2E?style=flat-square" alt=""> | **Session Dashboard** | `/session-dashboard` |
-| <img src="https://img.shields.io/badge/-audit-6366F1?style=flat-square" alt=""> | **Field Review** | `/field-review` |
+| <img src="https://img.shields.io/badge/-explore-1D4ED8?style=flat-square" alt=""> | **Explore Codebase** | `/exploring-codebase` |
+| <img src="https://img.shields.io/badge/-debug-B91C1C?style=flat-square" alt=""> | **Investigate Bugs** | `/investigating-bugs` |
+| <img src="https://img.shields.io/badge/-review-6D28D9?style=flat-square" alt=""> | **Code Review** | `/code-review` |
+| <img src="https://img.shields.io/badge/-prompt-92400E?style=flat-square" alt=""> | **Improve Prompts** | `/improving-prompts` |
+| <img src="https://img.shields.io/badge/-design-BE185D?style=flat-square" alt=""> | **Design Interfaces** | `/designing-interfaces` |
+| <img src="https://img.shields.io/badge/-tasks-065F46?style=flat-square" alt=""> | **Manage Tasks** | `/managing-tasks` |
+| <img src="https://img.shields.io/badge/-safety-991B1B?style=flat-square" alt=""> | **Evaluate Safety** | `/evaluating-safety` |
+| <img src="https://img.shields.io/badge/-improve-155E75?style=flat-square" alt=""> | **Improve Plugin** | `/improving-plugin` |
+| <img src="https://img.shields.io/badge/-health-1A7F37?style=flat-square" alt=""> | **Session Dashboard** | `/session-dashboard` |
+| <img src="https://img.shields.io/badge/-audit-4338CA?style=flat-square" alt=""> | **Field Review** | `/field-review` |
 
 <details>
 <summary>+ 4 more: <code>/memory</code> &bull; <code>/logs</code> &bull; <code>/docs-manager</code> &bull; <code>/claude-code-guide</code></summary>
 
 | | Skill | Command |
 |---|-------|---------|
-| <img src="https://img.shields.io/badge/-memory-7C3AED?style=flat-square" alt=""> | **Memory** | `/memory` |
-| <img src="https://img.shields.io/badge/-logs-6B7280?style=flat-square" alt=""> | **Logs** | `/logs` |
-| <img src="https://img.shields.io/badge/-docs-0EA5E9?style=flat-square" alt=""> | **Docs Manager** | `/docs-manager` |
-| <img src="https://img.shields.io/badge/-guide-F97316?style=flat-square" alt=""> | **Claude Code Guide** | `/claude-code-guide` |
+| <img src="https://img.shields.io/badge/-memory-5B21B6?style=flat-square" alt=""> | **Memory** | `/memory` |
+| <img src="https://img.shields.io/badge/-logs-4B5563?style=flat-square" alt=""> | **Logs** | `/logs` |
+| <img src="https://img.shields.io/badge/-docs-0369A1?style=flat-square" alt=""> | **Docs Manager** | `/docs-manager` |
+| <img src="https://img.shields.io/badge/-guide-9A3412?style=flat-square" alt=""> | **Claude Code Guide** | `/claude-code-guide` |
 
 </details>
 
 <br>
 
-## <img src="https://img.shields.io/badge/-Hooks-2563EB?style=flat-square" alt="" height="20"> Hooks
+## <img src="https://img.shields.io/badge/-Hooks-1D4ED8?style=flat-square" alt="" height="20"> Hooks
 
 51 hooks across 17 lifecycle events. Guardrails that run automatically on every tool call.
 
@@ -78,7 +78,7 @@
 <tr>
 <td width="25%" align="center">
 
-<img src="https://img.shields.io/badge/-SAFETY-EF4444?style=for-the-badge" alt="Safety">
+<img src="https://img.shields.io/badge/-SAFETY-B91C1C?style=for-the-badge" alt="Safety">
 
 Destructive commands
 Hardcoded secrets
@@ -87,7 +87,7 @@ Sensitive file access
 </td>
 <td width="25%" align="center">
 
-<img src="https://img.shields.io/badge/-QUALITY-8B5CF6?style=for-the-badge" alt="Quality">
+<img src="https://img.shields.io/badge/-QUALITY-6D28D9?style=for-the-badge" alt="Quality">
 
 Stubs & placeholders
 Type abuse (`as any`)
@@ -96,7 +96,7 @@ Edit churn detection
 </td>
 <td width="25%" align="center">
 
-<img src="https://img.shields.io/badge/-PROCESS-F59E0B?style=for-the-badge" alt="Process">
+<img src="https://img.shields.io/badge/-PROCESS-92400E?style=for-the-badge" alt="Process">
 
 Read-before-edit
 Commit hygiene
@@ -105,7 +105,7 @@ Scope discipline
 </td>
 <td width="25%" align="center">
 
-<img src="https://img.shields.io/badge/-CONTEXT-10B981?style=for-the-badge" alt="Context">
+<img src="https://img.shields.io/badge/-CONTEXT-065F46?style=for-the-badge" alt="Context">
 
 Redundant read prevention
 Memory injection
@@ -116,7 +116,7 @@ Session telemetry
 </table>
 
 <details>
-<summary><img src="https://img.shields.io/badge/-quiet_mode-6B7280?style=flat-square" alt=""> Suppress non-safety hooks for research sessions</summary>
+<summary><img src="https://img.shields.io/badge/-quiet_mode-4B5563?style=flat-square" alt=""> Suppress non-safety hooks for research sessions</summary>
 
 <br>
 
@@ -130,16 +130,16 @@ Safety hooks always run regardless of quiet mode.
 
 <br>
 
-## <img src="https://img.shields.io/badge/-Agents-EC4899?style=flat-square" alt="" height="20"> Agents
+## <img src="https://img.shields.io/badge/-Agents-BE185D?style=flat-square" alt="" height="20"> Agents
 
 10 agents including 4 pre-built pipelines that compose skills into end-to-end workflows.
 
 | Pipeline | Flow | Use when |
 |----------|------|----------|
-| <img src="https://img.shields.io/badge/-feature-7BCC2E?style=flat-square" alt=""> | explore &rarr; plan &rarr; implement &rarr; review &rarr; verify | New feature end-to-end |
-| <img src="https://img.shields.io/badge/-bugfix-DC2626?style=flat-square" alt=""> | explore &rarr; investigate &rarr; fix &rarr; review &rarr; confirm | Evidence-based bug resolution |
-| <img src="https://img.shields.io/badge/-security-EF4444?style=flat-square" alt=""> | audit &rarr; scan &rarr; dead-code &rarr; deps &rarr; report | Read-only security assessment |
-| <img src="https://img.shields.io/badge/-refactor-6366F1?style=flat-square" alt=""> | impact &rarr; decompose &rarr; implement &rarr; verify | Safe refactoring |
+| <img src="https://img.shields.io/badge/-feature-1A7F37?style=flat-square" alt=""> | explore &rarr; plan &rarr; implement &rarr; review &rarr; verify | New feature end-to-end |
+| <img src="https://img.shields.io/badge/-bugfix-B91C1C?style=flat-square" alt=""> | explore &rarr; investigate &rarr; fix &rarr; review &rarr; confirm | Evidence-based bug resolution |
+| <img src="https://img.shields.io/badge/-security-991B1B?style=flat-square" alt=""> | audit &rarr; scan &rarr; dead-code &rarr; deps &rarr; report | Read-only security assessment |
+| <img src="https://img.shields.io/badge/-refactor-4338CA?style=flat-square" alt=""> | impact &rarr; decompose &rarr; implement &rarr; verify | Safe refactoring |
 
 <details>
 <summary>Standalone agents</summary>
@@ -150,7 +150,7 @@ Safety hooks always run regardless of quiet mode.
 
 <br>
 
-## <img src="https://img.shields.io/badge/-Codebase_Pilot-06B6D4?style=flat-square" alt="" height="20"> Codebase Pilot
+## <img src="https://img.shields.io/badge/-Codebase_Pilot-155E75?style=flat-square" alt="" height="20"> Codebase Pilot
 
 Tree-sitter + SQLite indexing engine. Semantic code navigation across 14 languages.
 
@@ -163,26 +163,26 @@ codebase-pilot circular-deps              # Detect circular imports
 ```
 
 <p>
-  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
-  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript">
-  <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/Go-00ADD8?style=flat-square&logo=go&logoColor=white" alt="Go">
-  <img src="https://img.shields.io/badge/Rust-000000?style=flat-square&logo=rust&logoColor=white" alt="Rust">
-  <img src="https://img.shields.io/badge/Java-ED8B00?style=flat-square&logo=openjdk&logoColor=white" alt="Java">
-  <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin">
-  <img src="https://img.shields.io/badge/Ruby-CC342D?style=flat-square&logo=ruby&logoColor=white" alt="Ruby">
-  <img src="https://img.shields.io/badge/C%23-239120?style=flat-square&logo=csharp&logoColor=white" alt="C#">
-  <img src="https://img.shields.io/badge/PHP-777BB4?style=flat-square&logo=php&logoColor=white" alt="PHP">
-  <img src="https://img.shields.io/badge/Swift-FA7343?style=flat-square&logo=swift&logoColor=white" alt="Swift">
-  <img src="https://img.shields.io/badge/C/C++-00599C?style=flat-square&logo=cplusplus&logoColor=white" alt="C/C++">
-  <img src="https://img.shields.io/badge/Bash-4EAA25?style=flat-square&logo=gnubash&logoColor=white" alt="Bash">
+  <img src="https://img.shields.io/badge/TypeScript-1D4ED8?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/JavaScript-92400E?style=flat-square&logo=javascript&logoColor=white" alt="JavaScript">
+  <img src="https://img.shields.io/badge/Python-1E3A5F?style=flat-square&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Go-155E75?style=flat-square&logo=go&logoColor=white" alt="Go">
+  <img src="https://img.shields.io/badge/Rust-1C1917?style=flat-square&logo=rust&logoColor=white" alt="Rust">
+  <img src="https://img.shields.io/badge/Java-9A3412?style=flat-square&logo=openjdk&logoColor=white" alt="Java">
+  <img src="https://img.shields.io/badge/Kotlin-5B21B6?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin">
+  <img src="https://img.shields.io/badge/Ruby-991B1B?style=flat-square&logo=ruby&logoColor=white" alt="Ruby">
+  <img src="https://img.shields.io/badge/C%23-065F46?style=flat-square&logo=csharp&logoColor=white" alt="C#">
+  <img src="https://img.shields.io/badge/PHP-4338CA?style=flat-square&logo=php&logoColor=white" alt="PHP">
+  <img src="https://img.shields.io/badge/Swift-9A3412?style=flat-square&logo=swift&logoColor=white" alt="Swift">
+  <img src="https://img.shields.io/badge/C/C++-1D4ED8?style=flat-square&logo=cplusplus&logoColor=white" alt="C/C++">
+  <img src="https://img.shields.io/badge/Bash-1A7F37?style=flat-square&logo=gnubash&logoColor=white" alt="Bash">
 </p>
 
 Index updates automatically on file edits via hooks.
 
 <br>
 
-## <img src="https://img.shields.io/badge/-Config-F59E0B?style=flat-square" alt="" height="20"> Configuration
+## <img src="https://img.shields.io/badge/-Config-92400E?style=flat-square" alt="" height="20"> Configuration
 
 <details>
 <summary><strong>Memory system</strong> &mdash; FTS5-backed cross-session knowledge</summary>
