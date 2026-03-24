@@ -15,7 +15,7 @@ Common issues and how to resolve them.
 
 ## Codebase-Pilot Not Indexing
 
-**Symptom:** `/exploring-codebase` returns no results; `find-symbol` cannot locate known functions.
+**Symptom:** `/codebase-explorer` returns no results; `find-symbol` cannot locate known functions.
 
 Run the doctor command:
 

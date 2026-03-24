@@ -1,5 +1,5 @@
 ---
-name: exploring-codebase
+name: codebase-explorer
 description: Explores codebase structure, finds symbol definitions, traces dependency chains, and maps project architecture. Use when understanding unfamiliar code, finding where something is defined, tracing what calls a function, exploring how a module works, navigating dependencies, or getting a project overview.
 argument-hint: [query or file path]
 allowed-tools: Read, Bash, Grep, Glob
@@ -136,7 +136,7 @@ Common multi-step navigation sequences:
 Follow a field/variable name across the entire codebase, categorized by role (definition, transformation, query, display).
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/trace-field.sh "amount_due"
+bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/trace-field.sh "amount_due"
 ```
 
 Shows every file that references the field, grouped into:
@@ -152,7 +152,7 @@ Shows every file that references the field, grouped into:
 Trace an HTTP route from registration through handler, middleware, to DB calls.
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/find-route.sh "/api/v1/dashboard"
+bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/find-route.sh "/api/v1/dashboard"
 ```
 
 Shows the full chain:
@@ -168,7 +168,7 @@ Shows the full chain:
 Find all SQL queries referencing a table and show column usage patterns.
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/find-queries.sh "transactions"
+bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/find-queries.sh "transactions"
 ```
 
 Categorizes queries into SELECT, INSERT/UPDATE/DELETE, WHERE clauses, aggregate functions (SUM/AVG/COUNT), and schema DDL.
@@ -180,7 +180,7 @@ Categorizes queries into SELECT, INSERT/UPDATE/DELETE, WHERE clauses, aggregate 
 Compare field/column names between two files — SQL schema vs TypeScript interface, or any two type definition files.
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/diff-schema.sh "schema.sql" "types.ts"
+bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/diff-schema.sh "schema.sql" "types.ts"
 ```
 
 Shows fields only in file 1, only in file 2, and in both. Catches schema parity bugs between database definitions and application types.
@@ -192,7 +192,7 @@ Shows fields only in file 1, only in file 2, and in both. Catches schema parity 
 AST-aware security scanning — finds hardcoded secrets, SQL injection, insecure crypto, console.log in production, and unvalidated redirects.
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/security-scan.sh
+bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/security-scan.sh
 ```
 
 Flags:
@@ -213,7 +213,7 @@ node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js dead-code
 
 Or via the shell wrapper:
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/dead-code.sh
+bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/dead-code.sh
 ```
 
 **When to use:** "Find unused exports", "What code can I safely delete?", "Show dead code"
@@ -228,7 +228,7 @@ node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js change-impact "handleAuth"
 
 Or via the shell wrapper:
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/change-impact.sh "handleAuth"
+bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/change-impact.sh "handleAuth"
 ```
 
 **When to use:** "What breaks if I change X?", "Impact analysis for refactoring Y", "Show blast radius"
@@ -238,7 +238,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/change-impact.sh "h
 Find functions over a line threshold, flagging deeply nested code.
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/complexity-report.sh --threshold 30
+bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/complexity-report.sh --threshold 30
 ```
 
 Default threshold is 50 lines. Uses the codebase-pilot index to find functions with line ranges, then checks nesting depth in source.

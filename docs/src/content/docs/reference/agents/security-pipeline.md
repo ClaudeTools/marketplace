@@ -26,7 +26,7 @@ Read-only: `Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch, 
 Runs the full audit script for a broad picture of the codebase — architecture, dependencies, and surface area:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/full-audit.sh
+bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/full-audit.sh
 ```
 
 ### 2. Security Scan
@@ -34,7 +34,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/full-audit.sh
 Runs the security scan for targeted findings, grouped by severity:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/security-scan.sh
+bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/security-scan.sh
 ```
 
 Covers: hardcoded secrets, SQL injection patterns, insecure crypto, console.log in production code, and unvalidated redirects.

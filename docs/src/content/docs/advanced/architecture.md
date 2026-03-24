@@ -76,7 +76,7 @@ Skills are directories under `plugin/skills/`. Each skill contains a `SKILL.md` 
 
 ```yaml
 ---
-name: exploring-codebase
+name: codebase-explorer
 description: Brief description shown in skill picker
 argument-hint: [query or file path]
 allowed-tools: Read, Bash, Grep, Glob

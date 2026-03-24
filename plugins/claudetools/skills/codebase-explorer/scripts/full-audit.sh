@@ -5,7 +5,7 @@ set -uo pipefail
 
 PROJECT="${1:-$(pwd)}"
 CLI="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}/codebase-pilot/dist/cli.js"
-SCRIPTS="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}/skills/exploring-codebase/scripts"
+SCRIPTS="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}/skills/codebase-explorer/scripts"
 
 echo "================================================================"
 echo "  FULL CODEBASE AUDIT"

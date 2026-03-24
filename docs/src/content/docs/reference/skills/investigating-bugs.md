@@ -79,6 +79,6 @@ Do not attempt a third fix without fresh evidence.
 
 ## Related Components
 
-- **exploring-codebase skill** — use to locate relevant files before Step 2
+- **codebase-explorer skill** — use to locate relevant files before Step 2
 - **debugging-discipline rule** — enforces the two-strike rule and evidence requirement across all sessions
 - **codebase-pilot CLI** — `find-symbol`, `file-overview` for locating code during OBSERVE phase

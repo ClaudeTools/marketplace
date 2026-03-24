@@ -27,9 +27,9 @@ CLAUDE_PLUGIN_ROOT=/home/user/.claude/plugins/cache/claudetools/3.x.x
 
 When `CLAUDE_PLUGIN_ROOT` points to a versioned cache path (matching `*/plugins/cache/*/X.Y.Z`), the data directory (`metrics.db`, telemetry logs) is placed one level above the version directory so it survives plugin upgrades.
 
-## Adaptive Thresholds
+## Hook Thresholds
 
-Thresholds that control hook sensitivity are defined in `plugin/scripts/lib/adaptive-weights.sh` via the `get_threshold` function. All values are hardcoded constants — DB-based adaptive tuning was removed (see commit 701b12f).
+Thresholds that control hook sensitivity are hardcoded in `scripts/lib/adaptive-weights.sh` via the `get_threshold` function.
 
 | Threshold | Default | Used by |
 |-----------|---------|---------|

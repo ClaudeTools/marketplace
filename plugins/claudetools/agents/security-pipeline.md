@@ -17,7 +17,7 @@ Run the full audit script to get a broad picture of the codebase:
 
 ```bash
 # Run all analysis commands in one pass
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/full-audit.sh
+bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/full-audit.sh
 ```
 
 Record the output — it covers architecture, dependencies, and surface area.
@@ -26,7 +26,7 @@ Record the output — it covers architecture, dependencies, and surface area.
 Run the security scan script for targeted findings:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/security-scan.sh
+bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/security-scan.sh
 ```
 
 Capture all output. Group findings by severity: CRITICAL → HIGH → MEDIUM → LOW.

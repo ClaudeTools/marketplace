@@ -75,11 +75,11 @@ The frontend-design skill runs intent questions and domain exploration before wr
 
 > "what does `buildUserResponse` do and where is it called?"
 
-The exploring-codebase skill activates automatically and answers in context.
+The codebase-explorer skill activates automatically and answers in context.
 
 **Deep dive** — invoke with a specific mode:
 
-> "/exploring-codebase --mode dependency-graph src/api/auth.ts"
+> "/codebase-explorer --mode dependency-graph src/api/auth.ts"
 
 Modes: `map`, `dependency-graph`, `security-scan`, `dead-code`, `lint-summary`.
 

@@ -9,7 +9,7 @@ Structured codebase navigation using the codebase-pilot CLI. Wraps CLI commands 
 
 **Trigger:** Use when the user asks to understand unfamiliar code, find where something is defined, trace what calls a function, explore how a module works, or get a project overview.
 
-**Invocation:** `/exploring-codebase [query or file path]`
+**Invocation:** `/codebase-explorer [query or file path]`
 
 ---
 
@@ -71,10 +71,10 @@ CLI path: `node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js`
 ## Example Invocations
 
 ```
-/exploring-codebase How does this project handle authentication?
-/exploring-codebase Where is validatePayment defined?
-/exploring-codebase What imports the UserRepository?
-/exploring-codebase src/api/billing.ts
+/codebase-explorer How does this project handle authentication?
+/codebase-explorer Where is validatePayment defined?
+/codebase-explorer What imports the UserRepository?
+/codebase-explorer src/api/billing.ts
 ```
 
 ---

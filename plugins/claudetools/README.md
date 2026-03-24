@@ -60,7 +60,7 @@
 
 | Skill | Description |
 |-------|-------------|
-| <img src="https://img.shields.io/badge/%2Fexploring--codebase-1D4ED8?style=flat-square" alt="/exploring-codebase"> | Semantic code navigation via tree-sitter index. Find symbols, trace imports, detect dead code, map architecture, analyse change impact. 14 languages. |
+| <img src="https://img.shields.io/badge/%2Fcodebase--explorer-1D4ED8?style=flat-square" alt="/codebase-explorer"> | Semantic code navigation via tree-sitter index. Find symbols, trace imports, detect dead code, map architecture, analyse change impact. 14 languages. |
 | <img src="https://img.shields.io/badge/%2Finvestigating--bugs-B91C1C?style=flat-square" alt="/investigating-bugs"> | Evidence-based debugging: **reproduce** &rarr; **observe** &rarr; **hypothesize** &rarr; **verify** &rarr; **fix** &rarr; **confirm**. Two-strike rule. |
 | <img src="https://img.shields.io/badge/%2Fprompt--improver-92400E?style=flat-square" alt="/prompt-improver"> | Transform rough instructions into structured XML prompts. Modes: **execute**, **plan**, **task**. Auto-detects tech stack. |
 | <img src="https://img.shields.io/badge/%2Ffrontend--design-BE185D?style=flat-square" alt="/frontend-design"> | Production UI with generated design systems, responsive screenshots, contrast auditing. React, Next.js, Vite, Astro, SvelteKit, Tailwind. |

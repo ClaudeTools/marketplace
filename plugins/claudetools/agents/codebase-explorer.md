@@ -1,5 +1,5 @@
 ---
-name: exploring-codebase
+name: codebase-explorer
 description: Deeply analyzes existing codebase features by tracing execution paths, mapping architecture layers, understanding patterns and abstractions, and documenting dependencies to inform new development.
 model: sonnet
 color: yellow

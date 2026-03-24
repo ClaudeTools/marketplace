@@ -21,11 +21,11 @@ Use the security-pipeline agent for a full codebase audit, or ask Claude directl
 > "check this project for security issues"
 
 :::note[Behind the scenes]
-The exploring-codebase skill detects the security intent and runs `security-scan.sh` automatically. No command needed — Claude recognises the request and acts.
+The codebase-explorer skill detects the security intent and runs `security-scan.sh` automatically. No command needed — Claude recognises the request and acts.
 :::
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/security-scan.sh
+bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/security-scan.sh
 ```
 
 ```
@@ -56,7 +56,7 @@ Every finding includes the file and line number so you can jump directly to the 
 Claude runs the scan with a focused filter:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/security-scan.sh --secrets-only
+bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/security-scan.sh --secrets-only
 ```
 
 ```
@@ -83,7 +83,7 @@ The security-pipeline agent runs five steps in sequence, each feeding context in
 **Step 1 — Full audit**
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/full-audit.sh
+bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/full-audit.sh
 ```
 
 Covers architecture overview, dependency surface area, and entry points — establishing what exists before scanning for what's wrong.
@@ -91,7 +91,7 @@ Covers architecture overview, dependency surface area, and entry points — esta
 **Step 2 — Security scan**
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/exploring-codebase/scripts/security-scan.sh --all
+bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/security-scan.sh --all
 ```
 
 AST-aware scanning across all severity levels:

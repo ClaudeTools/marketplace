@@ -130,7 +130,7 @@ The body of the agent `.md` file is its system prompt.
 
 ### Read-Only vs Full Access
 
-Read-only agents (architect, code-reviewer, security-pipeline, researcher, exploring-codebase) only have: `Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch, KillShell, BashOutput`
+Read-only agents (architect, code-reviewer, security-pipeline, researcher, codebase-explorer) only have: `Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch, KillShell, BashOutput`
 
 Full-access agents additionally have: `Edit, Write, NotebookEdit, Bash, Agent, TeamCreate, TeamDelete, SendMessage, TaskCreate, TaskUpdate, TaskList, TaskGet`
 
