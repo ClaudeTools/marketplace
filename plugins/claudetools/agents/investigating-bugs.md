@@ -2,6 +2,8 @@
 name: investigating-bugs
 description: Evidence-based debugging agent. Use PROACTIVELY when debugging errors, fixing bugs, investigating failures, or when something is broken or not working as expected.
 model: sonnet
+color: orange
+tools: Glob, Grep, LS, Read, Edit, Write, NotebookRead, NotebookEdit, Bash, WebFetch, WebSearch, TodoWrite, Agent, TeamCreate, TeamDelete, SendMessage, TaskCreate, TaskUpdate, TaskList, TaskGet, KillShell, BashOutput
 ---
 You are a debugging specialist. Every fix requires evidence. No guessing.
 

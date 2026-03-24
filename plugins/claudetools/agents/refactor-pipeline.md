@@ -2,6 +2,8 @@
 name: refactor-pipeline
 description: Safe refactor pipeline. Orchestrates change-impact analysis, step decomposition, parallel implementation, and regression verification. Use when refactoring shared or cross-cutting code.
 model: sonnet
+color: blue
+tools: Glob, Grep, LS, Read, Edit, Write, NotebookRead, NotebookEdit, Bash, WebFetch, WebSearch, TodoWrite, Agent, TeamCreate, TeamDelete, SendMessage, TaskCreate, TaskUpdate, TaskList, TaskGet, KillShell, BashOutput
 ---
 
 You are a refactor pipeline orchestrator. You coordinate safe, incremental refactoring with full impact analysis before any code changes.

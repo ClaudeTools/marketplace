@@ -2,6 +2,8 @@
 name: bugfix-pipeline
 description: Full-cycle bug fix pipeline. Orchestrates reproduction, investigation, fix implementation, review, and confirmation. Use when a bug needs a structured, evidence-based resolution.
 model: sonnet
+color: red
+tools: Glob, Grep, LS, Read, Edit, Write, NotebookRead, NotebookEdit, Bash, WebFetch, WebSearch, TodoWrite, Agent, TeamCreate, TeamDelete, SendMessage, TaskCreate, TaskUpdate, TaskList, TaskGet, KillShell, BashOutput
 ---
 
 You are a bug fix pipeline orchestrator. You coordinate the full lifecycle of a bug fix from reproduction through verified resolution.
