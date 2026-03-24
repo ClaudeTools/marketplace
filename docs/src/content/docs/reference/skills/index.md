@@ -12,7 +12,7 @@ description: "7 intelligent workflow skills — triggered automatically or invok
 | [Exploring Codebase](exploring-codebase.md) | `/exploring-codebase` | Semantic navigation: find symbols, trace imports, map architecture, detect dead code |
 | [Investigating Bugs](investigating-bugs.md) | `/investigating-bugs` | 6-step evidence-based debugging protocol with two-strike rule |
 | [Prompt Improver](prompt-improver.md) | `/prompt-improver` | Transform rough instructions into structured XML prompts |
-| [Designing Interfaces](designing-interfaces.md) | `/designing-interfaces` | Production UI with design systems, responsive screenshots, contrast auditing |
+| [Frontend Design](frontend-design.md) | `/frontend-design` | Production UI with design systems, responsive screenshots, contrast auditing |
 | [Managing Tasks](managing-tasks.md) | `/managing-tasks` | Persistent tasks with cross-session continuity and handoff summaries |
 | [Evaluating Safety](evaluating-safety.md) | `/evaluating-safety` | Training scenarios, deterministic tests, cross-model safety comparison |
 | [Plugin Improver](plugin-improver.md) | `/plugin-improver` | 7-phase autonomous self-improvement with automatic regression revert |

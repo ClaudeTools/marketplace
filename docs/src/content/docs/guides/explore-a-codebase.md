@@ -1,8 +1,6 @@
 ---
 title: "Explore a Codebase"
 description: "Map an unfamiliar project's architecture, trace request flows, find dead code, and assess change blast radius using codebase-pilot."
-sidebar:
-  order: 5
 ---
 
 **Difficulty: Beginner**

@@ -1,8 +1,6 @@
 ---
 title: "Manage Tasks"
 description: "Track work across sessions with persistent tasks, subtask decomposition, and handoff summaries."
-sidebar:
-  order: 10
 ---
 
 **Difficulty: Intermediate**

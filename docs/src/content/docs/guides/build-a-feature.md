@@ -1,8 +1,6 @@
 ---
 title: "Build a Feature"
 description: "Walk through a real feature build — task creation, parallel implementation, quality hooks, and verification."
-sidebar:
-  order: 7
 ---
 
 **Difficulty: Intermediate**

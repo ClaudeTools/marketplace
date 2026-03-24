@@ -71,7 +71,7 @@ Slash commands previously invoked as `/claudetools:name` are now `/project:name`
   - `capture-outcome.sh` — PostToolUse telemetry for every tool call
   - `aggregate-session.sh` — SessionEnd metrics (edit churn, failure rate, task velocity)
   - `inject-session-context.sh` — SessionStart injection of learned patterns
-  - Adaptive thresholds — safety-bounded [0.5×, 2.0×] tuning from session data
+  - Adaptive thresholds — safety-bounded [0.5×, 2.0×] tuning from session data (removed in later versions)
 - **4 new skills:** [`/code-review`](commands/code-review.md), `/investigating-bugs`, `/tune-thresholds`, [`/session-dashboard`](commands/session-dashboard.md)
 - **4 new agents:** [code-reviewer](agents/code-reviewer.md), [test-writer](agents/test-writer.md), [researcher](agents/researcher.md), [architect](agents/architect.md)
 - `auto-approve-safe.sh` — auto-approves read-only tools and test/lint/typecheck commands across 8 languages
@@ -107,7 +107,7 @@ Slash commands previously invoked as `/claudetools:name` are now `/project:name`
 
 ---
 
-## See also
+## Related
 
 - [Installation](../getting-started/installation.md) — get the latest version
 - [Cheat Sheet](cheat-sheet.md) — all commands and hooks at a glance

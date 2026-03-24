@@ -1,13 +1,15 @@
 ---
 title: "Common Recipes"
 description: "12 composite workflows showing how claudetools features work together — from debug-and-fix to multi-agent parallel work."
-sidebar:
-  order: 12
 ---
+
+**Difficulty: Intermediate**
 
 Real situations rarely fit a single tool. These recipes show how skills, agents, hooks, and commands compose into end-to-end workflows.
 
 ---
+**Difficulty: Intermediate**
+
 
 ## 1. Debug and fix a production bug
 
@@ -33,6 +35,8 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 - `post-agent-gate.sh` verifies the code-reviewer actually completed its review passes.
 
 ---
+**Difficulty: Intermediate**
+
 
 ## 2. Explore and document unfamiliar code
 
@@ -58,6 +62,8 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 - `doc-index-generator.sh` (SessionEnd) regenerates the docs index automatically.
 
 ---
+**Difficulty: Intermediate**
+
 
 ## 3. Safe multi-file refactor
 
@@ -83,6 +89,8 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 - `verify-subagent-independently.sh` (SubagentStop) re-runs typecheck independently of the agent's self-report.
 
 ---
+**Difficulty: Intermediate**
+
 
 ## 4. Build a feature with tests
 
@@ -108,6 +116,8 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 - `capture-outcome.sh` records the session metrics (tool calls, failures, churn) to `metrics.db`.
 
 ---
+**Difficulty: Intermediate**
+
 
 ## 5. Security audit and remediation
 
@@ -133,6 +143,8 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 - `block-dangerous-bash.sh` intercepts any shell commands that resemble exfiltration patterns.
 
 ---
+**Difficulty: Intermediate**
+
 
 ## 6. Set up a new project
 
@@ -158,6 +170,8 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 - `config-audit-trail.sh` logs the initial configuration to a JSONL audit trail.
 
 ---
+**Difficulty: Intermediate**
+
 
 ## 7. Multi-agent parallel work
 
@@ -183,6 +197,8 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 - `TeammateIdle` hooks fire when any agent goes idle, triggering status updates to the team lead.
 
 ---
+**Difficulty: Intermediate**
+
 
 ## 8. Improve a vague prompt
 
@@ -207,6 +223,8 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 - `auto-approve-safe.sh` (PermissionRequest) approves read-only tools automatically so the prompt doesn't stall on permission prompts.
 
 ---
+**Difficulty: Intermediate**
+
 
 ## 9. Review a pull request
 
@@ -232,6 +250,8 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 - `edit-frequency-guard.sh` warns if the same file is fixed more than 3 times (may signal a design problem).
 
 ---
+**Difficulty: Intermediate**
+
 
 ## 10. Track complex work across sessions
 
@@ -257,6 +277,8 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 - `session-stop-gate.sh` (Stop) runs a comprehensive review before exit, ensuring no tasks are left dangling.
 
 ---
+**Difficulty: Intermediate**
+
 
 ## 11. Design a polished UI
 
@@ -281,6 +303,8 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 - `validate-content.sh` catches `TODO` and `lorem ipsum` placeholder text in JSX.
 
 ---
+**Difficulty: Intermediate**
+
 
 ## 12. Audit and improve CLAUDE.md
 
@@ -305,8 +329,10 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 - `doc-stale-detector.sh` will warn in future sessions if the updated CLAUDE.md goes 90 days without a review.
 
 ---
+**Difficulty: Intermediate**
 
-## See also
+
+## Related
 
 - [Which Tool Should I Use?](which-tool.md) — decision tree for choosing the right starting point
 - [Guides](debug-a-bug.md) — deep walkthroughs of individual workflows

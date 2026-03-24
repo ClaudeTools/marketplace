@@ -1,8 +1,6 @@
 ---
 title: "Debug a Bug"
 description: "Walk through a real bug investigation — REPRODUCE through CONFIRM with actual prompts and output."
-sidebar:
-  order: 6
 ---
 
 **Difficulty: Intermediate**

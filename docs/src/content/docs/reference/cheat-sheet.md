@@ -33,7 +33,7 @@ Skills activate automatically when your prompt matches their trigger patterns, o
 | [Exploring Codebase](skills/exploring-codebase.md) | `/exploring-codebase` or "how does X work", "find where Y is defined" | Semantic navigation via codebase-pilot — find symbols, trace imports, map architecture |
 | [Investigating Bugs](skills/investigating-bugs.md) | `/investigating-bugs` or "broken", "failing", "500", "why is" | 6-step evidence-based debugging: REPRODUCE → OBSERVE → HYPOTHESIZE → VERIFY → FIX → CONFIRM |
 | [Prompt Improver](skills/prompt-improver.md) | `/prompt-improver` or "improve this prompt" | Transforms vague instructions into structured XML prompts with approach blocks and escape clauses |
-| [Designing Interfaces](skills/designing-interfaces.md) | `/designing-interfaces` or "build a UI", "design a dashboard" | Production UI with design systems, responsive layout, contrast auditing |
+| [Frontend Design](skills/frontend-design.md) | `/frontend-design` or "build a UI", "design a dashboard" | Production UI with design systems, responsive layout, contrast auditing |
 | [Managing Tasks](skills/managing-tasks.md) | `/managing-tasks` or "create a task", "what's next" | Persistent tasks with codebase context enrichment, decomposition, and cross-session handoffs |
 | [Evaluating Safety](skills/evaluating-safety.md) | `/evaluating-safety` or "run training", "test safety" | Training scenarios, deterministic tests, cross-model safety comparison |
 | [Plugin Improver](skills/plugin-improver.md) | `/plugin-improver` | 7-phase autonomous self-improvement of the claudetools plugin with automatic regression revert |
@@ -62,8 +62,8 @@ Agents are spawned subprocesses. Pipelines compose multiple agents into end-to-e
 | [Code Reviewer](agents/code-reviewer.md) | Sonnet | Read-only | Quality review without touching files |
 | [Test Writer](agents/test-writer.md) | Sonnet | Full | Test generation following existing patterns |
 | [Researcher](agents/researcher.md) | Sonnet | Read-only | External API/library research before integration |
-| [Investigating Bugs](agents/bugfix-pipeline.md) | Sonnet | Full | Debugging without the full pipeline overhead |
-| [Exploring Codebase](agents/refactor-pipeline.md) | Sonnet | Read-only | Architecture mapping, import tracing |
+| [Investigating Bugs](skills/investigating-bugs.md) | Sonnet | Full | Debugging without the full pipeline overhead |
+| [Exploring Codebase](skills/exploring-codebase.md) | Sonnet | Read-only | Architecture mapping, import tracing |
 
 ---
 
@@ -146,7 +146,7 @@ node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js <command>
 
 ---
 
-## See also
+## Related
 
 - [Common Recipes](../guides/recipes.md) — composite workflows combining these tools
 - [Which Tool Should I Use?](../guides/which-tool.md) — decision tree

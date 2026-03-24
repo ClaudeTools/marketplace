@@ -1,8 +1,6 @@
 ---
 title: "Improve Prompts"
 description: "Turn a rough request into a structured XML prompt — execute immediately, review first, or convert into a tracked task tree."
-sidebar:
-  order: 9
 ---
 
 **Difficulty: Intermediate**

@@ -1,8 +1,6 @@
 ---
 title: "Tutorial: Your First Bug Fix"
 description: "Step-by-step walkthrough of finding and fixing a real bug with claudetools — see hooks fire, watch codebase-pilot locate code, follow the full debugging protocol."
-sidebar:
-  order: 1
 ---
 
 import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
@@ -10,8 +8,8 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 **Goal:** Fix a broken login endpoint using claudetools. You'll see how the debugging skill activates automatically, how codebase-pilot finds the right file, and how hooks catch issues before they ship.
 
 **Prerequisites:**
-- claudetools installed — see [Installation](/getting-started/installation/)
-- Familiar with the core building blocks — see [Core Concepts](/getting-started/core-concepts/)
+- claudetools installed — see [Installation](../getting-started/installation/)
+- Familiar with the core building blocks — see [Core Concepts](../getting-started/core-concepts/)
 
 **Time estimate:** ~10 minutes
 
@@ -41,12 +39,12 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
    You don't need to diagnose it first. Mention the symptom and when it started — that's enough.
 
    :::note[What just happened: skill auto-activates]
-   Claude detected "broken" and "started after" — keywords that trigger the [investigating-bugs skill](/reference/skills/investigating-bugs/) automatically. The 6-step protocol (REPRODUCE → OBSERVE → HYPOTHESIZE → VERIFY → FIX → CONFIRM) is now active. Claude cannot skip ahead or jump to a fix without evidence.
+   Claude detected "broken" and "started after" — keywords that trigger the [investigating-bugs skill](../reference/skills/investigating-bugs/) automatically. The 6-step protocol (REPRODUCE → OBSERVE → HYPOTHESIZE → VERIFY → FIX → CONFIRM) is now active. Claude cannot skip ahead or jump to a fix without evidence.
    :::
 
 2. **Watch codebase-pilot locate the code**
 
-   Claude doesn't guess at file paths. It queries the [codebase-pilot](/getting-started/core-concepts/#codebase-pilot) index:
+   Claude doesn't guess at file paths. It queries the [codebase-pilot](../getting-started/core-concepts/#codebase-pilot) index:
 
    > **Claude:** "REPRODUCE: Searching for the login route handler..."
    >
@@ -75,7 +73,7 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
    > The login handler reads `req.body.email` — when body is undefined, this throws a silent TypeError that the error handler swallows and responds with... nothing."
 
    :::note[What just happened: OBSERVE phase]
-   Claude didn't guess. It traced the middleware execution order by reading `app.ts` and checking how the router is assembled. This is why [codebase-pilot](/getting-started/core-concepts/#codebase-pilot) matters — Claude can trace actual imports rather than guessing at folder conventions.
+   Claude didn't guess. It traced the middleware execution order by reading `app.ts` and checking how the router is assembled. This is why [codebase-pilot](../getting-started/core-concepts/#codebase-pilot) matters — Claude can trace actual imports rather than guessing at folder conventions.
    :::
 
 4. **The hypothesis and verification**
@@ -99,7 +97,7 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
    > **Claude:** "FIX: Reordering middleware in `app.ts` — moving `rateLimiter` to position 3, after `express.json()`."
 
    :::note[What just happened: hook fires]
-   Before writing the edit, a [hook](/getting-started/core-concepts/#hook) fires: **read-before-edit**. Since Claude already read `app.ts` in step 2, it passes. If Claude had tried to edit without reading, the hook would have blocked it:
+   Before writing the edit, a [hook](../getting-started/core-concepts/#hook) fires: **read-before-edit**. Since Claude already read `app.ts` in step 2, it passes. If Claude had tried to edit without reading, the hook would have blocked it:
    > `[PreToolUse] read-before-edit: cannot edit app.ts — file not in read history. Read it first.`
    :::
 
@@ -137,9 +135,9 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 
 | Feature | What it did |
 |---------|------------|
-| [investigating-bugs skill](/reference/skills/investigating-bugs/) | Auto-activated on keywords, enforced REPRODUCE→CONFIRM sequence |
-| [codebase-pilot](/reference/codebase-pilot/cli-reference/) | Located `loginHandler` by symbol name, not by filename guessing |
-| [read-before-edit hook](/reference/hooks/process-hooks/) | Blocked editing without prior read (passed here because read was done) |
+| [investigating-bugs skill](../reference/skills/investigating-bugs/) | Auto-activated on keywords, enforced REPRODUCE→CONFIRM sequence |
+| [codebase-pilot](../reference/codebase-pilot/cli-reference/) | Located `loginHandler` by symbol name, not by filename guessing |
+| [read-before-edit hook](../reference/hooks/process-hooks/) | Blocked editing without prior read (passed here because read was done) |
 | Git history tracing | Found the rate-limiting commit as the starting point for investigation |
 
 ---
@@ -148,4 +146,4 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 
 - [Debug a Bug](debug-a-bug.md) — deeper walkthrough with a failed first hypothesis
 - [Tutorial: Explore a New Codebase](tutorial-explore-new-codebase.mdx) — map unfamiliar code before diving in
-- [Reference: investigating-bugs skill](/reference/skills/investigating-bugs/)
+- [Reference: investigating-bugs skill](../reference/skills/investigating-bugs/)

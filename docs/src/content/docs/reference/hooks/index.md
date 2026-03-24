@@ -39,6 +39,14 @@ Hooks are organized into 4 categories by purpose:
 - [**Process**](/reference/hooks/process-hooks/) — Enforces read-before-edit, commit hygiene, scope discipline
 - [**Context**](/reference/hooks/context-hooks/) — Prevents redundant reads, injects memory, tracks telemetry
 
+
+## Where to start
+
+- **Worried about destructive commands?** Start with [Safety hooks](/reference/hooks/safety-hooks/) — these block shell commands, secrets, and sensitive file access before they can do damage.
+- **Seeing incomplete or stubbed code?** Read [Quality hooks](/reference/hooks/quality-hooks/) — they catch TODOs, type escapes, and excessive churn on a single file.
+- **Want Claude to follow a consistent workflow?** [Process hooks](/reference/hooks/process-hooks/) enforce read-before-edit, conventional commits, and scope discipline.
+- **Optimizing context usage?** [Context hooks](/reference/hooks/context-hooks/) inject memory, prevent redundant reads, and track telemetry across sessions.
+
 ---
 
 ## Related

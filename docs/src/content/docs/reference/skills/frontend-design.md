@@ -1,5 +1,5 @@
 ---
-title: "Designing Interfaces"
+title: "Frontend Design"
 description: "Skill for building production-grade frontend interfaces with high design quality — React, Next.js, Vite, Astro, SvelteKit, and Tailwind CSS."
 ---
 Build distinctive, production-grade frontend interfaces with high design quality. Covers React, Next.js, Vite, Astro, SvelteKit, Tailwind CSS, and plain HTML/CSS projects.
@@ -19,7 +19,7 @@ Use this skill when you're building any visual interface from scratch — a land
 ## Try it now
 
 ```
-/designing-interfaces A billing dashboard with a summary card, recent invoices table, and usage chart
+/frontend-design A billing dashboard with a summary card, recent invoices table, and usage chart
 ```
 
 Claude will ask about your stack (or detect it from `package.json`), generate a CSS design system with semantic tokens, build the components, take responsive screenshots at 4 breakpoints, and run contrast and token audits before presenting the result.

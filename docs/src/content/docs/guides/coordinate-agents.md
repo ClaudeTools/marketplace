@@ -1,8 +1,6 @@
 ---
 title: "Coordinate Agents"
 description: "Run multiple Claude agents in parallel with file locks, shared decisions, and message passing."
-sidebar:
-  order: 13
 ---
 
 **Difficulty: Advanced**

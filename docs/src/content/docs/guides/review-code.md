@@ -1,8 +1,6 @@
 ---
 title: "Review Code"
 description: "Run a structured 4-pass code review on a branch, a file, or uncommitted changes — correctness, security, performance, maintainability."
-sidebar:
-  order: 8
 ---
 
 **Difficulty: Intermediate**

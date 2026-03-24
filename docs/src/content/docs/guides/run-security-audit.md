@@ -1,8 +1,6 @@
 ---
 title: "Run a Security Audit"
 description: "Scan for secrets, injection vulnerabilities, dead security controls, and dependency CVEs — with file:line evidence for every finding."
-sidebar:
-  order: 12
 ---
 
 **Difficulty: Advanced**
@@ -79,7 +77,7 @@ Secrets scan — 2 findings
 > "spawn a security-pipeline agent and run a full audit"
 
 :::note[Behind the scenes]
-The security-pipeline agent runs four steps in sequence, each feeding context into the next. The pipeline is read-only — it produces findings but never modifies files.
+The security-pipeline agent runs five steps in sequence, each feeding context into the next. The pipeline is read-only — it produces findings but never modifies files.
 :::
 
 **Step 1 — Full audit**

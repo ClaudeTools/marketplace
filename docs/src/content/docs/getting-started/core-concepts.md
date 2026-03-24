@@ -127,6 +127,7 @@ Unlike skills, these don't auto-trigger. You invoke them when you want them — 
 | `/logs` | Query conversation history, tool usage, and errors across sessions |
 | `/docs-manager` | Documentation audit: staleness, indexing, archiving |
 | `/claude-code-guide` | Best practices for building Claude Code extensions |
+| `/mesh` | Agent coordination: file locks, messages, shared decisions |
 
 **Analogy:** Slash commands are like the control panel in a car — the dashboard, the lights, the mirrors. The engine runs without them. But when you need to see what's happening, or check a specific reading, you reach for the right control.
 

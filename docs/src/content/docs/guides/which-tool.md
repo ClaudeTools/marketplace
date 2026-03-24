@@ -1,8 +1,6 @@
 ---
 title: "Which Tool Should I Use?"
 description: "Decision guide for choosing the right claudetools feature."
-sidebar:
-  order: 0
 ---
 
 **Difficulty: Beginner**
@@ -53,7 +51,7 @@ The pipeline agent runs root-cause analysis, cross-references recent commits, an
 
 **Medium feature** — structure the work first:
 
-> "/improving-prompts add email notifications when an invoice is overdue"
+> "/prompt-improver add email notifications when an invoice is overdue"
 
 This refines your request into a well-scoped implementation brief before Claude starts coding.
 
@@ -127,7 +125,7 @@ Claude runs `security-scan.sh` automatically. Results in under 30 seconds.
 
 > "spawn a security-pipeline agent and run a full audit"
 
-Four steps: full-audit, security-scan, dead security controls, dependency CVEs. Produces a structured report with recommended actions in priority order. See [Run a Security Audit](run-security-audit.md).
+Five steps: full-audit, security-scan, dead security controls, dependency CVEs. Produces a structured report with recommended actions in priority order. See [Run a Security Audit](run-security-audit.md).
 
 ---
 
@@ -184,9 +182,9 @@ Each agent session runs in its own worktree with no git conflicts. The mesh coor
 
 | Skill / Command | One-line description |
 |-----------------|----------------------|
-| `/build-a-feature` | Full implementation pipeline — plan, implement, review, commit |
+| `feature-pipeline` | Full implementation pipeline — plan, implement, review, commit |
 | `/code-review` | 4-pass review: correctness, security, performance, maintainability |
-| `/improving-prompts` | Turns rough requests into structured XML prompts |
+| `/prompt-improver` | Turns rough requests into structured XML prompts |
 | `/managing-tasks` | Create, track, and hand off tasks across sessions |
 | `/claudetools:security-pipeline` | Full codebase security audit — read-only, findings only |
 | `codebase-pilot` | Symbol search, file overview, import graph, dead code, change impact |

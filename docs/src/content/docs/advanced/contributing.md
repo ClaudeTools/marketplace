@@ -174,7 +174,7 @@ For substantial additions (new sections, restructuring), open an issue first to 
 
 ---
 
-## See also
+## Related
 
 - [Astro Starlight docs](https://starlight.astro.build/) — full reference for callouts, components, and configuration
 - [What's New](../reference/whats-new.md) — recent changes to the plugin these docs cover

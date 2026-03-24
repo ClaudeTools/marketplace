@@ -91,7 +91,8 @@ sqlite3 data/metrics.db "PRAGMA wal_checkpoint(TRUNCATE);"
 
 If the DB is corrupt, delete it — `ensure_metrics_db` recreates it with the full schema on next run. Existing hook outcomes and memories will be lost.
 
-## Publish Token Expired
+<details>
+<summary>For plugin publishers only — Publish Token Expired</summary>
 
 **Symptom:** CI publish workflow fails with authentication error.
 
@@ -102,6 +103,8 @@ gh secret set PUBLIC_REPO_TOKEN --repo ClaudeTools/marketplace-dev --body "$(gh 
 ```
 
 See the project CLAUDE.md for the full publish sequence.
+
+</details>
 
 ---
 

@@ -1,8 +1,6 @@
 ---
 title: "Set Up a New Project"
 description: "Configure claudetools for a new or existing project — indexing, session dashboard, and a CLAUDE.md that captures project conventions."
-sidebar:
-  order: 4
 ---
 
 **Difficulty: Beginner**

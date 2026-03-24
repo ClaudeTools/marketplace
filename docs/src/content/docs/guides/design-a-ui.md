@@ -1,8 +1,6 @@
 ---
 title: "Design a UI"
 description: "Build production-grade interfaces with a consistent design system, responsive screenshots, and automated contrast auditing."
-sidebar:
-  order: 11
 ---
 
 **Difficulty: Intermediate**

@@ -1,8 +1,6 @@
 ---
 title: "Tutorial: Safe Refactor"
 description: "Rename a function across a codebase safely — see change-impact analysis, hooks catching incomplete edits, and code review before you commit."
-sidebar:
-  order: 3
 ---
 
 import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
@@ -10,8 +8,8 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 **Goal:** Rename a function that's used in many places, using claudetools safety nets to ensure nothing breaks and every caller is updated.
 
 **Prerequisites:**
-- claudetools installed — see [Installation](/getting-started/installation/)
-- Familiar with hooks and codebase-pilot — see [Core Concepts](/getting-started/core-concepts/)
+- claudetools installed — see [Installation](../getting-started/installation/)
+- Familiar with hooks and codebase-pilot — see [Core Concepts](../getting-started/core-concepts/)
 
 **Time estimate:** ~15 minutes
 
@@ -39,7 +37,7 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
    Claude doesn't start editing immediately. It analyses first.
 
    :::note[What just happened: refactor-pipeline activates]
-   The [refactor pipeline](/reference/agents/refactor-pipeline/) activates for multi-file changes. It runs: impact analysis → decompose → implement → verify. No edits happen until the impact is understood.
+   The [refactor pipeline](../reference/agents/refactor-pipeline/) activates for multi-file changes. It runs: impact analysis → decompose → implement → verify. No edits happen until the impact is understood.
    :::
 
 2. **Change impact analysis**
@@ -64,7 +62,7 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
    > 6 callers across routes, middleware, a worker, and 2 test files. No re-exports to worry about. I'll update all of them."
 
    :::note[Why this matters]
-   Without [codebase-pilot](/getting-started/core-concepts/#codebase-pilot), you'd rely on text search — which misses dynamic calls, aliases, and re-exports. Change-impact traces the actual import and call graph.
+   Without [codebase-pilot](../getting-started/core-concepts/#codebase-pilot), you'd rely on text search — which misses dynamic calls, aliases, and re-exports. Change-impact traces the actual import and call graph.
    :::
 
 3. **The edits begin**
@@ -88,7 +86,7 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
    Claude is stopped. It reads `src/worker.ts`, then continues the edit.
    :::
 
-   This is the [read-before-edit hook](/reference/hooks/process-hooks/) in action. It prevents edits based on stale assumptions — Claude must see the current state of a file before changing it.
+   This is the [read-before-edit hook](../reference/hooks/process-hooks/) in action. It prevents edits based on stale assumptions — Claude must see the current state of a file before changing it.
 
 4. **Stub detection**
 
@@ -109,7 +107,7 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
    ```
    :::
 
-   The [no-stubs hook](/reference/hooks/quality-hooks/) fires on the `// TODO` comment. Claude fills in the real mock before moving on:
+   The [no-stubs hook](../reference/hooks/quality-hooks/) fires on the `// TODO` comment. Claude fills in the real mock before moving on:
 
    ```typescript {2-6}
    jest.mock('../services/user-service', () => ({
@@ -127,7 +125,7 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 
    > **You:** "Review the refactor before I commit."
 
-   The [code-review skill](/reference/commands/code-review/) runs a 4-pass structured review:
+   The [code-review skill](../reference/commands/code-review/) runs a 4-pass structured review:
 
    > **Claude (pass 1 — correctness):** "All 6 `getUser` references replaced with `resolveUser`. No remaining `getUser` calls in the codebase. Function signature unchanged — callers don't need updating beyond the name."
 
@@ -149,7 +147,7 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
    > **You:** "Commit it."
 
    :::note[Hook fires: commit message validated]
-   The commit message `refactor: rename getUser → resolveUser in user-service` is checked by the commit-hygiene [hook](/getting-started/core-concepts/#hook). It passes — it's a valid conventional commit with a `refactor:` prefix, a clear description, and no fixup markers.
+   The commit message `refactor: rename getUser → resolveUser in user-service` is checked by the commit-hygiene [hook](../getting-started/core-concepts/#hook). It passes — it's a valid conventional commit with a `refactor:` prefix, a clear description, and no fixup markers.
    :::
 
    ```bash {2}
@@ -167,9 +165,9 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 | Feature | What it did |
 |---------|------------|
 | `codebase-pilot change-impact` | Found all 6 callers before any edit |
-| [read-before-edit hook](/reference/hooks/process-hooks/) | Stopped an edit on an unread file |
-| [no-stubs hook](/reference/hooks/quality-hooks/) | Caught a `// TODO` placeholder in test mock |
-| [code-review skill](/reference/commands/code-review/) | Ran 4-pass review before commit |
+| [read-before-edit hook](../reference/hooks/process-hooks/) | Stopped an edit on an unread file |
+| [no-stubs hook](../reference/hooks/quality-hooks/) | Caught a `// TODO` placeholder in test mock |
+| [code-review skill](../reference/commands/code-review/) | Ran 4-pass review before commit |
 | commit-hygiene hook | Validated conventional commit format |
 
 The whole rename touched 6 files, caught 2 hook violations before they became problems, and shipped with a clean review.
@@ -189,5 +187,5 @@ The whole rename touched 6 files, caught 2 hook violations before they became pr
 
 - [Tutorial: Your First Bug Fix](tutorial-first-bug-fix.mdx) — apply the same read-first discipline to debugging
 - [Build a Feature](build-a-feature.md) — larger multi-file changes with the full feature pipeline
-- [Reference: Refactor Pipeline](/reference/agents/refactor-pipeline/)
-- [Reference: Process Hooks](/reference/hooks/process-hooks/)
+- [Reference: Refactor Pipeline](../reference/agents/refactor-pipeline/)
+- [Reference: Process Hooks](../reference/hooks/process-hooks/)
