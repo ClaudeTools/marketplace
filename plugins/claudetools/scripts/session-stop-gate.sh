@@ -20,7 +20,7 @@ set -euo pipefail
 INPUT=$(cat 2>/dev/null || true)
 source "$(dirname "$0")/hook-log.sh"
 METRICS_DB="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}/data/metrics.db"
-source "$(dirname "$0")/lib/adaptive-weights.sh"
+source "$(dirname "$0")/lib/thresholds.sh"
 MODEL_FAMILY=$(detect_model_family)
 
 # Prevent infinite loops — if this is a re-evaluation after blocking, allow stop

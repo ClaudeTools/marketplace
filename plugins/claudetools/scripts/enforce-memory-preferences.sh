@@ -7,6 +7,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/lib/hook-input.sh"
+source "$SCRIPT_DIR/lib/worktree.sh"
 hook_init
 
 HOOK_DECISION="allow"
@@ -17,10 +18,11 @@ HOOK_REASON=""
 CWD=$(hook_get_field '.cwd')
 [ -z "$CWD" ] && CWD="$(pwd)"
 
-# Build the Claude project slug: replace / with - , prepend -
-# Claude uses the CWD at session start, which could be a worktree path
-PROJECT_SLUG=$(echo "$CWD" | sed 's|^/|-|; s|/|-|g')
+# Resolve memory path — use get_repo_root() to handle worktrees correctly.
+REPO_ROOT=$(get_repo_root)
+PROJECT_SLUG=$(echo "$REPO_ROOT" | sed 's|^/|-|; s|/|-|g')
 MEMORY_INDEX="$HOME/.claude/projects/${PROJECT_SLUG}/memory/MEMORY.md"
+hook_log "memory-prefs: CWD=$CWD REPO_ROOT=$REPO_ROOT SLUG=$PROJECT_SLUG EXISTS=$([ -f "$MEMORY_INDEX" ] && echo yes || echo no)"
 
 # If memory index doesn't exist, nothing to enforce
 if [ ! -f "$MEMORY_INDEX" ]; then

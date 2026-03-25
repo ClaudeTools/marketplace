@@ -7,6 +7,7 @@
 set -euo pipefail
 
 source "$(dirname "$0")/hook-log.sh"
+source "$(dirname "$0")/lib/worktree.sh"
 source "$(dirname "$0")/lib/telemetry.sh" 2>/dev/null || true
 
 INPUT=$(cat 2>/dev/null || true)
@@ -35,8 +36,9 @@ if [ -f "$START_MARKER" ]; then
   fi
 fi
 
-# Memory directory
-MEMORY_DIR="$HOME/.claude/projects/$(echo "$CWD" | sed 's|^/|-|' | tr '/' '-')/memory"
+# Memory directory — use get_repo_root() to handle worktrees correctly.
+REPO_ROOT=$(get_repo_root)
+MEMORY_DIR="$HOME/.claude/projects/$(echo "$REPO_ROOT" | sed 's|^/|-|; s|/|-|g')/memory"
 mkdir -p "$MEMORY_DIR" 2>/dev/null || exit 0
 
 # Check if memories were already saved this session

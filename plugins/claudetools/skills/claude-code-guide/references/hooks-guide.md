@@ -352,7 +352,7 @@ sid=$(get_session_id "$INPUT")
 
 - `hook-log.sh` — Logging with hook name context
 - `ensure-db.sh` — SQLite metrics database initialization
-- `adaptive-weights.sh` — Adaptive threshold management
+- `thresholds.sh` — Static threshold configuration for hook behavior
 - `telemetry.sh` — Structured telemetry event emission
 
 ---

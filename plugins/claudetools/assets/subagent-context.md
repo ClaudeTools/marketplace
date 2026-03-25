@@ -46,3 +46,15 @@ node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-symbol "validate_ai_s
 - Types: user, feedback, project, reference
 - NEVER duplicate existing memories — check MEMORY.md index first
 </memory_rules>
+
+<guardrails>
+### Active Guardrails (do not propose building these — they already exist)
+- **enforce-user-stop**: Hard blocks all tools after user says "stop" (exit 2)
+- **enforce-memory-preferences**: Checks Edit/Write/Bash against stored MEMORY.md preferences (7 specific handlers: hardcoded colors, targeted tests, no tests during impl, file deletion, tasks-before-agents, branch-before-work, CreateTeam enforcement — plus generic NEVER pattern fallback)
+- **block-dangerous-bash**: Blocks rm -rf with broad paths, force push, supply chain attacks, credential exfiltration (exit 2 = hard block)
+- **verify-subagent-independently**: Runs typecheck + stub detection after every subagent completes (SubagentStop hook)
+- **session-stop-gate**: 3-tier quality audit at session end (deterministic → semantic grep → AI inference)
+- **guard-context-reread**: Blocks redundant full-file re-reads of unchanged files (4-state tracking: in-context, in-context-edited, was-read, new)
+- **enforce-team-usage**: Requires named agents + worktree isolation for multi-agent work; enforces TeamCreate when CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
+- **intercept-grep**: Redirects symbol-like Grep queries to codebase-pilot find-symbol; falls back to grep when pilot returns nothing
+</guardrails>

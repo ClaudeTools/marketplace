@@ -12,6 +12,34 @@ validate_ran_checks() {
   CWD=$(hook_get_field '.cwd' || true)
   [ -z "$CWD" ] && CWD="."
 
+  # --- Check for "no tests" memory preference ---
+  # If the user has a stored preference saying "no tests during implementation",
+  # accept typecheck-only evidence without requiring test artifacts.
+  local REPO_ROOT
+  REPO_ROOT=$(get_repo_root)
+  local PROJECT_SLUG
+  PROJECT_SLUG=$(echo "$REPO_ROOT" | sed 's|^/|-|; s|/|-|g')
+  local MEMORY_INDEX="$HOME/.claude/projects/${PROJECT_SLUG}/memory/MEMORY.md"
+
+  if [ -f "$MEMORY_INDEX" ]; then
+    if grep -qiE 'no.tests|don.t.*run.*tests|not want tests' "$MEMORY_INDEX" 2>/dev/null; then
+      # User has "no tests" preference. Accept typecheck-only evidence.
+      if find "$CWD" -name "tsconfig.tsbuildinfo" -mmin -30 -print -quit 2>/dev/null | grep -q .; then
+        return 0  # Typecheck evidence found, no tests required
+      fi
+      local LOG_FILE
+      LOG_FILE="$(cd "$(dirname "$0")/.." && pwd)/logs/hooks.log"
+      if [ -f "$LOG_FILE" ]; then
+        if tail -200 "$LOG_FILE" | grep -qiE 'typecheck|tsc' 2>/dev/null; then
+          return 0  # Typecheck command was run
+        fi
+      fi
+      echo "No typecheck or test evidence found. Your memory preferences say no tests during implementation, but typecheck is still recommended." >&2
+      echo "Run: npm run typecheck (or equivalent)" >&2
+      return 1
+    fi
+  fi
+
   # Check if this is a code project (has package.json, Cargo.toml, go.mod, etc.)
   local IS_CODE_PROJECT=false
   for marker in package.json Cargo.toml go.mod pyproject.toml setup.py Makefile; do

@@ -8,7 +8,7 @@ set -euo pipefail
 source "$(dirname "$0")/hook-log.sh"
 source "$(dirname "$0")/lib/ensure-db.sh"
 source "$(dirname "$0")/lib/detect-project.sh"
-source "$(dirname "$0")/lib/adaptive-weights.sh"
+source "$(dirname "$0")/lib/thresholds.sh"
 
 # sqlite3 required
 if ! command -v sqlite3 &>/dev/null; then

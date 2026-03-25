@@ -7,7 +7,7 @@ set -euo pipefail
 
 source "$(dirname "$0")/hook-log.sh"
 source "$(dirname "$0")/lib/ensure-db.sh"
-source "$(dirname "$0")/lib/adaptive-weights.sh"
+source "$(dirname "$0")/lib/thresholds.sh"
 source "$(dirname "$0")/lib/worktree.sh"
 
 INPUT=$(cat 2>/dev/null || true)

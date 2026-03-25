@@ -21,8 +21,8 @@ hook_init() {
   # shellcheck source=ensure-db.sh
   source "${_HOOK_INPUT_DIR}/ensure-db.sh"
   ensure_metrics_db 2>/dev/null || true
-  # shellcheck source=adaptive-weights.sh
-  source "${_HOOK_INPUT_DIR}/adaptive-weights.sh"
+  # shellcheck source=thresholds.sh
+  source "${_HOOK_INPUT_DIR}/thresholds.sh"
   # Structured telemetry (machine-readable events.jsonl)
   source "${_HOOK_INPUT_DIR}/telemetry.sh" 2>/dev/null || true
 

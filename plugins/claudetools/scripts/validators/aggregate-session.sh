@@ -21,6 +21,19 @@ run_aggregate_session() {
   # Ensure DB exists
   ensure_metrics_db || return 0
 
+  # Force-flush the outcome spool before querying.
+  # capture-outcome.sh batches writes and only auto-flushes at >= 10 pending or
+  # file age >= 30s. Short worktree sessions (few tool calls, fast completion)
+  # never trigger either threshold, leaving tool_outcomes empty at SessionEnd.
+  local SPOOL_FILE="/tmp/claude-outcome-spool-${session_id}/pending.sql"
+  if [ -f "$SPOOL_FILE" ] && [ -s "$SPOOL_FILE" ]; then
+    {
+      echo "BEGIN TRANSACTION;"
+      cat "$SPOOL_FILE"
+      echo "COMMIT;"
+    } | sqlite3 "$METRICS_DB" 2>/dev/null && : > "$SPOOL_FILE" 2>/dev/null || true
+  fi
+
   # Query tool_outcomes for this session (parameterised queries)
   local total_calls
   total_calls=$(sqlite3 "$METRICS_DB" \

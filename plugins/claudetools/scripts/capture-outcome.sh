@@ -9,7 +9,7 @@ set -euo pipefail
 source "$(dirname "$0")/hook-log.sh"
 source "$(dirname "$0")/lib/portable-lock.sh"
 source "$(dirname "$0")/lib/ensure-db.sh"
-source "$(dirname "$0")/lib/adaptive-weights.sh"
+source "$(dirname "$0")/lib/thresholds.sh"
 source "$(dirname "$0")/lib/worktree.sh"
 
 # sqlite3 required — skip silently if missing

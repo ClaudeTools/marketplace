@@ -12,7 +12,7 @@
       "name": "claudetools",
       "source": "./plugins/claudetools",
       "description": "Comprehensive guardrail system for Claude Code — 42 adaptive hooks, self-learning thresholds, per-model weight tuning, 8 skills, and developer workflow automation",
-      "version": "9.0.1",
+      "version": "9.1.0",
       "category": "developer-tools",
       "tags": [
         "guardrails",

@@ -7,7 +7,7 @@ set -euo pipefail
 # Source shared utilities
 source "$(dirname "$0")/hook-log.sh"
 source "$(dirname "$0")/lib/ensure-db.sh"
-source "$(dirname "$0")/lib/adaptive-weights.sh"
+source "$(dirname "$0")/lib/thresholds.sh"
 source "$(dirname "$0")/lib/telemetry.sh" 2>/dev/null || true
 source "$(dirname "$0")/lib/worktree.sh"
 

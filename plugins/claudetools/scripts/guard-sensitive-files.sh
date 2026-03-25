@@ -9,7 +9,7 @@ INPUT=$(cat 2>/dev/null || true)
 source "$(dirname "$0")/hook-log.sh"
 source "$(dirname "$0")/lib/ensure-db.sh"
 ensure_metrics_db 2>/dev/null || true
-source "$(dirname "$0")/lib/adaptive-weights.sh"
+source "$(dirname "$0")/lib/thresholds.sh"
 MODEL_FAMILY=$(detect_model_family)
 hook_log "invoked"
 trap 'hook_log_result $? "${HOOK_DECISION:-allow}" "${HOOK_REASON:-}"' EXIT
