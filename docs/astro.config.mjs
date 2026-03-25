@@ -8,7 +8,36 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'claudetools',
-      plugins: [starlightLlmsTxt()],
+      plugins: [starlightLlmsTxt({
+        projectName: 'claudetools',
+        description: 'claudetools is a Claude Code plugin that adds zero-config guardrails (hooks), structured workflow skills, autonomous agent pipelines, and semantic code navigation (codebase-pilot) to Claude Code sessions. One install command, no configuration needed.',
+        details: `Key concepts:
+- **Hooks** fire on Claude Code lifecycle events (PreToolUse, PostToolUse, UserPromptSubmit) to catch mistakes before they happen
+- **Skills** are structured workflows invoked via slash commands (e.g. /code-review, /investigating-bugs, /managing-tasks)
+- **Agents** are autonomous pipelines for complex tasks (bugfix-pipeline, feature-pipeline, security-pipeline, refactor-pipeline)
+- **Codebase Pilot** indexes your repo with tree-sitter for instant symbol search, import tracing, and architecture mapping across 14 languages
+- **Agent Mesh** coordinates multiple Claude Code sessions working in the same repo with file locks, messaging, and shared decisions`,
+        promote: ['index*', 'getting-started/**', 'guides/which-tool'],
+        demote: ['advanced/**', 'reference/whats-new'],
+        exclude: ['reference/whats-new'],
+        customSets: [
+          {
+            label: 'Getting Started',
+            paths: ['getting-started/**'],
+            description: 'installation, quick tour, core concepts, and FAQ for new users',
+          },
+          {
+            label: 'Workflow Guides',
+            paths: ['guides/**'],
+            description: 'step-by-step guides for common workflows like debugging, building features, and code review',
+          },
+          {
+            label: 'Reference',
+            paths: ['reference/**'],
+            description: 'complete reference for all skills, agents, hooks, commands, and codebase-pilot CLI',
+          },
+        ],
+      })],
       customCss: ['./src/styles/custom.css'],
       editLink: {
         baseUrl: 'https://github.com/ClaudeTools/marketplace-dev/edit/main/docs/',
