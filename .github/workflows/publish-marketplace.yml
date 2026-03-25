@@ -81,3 +81,9 @@ jobs:
           user-email: 'me@oweninnes.com'
           user-name: 'Owen Innes'
           commit-message: 'sync: update marketplace from dev'
+
+      - name: Trigger docs deploy on public repo
+        env:
+          GH_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
+        run: |
+          gh workflow run "Deploy Docs" --repo ClaudeTools/marketplace --ref main 2>/dev/null || true
