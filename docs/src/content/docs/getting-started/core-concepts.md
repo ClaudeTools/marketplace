@@ -30,7 +30,7 @@ The eight building blocks of claudetools, what they do, why they matter, and how
 │                    ↓                                            │
 │  [PostToolUse hooks]  ← track reads/edits, reindex, telemetry  │
 │                    ↓                                            │
-│  Skills trigger (debugger, exploring-codebase…)       │
+│  Skills trigger (debugger, codebase-explorer…)       │
 │  Agents orchestrate (feature-pipeline, bugfix-pipeline…)        │
 │  Codebase Pilot answers structural queries from the index       │
 └─────────────────────────────────────────────────────────────────┘
@@ -96,7 +96,7 @@ Skills are triggered automatically when your task matches, or explicitly via `/s
 
 | Skill | Purpose |
 |-------|---------|
-| `/exploring-codebase` | Semantic navigation: find symbols, trace imports, map architecture, detect dead code |
+| `/codebase-explorer` | Semantic navigation: find symbols, trace imports, map architecture, detect dead code |
 | `/debugger` | 6-step evidence-based debugging protocol with two-strike rule |
 | `/prompt-improver` | Transform rough instructions into structured XML prompts |
 | `/frontend-design` | Production UI with design systems, responsive screenshots, contrast auditing |
@@ -160,9 +160,9 @@ Standalone agents handle targeted tasks:
 | `test-writer` | Full | Test generation |
 | `researcher` | Read-only | External API/library research |
 | `debugger` | Full | Evidence-based debugging |
-| `exploring-codebase` | Read-only | Codebase analysis and navigation |
+| `codebase-explorer` | Read-only | Codebase analysis and navigation |
 
-**Analogy:** Agents are like project subcontractors. You (the general contractor) define the scope and constraints. Each specialist brings their own tools and expertise, works independently within those constraints, and reports back when done. The `exploring-codebase` agent only reads — it can't accidentally write a file while it's trying to understand one.
+**Analogy:** Agents are like project subcontractors. You (the general contractor) define the scope and constraints. Each specialist brings their own tools and expertise, works independently within those constraints, and reports back when done. The `codebase-explorer` agent only reads — it can't accidentally write a file while it's trying to understand one.
 
 **Why this matters:** Pipelines enforce process. Instead of asking Claude to "build this feature", the `feature` pipeline ensures exploration happens before planning, planning before implementation, implementation before review. You get structured quality, not best-effort quality.
 
@@ -200,7 +200,7 @@ codebase-pilot dead-code                  # Unused exports
 codebase-pilot circular-deps             # Circular import detection
 ```
 
-The `exploring-codebase` skill and hooks both query this index. It's what makes navigation answers grounded in actual code rather than pattern matching on filenames.
+The `codebase-explorer` skill and hooks both query this index. It's what makes navigation answers grounded in actual code rather than pattern matching on filenames.
 
 **Analogy:** Codebase Pilot is like a city's GIS database. Without it, Claude navigates by memory and guesswork — "the post office is probably near the town square." With it, every query returns a precise address. The index is what separates "I think the auth handler is somewhere in middleware" from "it's at `src/middleware/auth.ts:47`."
 
