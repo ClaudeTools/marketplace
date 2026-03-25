@@ -28,7 +28,7 @@ jobs:
       - name: Install and build docs
         run: |
           cd docs
-          npm install
+          npm install --legacy-peer-deps
           npx astro build
       - uses: actions/upload-pages-artifact@v3
         with:
