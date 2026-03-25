@@ -61,7 +61,7 @@ Skills auto-trigger when your task matches a pattern — you don't have to invok
 
 ### How do I trigger a skill manually?
 
-Type `/skill-name` in the chat. For example, `/codebase-explorer` starts semantic codebase navigation even if Claude didn't auto-trigger it. All available skills are listed in [Core Concepts — Skills](/marketplace/getting-started/core-concepts/#skills).
+Type `/skill-name` in the chat. For example, `/exploring-codebase` starts semantic codebase navigation even if Claude didn't auto-trigger it. All available skills are listed in [Core Concepts — Skills](/marketplace/getting-started/core-concepts/#skills).
 
 ### Why did the bug-fixing skill jump straight to a fix without reproducing first?
 

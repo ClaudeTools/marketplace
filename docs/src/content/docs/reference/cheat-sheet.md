@@ -30,7 +30,7 @@ Skills activate automatically when your prompt matches their trigger patterns, o
 
 | Skill | Trigger | What it does |
 |-------|---------|-------------|
-| [Codebase Explorer](skills/codebase-explorer.md) | `/codebase-explorer` or "how does X work", "find where Y is defined" | Semantic navigation via codebase-pilot — find symbols, trace imports, map architecture |
+| [Exploring Codebase](skills/exploring-codebase.md) | `/exploring-codebase` or "how does X work", "find where Y is defined" | Semantic navigation via codebase-pilot — find symbols, trace imports, map architecture |
 | [Investigating Bugs](skills/debugger.md) | `/debugger` or "broken", "failing", "500", "why is" | 6-step evidence-based debugging: REPRODUCE → OBSERVE → HYPOTHESIZE → VERIFY → FIX → CONFIRM |
 | [Prompt Improver](skills/prompt-improver.md) | `/prompt-improver` or "improve this prompt" | Transforms vague instructions into structured XML prompts with approach blocks and escape clauses |
 | [Frontend Design](skills/frontend-design.md) | `/frontend-design` or "build a UI", "design a dashboard" | Production UI with design systems, responsive layout, contrast auditing |
@@ -63,7 +63,7 @@ Agents are spawned subprocesses. Pipelines compose multiple agents into end-to-e
 | [Test Writer](agents/test-writer.md) | Sonnet | Full | Test generation following existing patterns |
 | [Researcher](agents/researcher.md) | Sonnet | Read-only | External API/library research before integration |
 | [Investigating Bugs](skills/debugger.md) | Sonnet | Full | Debugging without the full pipeline overhead |
-| [Codebase Explorer](skills/codebase-explorer.md) | Sonnet | Read-only | Architecture mapping, import tracing |
+| [Exploring Codebase](skills/exploring-codebase.md) | Sonnet | Read-only | Architecture mapping, import tracing |
 
 ---
 

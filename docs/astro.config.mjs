@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightLlmsTxt from 'starlight-llms-txt';
 
 export default defineConfig({
   site: 'https://claudetools.github.io',
@@ -7,6 +8,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'claudetools',
+      plugins: [starlightLlmsTxt()],
       customCss: ['./src/styles/custom.css'],
       editLink: {
         baseUrl: 'https://github.com/ClaudeTools/marketplace-dev/edit/main/docs/',

@@ -43,13 +43,13 @@ Real situations rarely fit a single tool. These recipes show how skills, agents,
 **Goal:** Build a mental model of an unknown codebase and produce navigable documentation.
 
 **Commands used:**
-- `/claudetools:codebase-explorer` — semantic navigation via codebase-pilot
+- `/claudetools:exploring-codebase` — semantic navigation via codebase-pilot
 - `codebase-pilot map` — project overview to start
 - `/claudetools:docs-manager` — create and index the output
 
 **Workflow:**
 
-1. `"Map the project and explain how authentication works"` — codebase-explorer activates.
+1. `"Map the project and explain how authentication works"` — exploring-codebase activates.
 2. Claude runs `codebase-pilot map` to get the project layout, then `find-symbol AuthService` to locate the entry point.
 3. Claude traces the import graph with `related-files` and builds a call tree from `login()` to token issuance.
 4. `"/docs-manager init"` — sets up the docs structure if missing.
