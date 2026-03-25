@@ -7,6 +7,7 @@ set -euo pipefail
 
 # Source shared utilities
 source "$(dirname "$0")/hook-log.sh"
+source "$(dirname "$0")/lib/portable-lock.sh"
 source "$(dirname "$0")/lib/ensure-db.sh"
 source "$(dirname "$0")/lib/adaptive-weights.sh"
 source "$(dirname "$0")/lib/worktree.sh"
@@ -54,9 +55,9 @@ fi
 
 # Flush if 10+ pending or stale
 if [ "$PENDING" -ge 10 ] || [ "$STALE" -eq 1 ]; then
-  # Non-blocking flush with lock to prevent concurrent flushes
-  (
-    flock -n 200 2>/dev/null || exit 0
+  # Non-blocking flush with lock to prevent concurrent flushes (run in background)
+  {
+    portable_trylock "$LOCK_FILE" || exit 0
     if [ -f "$SPOOL_FILE" ] && [ -s "$SPOOL_FILE" ]; then
       # Wrap in transaction for atomicity
       {
@@ -66,7 +67,8 @@ if [ "$PENDING" -ge 10 ] || [ "$STALE" -eq 1 ]; then
       } | sqlite3 "$METRICS_DB" 2>/dev/null || true
       : > "$SPOOL_FILE"  # Truncate after successful flush
     fi
-  ) 200>"$LOCK_FILE" &
+    portable_unlock "$LOCK_FILE"
+  } &
 fi
 
 exit 0

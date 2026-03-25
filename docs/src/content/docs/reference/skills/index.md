@@ -9,7 +9,7 @@ description: "7 intelligent workflow skills — triggered automatically or invok
 
 | Skill | Invocation | Purpose |
 |-------|-----------|---------|
-| [Exploring Codebase](exploring-codebase.md) | `/exploring-codebase` | Semantic navigation: find symbols, trace imports, map architecture, detect dead code |
+| [Codebase Explorer](codebase-explorer.md) | `/codebase-explorer` | Semantic navigation: find symbols, trace imports, map architecture, detect dead code |
 | [Investigating Bugs](debugger.md) | `/debugger` | 6-step evidence-based debugging protocol with two-strike rule |
 | [Prompt Improver](prompt-improver.md) | `/prompt-improver` | Transform rough instructions into structured XML prompts |
 | [Frontend Design](frontend-design.md) | `/frontend-design` | Production UI with design systems, responsive screenshots, contrast auditing |

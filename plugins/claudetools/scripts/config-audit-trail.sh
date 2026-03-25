@@ -7,6 +7,7 @@ set -euo pipefail
 
 # Source shared utilities
 source "$(dirname "$0")/hook-log.sh"
+source "$(dirname "$0")/lib/portable-lock.sh"
 
 # Read hook input from stdin
 INPUT=$(cat)
@@ -25,12 +26,13 @@ AUDIT_LOG="$LOGS_DIR/config-changes.jsonl"
 ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Append audit entry as JSON line (use jq for safe construction)
-# flock to prevent interleaved writes from concurrent sessions
-(
-  flock -w 1 200 || true
+# Lock to prevent interleaved writes
+portable_lock "${AUDIT_LOG}.lock" && {
   jq -n --arg ts "$ts" --arg src "$source_name" --arg f "$file_path" \
+    '{timestamp: $ts, source: $src, file: $f}' >> "$AUDIT_LOG" 2>/dev/null || true
+  portable_unlock "${AUDIT_LOG}.lock"
+} || jq -n --arg ts "$ts" --arg src "$source_name" --arg f "$file_path" \
     '{timestamp: $ts, source: $src, file: $f}' >> "$AUDIT_LOG"
-) 200>"${AUDIT_LOG}.lock"
 
 hook_log "config change recorded source=${source_name} file=${file_path}"
 

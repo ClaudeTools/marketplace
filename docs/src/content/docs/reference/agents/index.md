@@ -18,7 +18,7 @@ description: "11 specialized agents — 4 full-cycle pipelines (feature, bugfix,
 | Researching external APIs or libraries | [Researcher](/marketplace/reference/agents/researcher/) | Read-only; fetches docs and returns actionable findings before you write integration code |
 | Designing system architecture or APIs | [Architect](/marketplace/reference/agents/architect/) | Opus-powered read-only agent for design decisions, trade-off analysis, and impact review |
 | Debugging without a full pipeline | [Investigating Bugs](/marketplace/reference/agents/debugger/) | Standalone debug agent — same protocol as the bugfix pipeline, without the review/confirm phases |
-| Understanding unfamiliar code | [Exploring Codebase](/marketplace/reference/agents/exploring-codebase/) | Read-only; maps architecture, traces imports, and answers structural questions from the semantic index |
+| Understanding unfamiliar code | [Codebase Explorer](/marketplace/reference/agents/codebase-explorer/) | Read-only; maps architecture, traces imports, and answers structural questions from the semantic index |
 
 ---
 
@@ -41,7 +41,7 @@ description: "11 specialized agents — 4 full-cycle pipelines (feature, bugfix,
 | [Test Writer](/reference/agents/test-writer/) | Sonnet | Full | Test generation |
 | [Researcher](/reference/agents/researcher/) | Sonnet | Read-only | External API/library research |
 | [Investigating Bugs](/reference/agents/debugger/) | Sonnet | Full | Evidence-based debugging |
-| [Exploring Codebase](/reference/agents/exploring-codebase/) | Sonnet | Read-only | Codebase analysis |
+| [Codebase Explorer](/reference/agents/codebase-explorer/) | Sonnet | Read-only | Codebase analysis |
 
 ---
 

@@ -67,4 +67,4 @@ The researcher checks if Stripe SDK usage exists locally first, then searches fo
 
 - [Reference: implementing-features agent](implementing-features.md) — typically runs after researcher to act on the findings
 - [Feature Pipeline](feature-pipeline.md) — researcher is often the first step before planning
-- [Reference: exploring-codebase skill](/reference/skills/exploring-codebase/) — for local codebase questions rather than external API research
+- [Reference: codebase-explorer skill](/reference/skills/codebase-explorer/) — for local codebase questions rather than external API research

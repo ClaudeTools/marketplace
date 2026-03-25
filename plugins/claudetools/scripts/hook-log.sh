@@ -9,20 +9,21 @@ mkdir -p "$_HOOK_LOG_DIR"
 HOOK_LOG_FILE="$_HOOK_LOG_DIR/hooks.log"
 HOOK_NAME="$(basename "${BASH_SOURCE[1]:-$0}")"
 
+source "$(dirname "${BASH_SOURCE[0]}")/lib/portable-lock.sh"
+
 hook_log() {
   local msg="$1"
   # Log rotation: if hooks.log exceeds 5MB, rotate to hooks.log.old
-  # Wrapped in flock to prevent concurrent rotation races
-  (
-    flock -n 200 || return 0
-    if [ -f "$HOOK_LOG_FILE" ]; then
-      local size
-      size=$(stat -f%z "$HOOK_LOG_FILE" 2>/dev/null || stat -c%s "$HOOK_LOG_FILE" 2>/dev/null || echo 0)
-      if [ "$size" -gt 5242880 ]; then
-        mv -f "$HOOK_LOG_FILE" "${HOOK_LOG_FILE}.old"
+  if [ -f "$HOOK_LOG_FILE" ]; then
+    local size
+    size=$(stat -f%z "$HOOK_LOG_FILE" 2>/dev/null || stat -c%s "$HOOK_LOG_FILE" 2>/dev/null || echo 0)
+    if [ "$size" -gt 5242880 ]; then
+      if portable_trylock "${HOOK_LOG_FILE}.lock"; then
+        mv -f "$HOOK_LOG_FILE" "${HOOK_LOG_FILE}.old" 2>/dev/null || true
+        portable_unlock "${HOOK_LOG_FILE}.lock"
       fi
     fi
-  ) 200>"${HOOK_LOG_FILE}.lock"
+  fi
   local ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
   local agent_id=$(echo "$INPUT" | jq -r '.agent_id // "main"' 2>/dev/null || echo "unknown")
   local agent_type=$(echo "$INPUT" | jq -r '.agent_type // "main"' 2>/dev/null || echo "unknown")

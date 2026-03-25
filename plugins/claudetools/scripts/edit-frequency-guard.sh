@@ -10,6 +10,7 @@ set -euo pipefail
 
 INPUT=$(cat 2>/dev/null || true)
 source "$(dirname "$0")/hook-log.sh"
+source "$(dirname "$0")/lib/portable-lock.sh"
 source "$(dirname "$0")/lib/ensure-db.sh"
 ensure_metrics_db 2>/dev/null || true
 source "$(dirname "$0")/lib/adaptive-weights.sh"
@@ -45,17 +46,17 @@ if [ ! -f "$COUNTER_FILE" ]; then
 fi
 
 # Read-modify-write under advisory lock to prevent race conditions
-(
-  flock -x 200
+portable_lock "${COUNTER_FILE}.lock"
 
-  # Read current count for this file
-  CURRENT_COUNT=$(jq -r --arg file "$FILE_PATH" '.[$file] // 0' "$COUNTER_FILE" 2>/dev/null || echo "0")
-  NEW_COUNT=$((CURRENT_COUNT + 1))
+# Read current count for this file
+CURRENT_COUNT=$(jq -r --arg file "$FILE_PATH" '.[$file] // 0' "$COUNTER_FILE" 2>/dev/null || echo "0")
+NEW_COUNT=$((CURRENT_COUNT + 1))
 
-  # Update counter file atomically
-  TEMP_COUNTER=$(mktemp)
-  jq --arg file "$FILE_PATH" --argjson count "$NEW_COUNT" '.[$file] = $count' "$COUNTER_FILE" > "$TEMP_COUNTER" 2>/dev/null && mv "$TEMP_COUNTER" "$COUNTER_FILE" || rm -f "$TEMP_COUNTER"
-) 200>"${COUNTER_FILE}.lock"
+# Update counter file atomically
+TEMP_COUNTER=$(mktemp)
+jq --arg file "$FILE_PATH" --argjson count "$NEW_COUNT" '.[$file] = $count' "$COUNTER_FILE" > "$TEMP_COUNTER" 2>/dev/null && mv "$TEMP_COUNTER" "$COUNTER_FILE" || rm -f "$TEMP_COUNTER"
+
+portable_unlock "${COUNTER_FILE}.lock"
 
 # Re-read the count from the updated file (subshell variables don't propagate)
 NEW_COUNT=$(jq -r --arg file "$FILE_PATH" '.[$file] // 0' "$COUNTER_FILE" 2>/dev/null || echo "0")

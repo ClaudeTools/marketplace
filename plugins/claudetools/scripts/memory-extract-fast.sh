@@ -6,6 +6,7 @@
 set -euo pipefail
 
 source "$(dirname "$0")/hook-log.sh"
+source "$(dirname "$0")/lib/portable-lock.sh"
 
 INPUT=$(cat 2>/dev/null || true)
 
@@ -37,11 +38,14 @@ emit_candidate() {
   local desc="$2"
   # Escape for JSON: backslashes, quotes, newlines
   desc=$(printf '%s' "$desc" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr '\n' ' ' | head -c 200)
-  # flock to prevent interleaved writes from concurrent sessions
-  (
-    flock -w 1 200 || true
-    echo "{\"type\":\"$ctype\",\"description\":\"$desc\",\"source\":\"stop-extract\",\"session_id\":\"$SESSION_ID\",\"timestamp\":\"$TIMESTAMP\"}" >> "$CANDIDATES_FILE"
-  ) 200>"${CANDIDATES_FILE}.lock"
+  # Lock to prevent interleaved writes from concurrent sessions
+  local entry="{\"type\":\"$ctype\",\"description\":\"$desc\",\"source\":\"stop-extract\",\"session_id\":\"$SESSION_ID\",\"timestamp\":\"$TIMESTAMP\"}"
+  if portable_lock "${CANDIDATES_FILE}.lock"; then
+    echo "$entry" >> "$CANDIDATES_FILE" 2>/dev/null || true
+    portable_unlock "${CANDIDATES_FILE}.lock"
+  else
+    echo "$entry" >> "$CANDIDATES_FILE"
+  fi
 }
 
 # --- Extract user corrections ---

@@ -85,5 +85,5 @@ Run the security-pipeline agent before we cut the v2.0 release branch.
 ## Related
 
 - [Run a Security Audit guide](/guides/run-security-audit/) — walkthrough of the security pipeline with real output
-- [Reference: exploring-codebase skill](/reference/skills/exploring-codebase/) — the skill that powers the scan and dead-code steps
+- [Reference: codebase-explorer skill](/reference/skills/codebase-explorer/) — the skill that powers the scan and dead-code steps
 - [Bugfix Pipeline](bugfix-pipeline.md) — use after the audit to resolve critical findings

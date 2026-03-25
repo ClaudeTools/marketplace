@@ -1,5 +1,5 @@
 ---
-title: "Exploring Codebase"
+title: "Codebase Explorer"
 description: "Skill that wraps codebase-pilot CLI into workflow modes — symbol search, import tracing, architecture mapping, and dependency analysis."
 ---
 
@@ -22,7 +22,7 @@ Use this skill any time you're working in a codebase you don't fully know — wh
 ## Try it now
 
 ```
-/exploring-codebase How does this project handle authentication?
+/codebase-explorer How does this project handle authentication?
 ```
 
 Claude will use codebase-pilot to map the project, find auth-related symbols, trace their import chains, and return a structured summary covering entry points, middleware, token flow, and key files — without reading every file blindly.

@@ -6,6 +6,8 @@
 # Appends JSONL to plugin/logs/events.jsonl — no jq, no subshells, no external deps
 # All globals cached after first _telemetry_ensure_init call
 
+source "$(dirname "${BASH_SOURCE[0]}")/portable-lock.sh"
+
 # Cached globals — exported so subshells inherit without re-init
 _TELEMETRY_INSTALL_ID="${_TELEMETRY_INSTALL_ID:-}"
 _TELEMETRY_VERSION="${_TELEMETRY_VERSION:-}"
@@ -59,20 +61,19 @@ _telemetry_ensure_init() {
   mkdir -p "$log_dir" 2>/dev/null || true
   _TELEMETRY_EVENTS_FILE="${log_dir}/events.jsonl"
 
-  # Log rotation at 10MB (cross-platform stat)
-  # Wrapped in flock to prevent concurrent rotation races
-  (
-    flock -n 200 || true
-    if [ -f "$_TELEMETRY_EVENTS_FILE" ]; then
-      local size
-      size=$(stat -f%z "$_TELEMETRY_EVENTS_FILE" 2>/dev/null \
-             || stat -c%s "$_TELEMETRY_EVENTS_FILE" 2>/dev/null \
-             || echo 0)
-      if [ "$size" -gt 10485760 ]; then
+  # Log rotation at 10MB (cross-platform stat + portable lock)
+  if [ -f "$_TELEMETRY_EVENTS_FILE" ]; then
+    local size
+    size=$(stat -f%z "$_TELEMETRY_EVENTS_FILE" 2>/dev/null \
+           || stat -c%s "$_TELEMETRY_EVENTS_FILE" 2>/dev/null \
+           || echo 0)
+    if [ "$size" -gt 10485760 ]; then
+      if portable_trylock "${_TELEMETRY_EVENTS_FILE}.lock"; then
         mv -f "$_TELEMETRY_EVENTS_FILE" "${_TELEMETRY_EVENTS_FILE}.1" 2>/dev/null || true
+        portable_unlock "${_TELEMETRY_EVENTS_FILE}.lock"
       fi
     fi
-  ) 200>"${_TELEMETRY_EVENTS_FILE}.lock"
+  fi
 
   export _TELEMETRY_INSTALL_ID _TELEMETRY_VERSION _TELEMETRY_OS _TELEMETRY_EVENTS_FILE
 }
