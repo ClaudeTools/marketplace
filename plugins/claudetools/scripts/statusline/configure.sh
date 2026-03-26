@@ -49,4 +49,26 @@ if [[ "$existing" == *"statusline/render.sh"* && ! -f "${existing#bash }" ]]; th
 fi
 
 # Case 4: User has their own statusline (ccstatusline, custom script, etc.) — don't touch
+
+# --- User config migration ---
+# If user has a statusline.json with an old default widget list, update it to the current defaults.
+# Only migrates if the list exactly matches a known old default (user hasn't customized).
+USER_CONFIG="$HOME/.config/claudetools/statusline.json"
+DEFAULT_CONFIG="${CLAUDE_PLUGIN_ROOT}/scripts/statusline/defaults.json"
+
+if [[ -f "$USER_CONFIG" && -f "$DEFAULT_CONFIG" ]]; then
+  current_widgets=$(jq -c '.widgets' "$USER_CONFIG" 2>/dev/null) || true
+  desired_widgets=$(jq -c '.widgets' "$DEFAULT_CONFIG" 2>/dev/null) || true
+
+  # Known old defaults that should be auto-migrated (exact order as shipped)
+  OLD_V1='["model","git","context","cost","speed","duration","worktree"]'
+
+  if [[ "$current_widgets" == "$OLD_V1" && "$current_widgets" != "$desired_widgets" ]]; then
+    # Preserve user's separator and color prefs, only update widgets
+    jq --argjson widgets "$(jq '.widgets' "$DEFAULT_CONFIG")" \
+      '.widgets = $widgets' \
+      "$USER_CONFIG" > "${USER_CONFIG}.tmp" && mv "${USER_CONFIG}.tmp" "$USER_CONFIG"
+  fi
+fi
+
 exit 0
