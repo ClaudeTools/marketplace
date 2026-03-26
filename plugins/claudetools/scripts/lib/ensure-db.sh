@@ -59,8 +59,7 @@ CREATE TABLE IF NOT EXISTS threshold_overrides (
 INSERT OR IGNORE INTO threshold_overrides (metric_name, default_value, current_value, min_bound, max_bound, reason)
 VALUES
   ('edit_frequency_limit', 3, 3, 1.5, 6, 'Default: warn after 3 edits to same file'),
-  ('failure_loop_limit', 3, 3, 1.5, 6, 'Default: block after 3 same-tool failures'),
-  ('stub_sensitivity', 1.0, 1.0, 0.5, 2.0, 'Default: standard stub detection sensitivity');
+  ('failure_loop_limit', 3, 3, 1.5, 6, 'Default: block after 3 same-tool failures');
 
 CREATE TABLE IF NOT EXISTS project_memories (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -192,9 +191,7 @@ INSERT OR IGNORE INTO threshold_overrides (metric_name, default_value, current_v
   ('uncommitted_file_limit', 5, 5, 2, 15, 'enforce-git-commits: modified file count before blocking'),
   ('large_change_threshold', 15, 15, 5, 50, 'session-stop-gate: files in commit before scope warning'),
   ('ai_audit_diff_threshold', 30, 30, 10, 100, 'session-stop-gate: diff lines before AI audit triggers'),
-  ('outcome_retention_days', 90, 90, 30, 365, 'aggregate-session: days to keep tool_outcomes'),
-  ('memory_retrieval_limit', 3, 3, 1, 5, 'active-memory: max memories injected per prompt'),
-  ('memory_fts_min_rank', -5, -5, -20, -1, 'active-memory: FTS5 rank threshold (more negative = looser)');
+  ('outcome_retention_days', 90, 90, 30, 365, 'aggregate-session: days to keep tool_outcomes');
 SQL
   fi
 
@@ -374,8 +371,6 @@ SQL
     ('large_change_threshold', 15, 15, 5, 50, 'session-stop-gate: files in commit before scope warning'),
     ('ai_audit_diff_threshold', 30, 30, 10, 100, 'session-stop-gate: diff lines before AI audit triggers'),
     ('outcome_retention_days', 90, 90, 30, 365, 'aggregate-session: days to keep tool_outcomes'),
-    ('memory_retrieval_limit', 3, 3, 1, 5, 'active-memory: max memories injected per prompt'),
-    ('memory_fts_min_rank', -5, -5, -20, -1, 'active-memory: FTS5 rank threshold (more negative = looser)'),
     ('read_warn_lines', 1000, 1000, 500, 3000, 'enforce-read-efficiency: warn when reading files above this line count'),
     ('read_block_lines', 5000, 5000, 2000, 10000, 'enforce-read-efficiency: block full reads above this line count');" 2>/dev/null || true
 

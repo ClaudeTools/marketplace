@@ -69,18 +69,6 @@ get_threshold() {
     # Range: 7–365 | Higher = more history for trend analysis
     outcome_retention_days) echo "90" ;;
 
-    # stub_sensitivity — multiplier for stub-detection scoring (1.0 = baseline)
-    # Range: 0.1–2.0 | Higher = more aggressive stub flagging
-    stub_sensitivity) echo "1.0" ;;
-
-    # memory_retrieval_limit — max memory fragments surfaced per hook invocation
-    # Range: 1–20 | Higher = richer context, higher token cost
-    memory_retrieval_limit) echo "3" ;;
-
-    # memory_fts_min_rank — minimum FTS5 rank score to include a memory result
-    # Range: -100–0 | Less negative = stricter relevance filter
-    memory_fts_min_rank) echo "-5" ;;
-
     # read_warn_lines — line count above which a file read triggers a warning
     # Range: 100–5000 | Higher = more lenient about large file reads
     read_warn_lines) echo "2000" ;;
@@ -114,48 +102,6 @@ record_hook_outcome() {
   (sqlite3 "$METRICS_DB" \
     "INSERT INTO hook_outcomes (session_id, hook_name, event_type, decision, tool_name, threshold_name, threshold_used, model_family)
      VALUES ('$session_id', '$hook_name', '$event_type', '$decision', '$tool_name', '$threshold_name', '$threshold_used', '$model_family');" 2>/dev/null || true) &
-}
-
-classify_outcome() {
-  local outcome_id="$1"
-  local is_correct="$2"
-  local classification="$3"
-  sqlite3 "$METRICS_DB" \
-    "UPDATE hook_outcomes SET is_correct=$is_correct, classification='$classification' WHERE id=$outcome_id;" 2>/dev/null || true
-}
-
-compute_hook_metrics() {
-  local hook_name="$1"
-  local since="${2:-}"
-  local where_clause="WHERE hook_name='$hook_name' AND classification IS NOT NULL"
-  [ -n "$since" ] && where_clause="$where_clause AND timestamp > '$since'"
-  AW_TP=$(sqlite3 "$METRICS_DB" "SELECT COUNT(*) FROM hook_outcomes $where_clause AND classification='TP';" 2>/dev/null || echo "0")
-  AW_FP=$(sqlite3 "$METRICS_DB" "SELECT COUNT(*) FROM hook_outcomes $where_clause AND classification='FP';" 2>/dev/null || echo "0")
-  AW_TN=$(sqlite3 "$METRICS_DB" "SELECT COUNT(*) FROM hook_outcomes $where_clause AND classification='TN';" 2>/dev/null || echo "0")
-  AW_FN=$(sqlite3 "$METRICS_DB" "SELECT COUNT(*) FROM hook_outcomes $where_clause AND classification='FN';" 2>/dev/null || echo "0")
-  local total=$((AW_TP + AW_FP + AW_TN + AW_FN))
-  if [ "$total" -eq 0 ]; then
-    AW_PRECISION="1.0"; AW_RECALL="1.0"; AW_FP_RATE="0.0"; AW_FN_RATE="0.0"
-    return
-  fi
-  local tp_fp=$((AW_TP + AW_FP))
-  local tp_fn=$((AW_TP + AW_FN))
-  local fp_tn=$((AW_FP + AW_TN))
-  AW_PRECISION=$(awk "BEGIN {if($tp_fp>0) printf \"%.4f\", $AW_TP/$tp_fp; else print \"1.0\"}")
-  AW_RECALL=$(awk "BEGIN {if($tp_fn>0) printf \"%.4f\", $AW_TP/$tp_fn; else print \"1.0\"}")
-  AW_FP_RATE=$(awk "BEGIN {if($fp_tn>0) printf \"%.4f\", $AW_FP/$fp_tn; else print \"0.0\"}")
-  AW_FN_RATE=$(awk "BEGIN {if($tp_fn>0) printf \"%.4f\", $AW_FN/$tp_fn; else print \"0.0\"}")
-}
-
-get_hook_category() {
-  local hook_name="$1"
-  case "$hook_name" in
-    guard-sensitive-files|ai-safety|dangerous-bash) echo "safety" ;;
-    edit-frequency-guard|failure-pattern-detector|stubs|task-quality) echo "quality" ;;
-    enforce-git-commits|session-stop-dispatcher|enforce-task-quality) echo "process" ;;
-    inject-session-context|aggregate-session|doc-manager|doc-stale-detector) echo "context" ;;
-    *) echo "general" ;;
-  esac
 }
 
 detect_model_family() {

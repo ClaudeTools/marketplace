@@ -70,7 +70,7 @@ portable_unlock() {
   local lockfile="$1"
   if command -v flock &>/dev/null; then
     flock -u 200 2>/dev/null
-    exec 200>&- 2>/dev/null
+    exec 200>&-
   else
     rmdir "${lockfile}.d" 2>/dev/null
   fi
