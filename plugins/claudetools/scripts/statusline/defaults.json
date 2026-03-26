@@ -1,0 +1,5 @@
+{
+  "widgets": ["model", "git", "context", "cost", "speed", "duration", "worktree"],
+  "separator": " | ",
+  "colors": true
+}
