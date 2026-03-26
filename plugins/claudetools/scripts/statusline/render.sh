@@ -60,17 +60,15 @@ widget_git() {
 }
 
 widget_context() {
-  local pct color
+  local pct
   pct=$(echo "$INPUT" | jq -r '.context_window.used_percentage // empty')
   [[ -z "$pct" || "$pct" == "null" ]] && return
-  # Use jq for integer comparison (avoids bc dependency)
   local int_pct
   int_pct=$(echo "$INPUT" | jq -r '.context_window.used_percentage | floor')
-  color="$GREEN"
+  # Always yellow to match Claude Code's native context display
+  local color="$YELLOW"
   if (( int_pct > 80 )); then
     color="$RED"
-  elif (( int_pct > 50 )); then
-    color="$YELLOW"
   fi
   printf "${color}%d%% ctx${RESET}" "$int_pct"
 }
@@ -120,7 +118,7 @@ widget_session() {
   local pct
   pct=$(echo "$INPUT" | jq -r '.rate_limits.five_hour.used_percentage // empty' 2>/dev/null) || true
   [[ -z "$pct" || "$pct" == "null" ]] && return
-  local int_pct color
+  local int_pct color reset_epoch reset_time
   int_pct=$(echo "$INPUT" | jq -r '.rate_limits.five_hour.used_percentage | floor')
   color="$GREEN"
   if (( int_pct > 80 )); then
@@ -128,14 +126,20 @@ widget_session() {
   elif (( int_pct > 50 )); then
     color="$YELLOW"
   fi
-  printf "${color}%d%% 5h${RESET}" "$int_pct"
+  # Show reset time (e.g., "37% 5h @14:32")
+  reset_epoch=$(echo "$INPUT" | jq -r '.rate_limits.five_hour.resets_at // empty' 2>/dev/null) || true
+  reset_time=""
+  if [[ -n "$reset_epoch" && "$reset_epoch" != "null" ]]; then
+    reset_time=" @$(date -d "@${reset_epoch}" '+%H:%M' 2>/dev/null || date -r "${reset_epoch}" '+%H:%M' 2>/dev/null)" || true
+  fi
+  printf "${color}%d%% 5h%s${RESET}" "$int_pct" "$reset_time"
 }
 
 widget_weekly() {
   local pct
   pct=$(echo "$INPUT" | jq -r '.rate_limits.seven_day.used_percentage // empty' 2>/dev/null) || true
   [[ -z "$pct" || "$pct" == "null" ]] && return
-  local int_pct color
+  local int_pct color reset_epoch reset_time
   int_pct=$(echo "$INPUT" | jq -r '.rate_limits.seven_day.used_percentage | floor')
   color="$GREEN"
   if (( int_pct > 80 )); then
@@ -143,7 +147,13 @@ widget_weekly() {
   elif (( int_pct > 50 )); then
     color="$YELLOW"
   fi
-  printf "${color}%d%% 7d${RESET}" "$int_pct"
+  # Show reset day and time (e.g., "12% 7d @Wed 09:00")
+  reset_epoch=$(echo "$INPUT" | jq -r '.rate_limits.seven_day.resets_at // empty' 2>/dev/null) || true
+  reset_time=""
+  if [[ -n "$reset_epoch" && "$reset_epoch" != "null" ]]; then
+    reset_time=" @$(date -d "@${reset_epoch}" '+%a %H:%M' 2>/dev/null || date -r "${reset_epoch}" '+%a %H:%M' 2>/dev/null)" || true
+  fi
+  printf "${color}%d%% 7d%s${RESET}" "$int_pct" "$reset_time"
 }
 
 # Build output
