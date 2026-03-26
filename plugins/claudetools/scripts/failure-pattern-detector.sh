@@ -25,12 +25,16 @@ is_benign_failure() {
     Glob)
       # No matches — normal when searching for files that may not exist
       echo "$ERROR" | grep -qiE 'no (files|match)|0 match|empty result' && return 0
+      # Ripgrep timeout — infrastructure issue (large repo/slow disk), not an agent logic error
+      echo "$ERROR" | grep -qiE 'ripgrep.*timed?[[:space:]]*out|timed?[[:space:]]*out.*ripgrep|search.*timed?[[:space:]]*out' && return 0
       # Also: Glob returns success with empty output, but if somehow an error, skip it
       [ -z "$ERROR" ] && return 0
       ;;
     Grep)
       # No matches — extremely common, not a failure
       echo "$ERROR" | grep -qiE 'no (files|match)|0 match|empty result' && return 0
+      # Ripgrep timeout — infrastructure issue (large repo/slow disk), not an agent logic error
+      echo "$ERROR" | grep -qiE 'ripgrep.*timed?[[:space:]]*out|timed?[[:space:]]*out.*ripgrep|search.*timed?[[:space:]]*out' && return 0
       [ -z "$ERROR" ] && return 0
       ;;
     Bash)
