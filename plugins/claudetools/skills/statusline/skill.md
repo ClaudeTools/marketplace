@@ -16,6 +16,8 @@ The claudetools statusline is configured at `~/.config/claudetools/statusline.js
 | `context` | Context window usage % | `42% ctx` |
 | `cost` | Session cost | `$0.83` |
 | `speed` | Output token rate | `16.6 tok/s` |
+| `session` | 5-hour rate limit usage % | `42% 5h` |
+| `weekly` | 7-day rate limit usage % | `15% 7d` |
 | `duration` | Session duration | `12m` |
 | `worktree` | Worktree name (if active) | `wt:hazy-noodling-stearns` |
 
@@ -46,7 +48,7 @@ Delete `~/.config/claudetools/statusline.json`. The renderer will recreate it fr
 
 ```json
 {
-  "widgets": ["model", "git", "context", "cost", "speed", "duration", "worktree"],
+  "widgets": ["model", "git", "context", "session", "weekly", "duration", "worktree"],
   "separator": " | ",
   "colors": true
 }

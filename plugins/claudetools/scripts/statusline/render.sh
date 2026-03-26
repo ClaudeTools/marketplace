@@ -23,7 +23,7 @@ CONFIG="$USER_CONFIG"
 INPUT=$(cat)
 
 # Read config values
-WIDGETS=$(jq -r '.widgets // ["model","git","context","cost","speed","duration","worktree"] | .[]' "$CONFIG")
+WIDGETS=$(jq -r '.widgets // ["model","git","context","session","weekly","duration","worktree"] | .[]' "$CONFIG")
 SEPARATOR=$(jq -r '.separator // " | "' "$CONFIG")
 USE_COLORS=$(jq -r 'if .colors == false then "false" else "true" end' "$CONFIG")
 
@@ -114,6 +114,36 @@ widget_worktree() {
   wt_name=$(echo "$INPUT" | jq -r '.worktree.name // empty' 2>/dev/null) || true
   [[ -z "$wt_name" ]] && return
   printf "${MAGENTA}wt:%s${RESET}" "$wt_name"
+}
+
+widget_session() {
+  local pct
+  pct=$(echo "$INPUT" | jq -r '.rate_limits.five_hour.used_percentage // empty' 2>/dev/null) || true
+  [[ -z "$pct" || "$pct" == "null" ]] && return
+  local int_pct color
+  int_pct=$(echo "$INPUT" | jq -r '.rate_limits.five_hour.used_percentage | floor')
+  color="$GREEN"
+  if (( int_pct > 80 )); then
+    color="$RED"
+  elif (( int_pct > 50 )); then
+    color="$YELLOW"
+  fi
+  printf "${color}%d%% 5h${RESET}" "$int_pct"
+}
+
+widget_weekly() {
+  local pct
+  pct=$(echo "$INPUT" | jq -r '.rate_limits.seven_day.used_percentage // empty' 2>/dev/null) || true
+  [[ -z "$pct" || "$pct" == "null" ]] && return
+  local int_pct color
+  int_pct=$(echo "$INPUT" | jq -r '.rate_limits.seven_day.used_percentage | floor')
+  color="$GREEN"
+  if (( int_pct > 80 )); then
+    color="$RED"
+  elif (( int_pct > 50 )); then
+    color="$YELLOW"
+  fi
+  printf "${color}%d%% 7d${RESET}" "$int_pct"
 }
 
 # Build output
