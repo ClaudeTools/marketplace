@@ -118,7 +118,7 @@ widget_session() {
   local pct
   pct=$(echo "$INPUT" | jq -r '.rate_limits.five_hour.used_percentage // empty' 2>/dev/null) || true
   [[ -z "$pct" || "$pct" == "null" ]] && return
-  local int_pct color reset_epoch reset_time
+  local int_pct color reset_time
   int_pct=$(echo "$INPUT" | jq -r '.rate_limits.five_hour.used_percentage | floor')
   color="$GREEN"
   if (( int_pct > 80 )); then
@@ -126,14 +126,12 @@ widget_session() {
   elif (( int_pct > 50 )); then
     color="$YELLOW"
   fi
-  # Show reset time (e.g., "37% 5h @14:32")
-  reset_epoch=$(echo "$INPUT" | jq -r '.rate_limits.five_hour.resets_at // empty' 2>/dev/null) || true
-  reset_time=""
-  if [[ -n "$reset_epoch" && "$reset_epoch" != "null" && "$reset_epoch" != "0" ]]; then
-    local fmt
-    fmt=$(date -d "@${reset_epoch}" '+%H:%M' 2>/dev/null) || fmt=$(date -r "${reset_epoch}" '+%H:%M' 2>/dev/null) || fmt=""
-    [[ -n "$fmt" ]] && reset_time=" @${fmt}"
-  fi
+  # Format reset time in local timezone using jq (cross-platform, no date command)
+  reset_time=$(echo "$INPUT" | jq -r '
+    .rate_limits.five_hour.resets_at // null |
+    if . and . > 0 then " @" + (. | strflocaltime("%H:%M"))
+    else "" end
+  ' 2>/dev/null) || reset_time=""
   printf "${color}%d%% 5h%s${RESET}" "$int_pct" "$reset_time"
 }
 
@@ -141,7 +139,7 @@ widget_weekly() {
   local pct
   pct=$(echo "$INPUT" | jq -r '.rate_limits.seven_day.used_percentage // empty' 2>/dev/null) || true
   [[ -z "$pct" || "$pct" == "null" ]] && return
-  local int_pct color reset_epoch reset_time
+  local int_pct color reset_time
   int_pct=$(echo "$INPUT" | jq -r '.rate_limits.seven_day.used_percentage | floor')
   color="$GREEN"
   if (( int_pct > 80 )); then
@@ -149,14 +147,12 @@ widget_weekly() {
   elif (( int_pct > 50 )); then
     color="$YELLOW"
   fi
-  # Show reset day and time (e.g., "12% 7d @Wed 09:00")
-  reset_epoch=$(echo "$INPUT" | jq -r '.rate_limits.seven_day.resets_at // empty' 2>/dev/null) || true
-  reset_time=""
-  if [[ -n "$reset_epoch" && "$reset_epoch" != "null" && "$reset_epoch" != "0" ]]; then
-    local fmt
-    fmt=$(date -d "@${reset_epoch}" '+%a %H:%M' 2>/dev/null) || fmt=$(date -r "${reset_epoch}" '+%a %H:%M' 2>/dev/null) || fmt=""
-    [[ -n "$fmt" ]] && reset_time=" @${fmt}"
-  fi
+  # Format reset day+time in local timezone using jq (cross-platform, no date command)
+  reset_time=$(echo "$INPUT" | jq -r '
+    .rate_limits.seven_day.resets_at // null |
+    if . and . > 0 then " @" + (. | strflocaltime("%a %H:%M"))
+    else "" end
+  ' 2>/dev/null) || reset_time=""
   printf "${color}%d%% 7d%s${RESET}" "$int_pct" "$reset_time"
 }
 
