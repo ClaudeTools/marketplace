@@ -129,8 +129,10 @@ widget_session() {
   # Show reset time (e.g., "37% 5h @14:32")
   reset_epoch=$(echo "$INPUT" | jq -r '.rate_limits.five_hour.resets_at // empty' 2>/dev/null) || true
   reset_time=""
-  if [[ -n "$reset_epoch" && "$reset_epoch" != "null" ]]; then
-    reset_time=" @$(date -d "@${reset_epoch}" '+%H:%M' 2>/dev/null || date -r "${reset_epoch}" '+%H:%M' 2>/dev/null)" || true
+  if [[ -n "$reset_epoch" && "$reset_epoch" != "null" && "$reset_epoch" != "0" ]]; then
+    local fmt
+    fmt=$(date -d "@${reset_epoch}" '+%H:%M' 2>/dev/null) || fmt=$(date -r "${reset_epoch}" '+%H:%M' 2>/dev/null) || fmt=""
+    [[ -n "$fmt" ]] && reset_time=" @${fmt}"
   fi
   printf "${color}%d%% 5h%s${RESET}" "$int_pct" "$reset_time"
 }
@@ -150,8 +152,10 @@ widget_weekly() {
   # Show reset day and time (e.g., "12% 7d @Wed 09:00")
   reset_epoch=$(echo "$INPUT" | jq -r '.rate_limits.seven_day.resets_at // empty' 2>/dev/null) || true
   reset_time=""
-  if [[ -n "$reset_epoch" && "$reset_epoch" != "null" ]]; then
-    reset_time=" @$(date -d "@${reset_epoch}" '+%a %H:%M' 2>/dev/null || date -r "${reset_epoch}" '+%a %H:%M' 2>/dev/null)" || true
+  if [[ -n "$reset_epoch" && "$reset_epoch" != "null" && "$reset_epoch" != "0" ]]; then
+    local fmt
+    fmt=$(date -d "@${reset_epoch}" '+%a %H:%M' 2>/dev/null) || fmt=$(date -r "${reset_epoch}" '+%a %H:%M' 2>/dev/null) || fmt=""
+    [[ -n "$fmt" ]] && reset_time=" @${fmt}"
   fi
   printf "${color}%d%% 7d%s${RESET}" "$int_pct" "$reset_time"
 }
