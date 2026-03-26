@@ -5,10 +5,13 @@
 set -euo pipefail
 
 SETTINGS="$HOME/.claude/settings.json"
-RENDER_SCRIPT='${CLAUDE_PLUGIN_ROOT}/scripts/statusline/render.sh'
 
-# Graceful degradation if jq is missing
+# Graceful degradation if jq or CLAUDE_PLUGIN_ROOT is missing
 command -v jq &>/dev/null || exit 0
+[[ -n "${CLAUDE_PLUGIN_ROOT:-}" ]] || exit 0
+
+# Resolve the absolute path at hook runtime (settings.json doesn't expand env vars)
+RENDER_SCRIPT="${CLAUDE_PLUGIN_ROOT}/scripts/statusline/render.sh"
 
 # Ensure settings.json exists
 if [[ ! -f "$SETTINGS" ]]; then
