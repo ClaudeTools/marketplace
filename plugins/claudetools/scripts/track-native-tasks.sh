@@ -56,19 +56,23 @@ validate_state_file
 
 case "$TOOL_NAME" in
   TaskCreate)
-    # Extract tool_result first — only record if the create actually succeeded
-    TASK_RESULT=$(echo "$INPUT" | jq -r '.tool_result // ""' 2>/dev/null || echo "")
+    # PostToolUse provides: tool_response.task.id and tool_response.task.subject
+    # Primary: extract structured ID from tool_response object
+    TASK_ID=$(echo "$INPUT" | jq -r '.tool_response.task.id // .tool_response.id // ""' 2>/dev/null || echo "")
 
-    # Guard: only track successful creates (result contains "Task #N created" or similar)
-    # If the result looks like an error or is empty, skip — don't create phantom tasks
-    TASK_ID=$(echo "$TASK_RESULT" | grep -o '#[0-9]*' | head -1 | tr -d '#' || echo "")
+    # Fallback: try tool_response as a string containing "Task #N"
     if [[ -z "$TASK_ID" ]]; then
-      # No task ID found in result — tool likely failed or returned unexpected format
+      TASK_RESULT=$(echo "$INPUT" | jq -r '.tool_response // ""' 2>/dev/null || echo "")
+      TASK_ID=$(echo "$TASK_RESULT" | grep -o '#[0-9]*' | head -1 | tr -d '#' || echo "")
+    fi
+
+    # No ID found — tool likely failed, skip to avoid phantom tasks
+    if [[ -z "$TASK_ID" ]]; then
       exit 0
     fi
 
-    # tool_input has subject and description
-    SUBJECT=$(echo "$INPUT" | jq -r '.tool_input.subject // "unknown"' 2>/dev/null || echo "unknown")
+    # Subject from response (confirmed) or input (fallback)
+    SUBJECT=$(echo "$INPUT" | jq -r '.tool_response.task.subject // .tool_input.subject // "unknown"' 2>/dev/null || echo "unknown")
     DESCRIPTION=$(echo "$INPUT" | jq -r '.tool_input.description // ""' 2>/dev/null || echo "")
     # Add the task to state
     jq --arg id "$TASK_ID" \
