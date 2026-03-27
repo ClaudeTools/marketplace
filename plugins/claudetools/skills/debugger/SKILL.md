@@ -2,7 +2,7 @@
 name: debugger
 description: Evidence-based debugging workflow that enforces REPRODUCE, OBSERVE, HYPOTHESIZE, VERIFY, FIX, CONFIRM. Use when the user says debug this, fix this bug, why is this failing, this is broken, not working, unexpected behaviour, or error.
 argument-hint: [error-description]
-allowed-tools: Read, Bash, Grep, Glob, Edit, Write
+allowed-tools: Read, Bash, Grep, Glob, Edit, Write, AskUserQuestion, TaskCreate, TaskUpdate
 metadata:
   author: Owen Innes
   version: 1.0.0
@@ -13,6 +13,10 @@ metadata:
 # Investigating Bugs
 
 Evidence-based debugging. Every fix requires evidence. No guessing.
+
+## Task Tracking
+
+Before starting, create a task for the overall bug investigation using TaskCreate. Mark it in_progress immediately. As you progress through each step, update the task description with your findings. Mark completed only after Step 6 (CONFIRM) passes.
 
 ## The Protocol
 
@@ -41,6 +45,16 @@ Before writing any fix, state your hypothesis:
 - If you have multiple hypotheses, rank them by likelihood
 - Each hypothesis must reference specific evidence (error message, line number, log output)
 
+**When multiple hypotheses exist (2+):** Use AskUserQuestion to let the user choose which to investigate first. Structure it as:
+
+- **Single-select** with `preview` enabled
+- **question**: state how many hypotheses and what they relate to (derived from the actual error context)
+- **header**: "Root cause" (max 12 chars)
+- **Each option**: label = short hypothesis name derived from your analysis, description = one-line cause summary, preview = the actual evidence collected in Steps 1-2 (error excerpts, file:line refs, log snippets, likelihood rating)
+- **Populate entirely from your investigation** — every label, description, and preview line must reference real evidence from this specific bug. Never use placeholder text.
+
+If only one hypothesis exists, skip the question and proceed directly.
+
 ### Step 4: VERIFY
 Test your hypothesis before fixing:
 - Add diagnostic logging if needed (temporary, remove later)
@@ -58,6 +72,17 @@ Verify the fix works:
 - Run the previously-failing command — it should pass
 - Run the full test suite — no regressions
 - Run typecheck — no new errors
+
+### Step 6½: SCOPE CHECK (conditional)
+After confirming the fix, if you discovered related issues during investigation, use AskUserQuestion with multiSelect to offer follow-ups:
+
+- **multiSelect: true** — user picks zero or more
+- **question**: state the fix is confirmed, mention how many related issues you found
+- **header**: "Follow-ups"
+- **Each option**: label = the actual issue name (e.g. the function or file where you spotted it), description = what's wrong and where (file:line)
+- **Populate from your actual investigation findings** — only issues you have concrete evidence for. Never invent hypothetical follow-ups.
+
+Skip this if no related issues were found.
 
 ## Two-Strike Rule
 

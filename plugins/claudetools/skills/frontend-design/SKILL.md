@@ -2,7 +2,7 @@
 name: frontend-design
 description: Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build a website, landing page, dashboard, web app, UI component, page layout, or any visual web interface. Also use when asked to redesign, restyle, make something look better, add dark mode, or create a design system. Covers React, Next.js, Vite, Astro, SvelteKit, Tailwind CSS, and plain HTML/CSS projects.
 argument-hint: [description of what to build]
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch, TaskCreate, TaskUpdate
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch, TaskCreate, TaskUpdate, AskUserQuestion
 metadata:
   author: Owen Innes
   version: 1.1.0
@@ -93,8 +93,16 @@ Classify each issue as auto-fixable or manual:
 - Large components → requires architectural decisions
 - Responsive issues → requires layout strategy
 
-### Step 4: Present Report
-Show the user: total issue count, breakdown by category, which are auto-fixable vs manual. Offer to auto-fix eligible issues.
+### Step 4: Present Report and Prioritize
+Show the user: total issue count, breakdown by category, which are auto-fixable vs manual.
+
+If there are issues across multiple categories, use AskUserQuestion with multiSelect to let the user prioritize:
+
+- **multiSelect: true** — user picks which categories to address now
+- **question**: state the total issue count and that you've categorized them
+- **header**: "Fix scope"
+- **Each option**: label = category name with actual count from audit output (e.g. "Hardcoded colors (12)"), description = what fixing this category involves and whether it's auto-fixable or requires decisions
+- **Only show categories that have issues** — derive the option list entirely from the audit script output. If the audit found 3 categories with issues, show 3 options. If it found 1, skip the question and just fix it.
 
 ### Step 5: Re-audit After Fixes
 After applying fixes, re-run the audit scripts. The audit history in `.frontend-design/audit-history.json` shows the score delta — confirm improvement.
@@ -141,7 +149,15 @@ If you cannot answer with specifics, stop and ask the user.
 ```bash
 python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/design-system.py --list-domains
 ```
-Match the product's domain to recommended themes. Present 2-3 options to the user. The chosen theme provides the color palette, type ratio, depth strategy, and font recommendations as a starting point — then customize based on domain exploration.
+Match the product's domain to recommended themes. Use AskUserQuestion with `preview` to present 2-3 visual direction options:
+
+- **Single-select** with `preview` enabled — the side-by-side layout lets users compare directions visually
+- **question**: reference the specific product/domain from the intent exploration
+- **header**: "Direction"
+- **Each option**: label = theme name from `--list-domains` output, description = one-line mood derived from domain exploration, preview = real values from the theme script: hex palette with block chars (██), font pairing + ratio, depth strategy, mood line, and the signature element from your domain exploration
+- **Every value must come from the actual script output and your domain exploration** — palette hex codes from `design-system.py`, font names from the theme config, signature element from your earlier analysis. Never use example palettes.
+
+After the user selects, proceed with that direction.
 
 **Proposal** — Present a direction referencing all four exploration outputs. Ask user to confirm before proceeding.
 

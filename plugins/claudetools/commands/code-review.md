@@ -15,7 +15,13 @@ bash ${CLAUDE_PLUGIN_ROOT}/skills/code-review/scripts/gather-diff.sh $ARGUMENTS
 ```
 This outputs the diff to review. If $ARGUMENTS is a file path, it shows that file. If it's a branch name, it shows the diff against main. If empty, it shows uncommitted changes.
 
-2. **Pass 1: Correctness** — Read every changed file. For each change:
+2. **Scope the review** — After gathering the diff, assess its size. If the diff touches 5+ files or 200+ lines, use AskUserQuestion to let the user scope the review:
+
+   - **Single-select** for review depth: derive options from the actual diff size. Label each with what it covers for THIS diff (e.g. "Quick — scan 3 changed controllers for obvious issues" vs "Deep — all 12 files including test changes, line-by-line").
+   - **multiSelect** for pass selection (only if depth is not "quick"): list the 4 passes (Correctness, Security, Performance, Maintainability) and let the user deselect passes they don't care about for this review. Description for each should reference what's relevant in the actual diff (e.g. "Security — this diff adds 2 new API endpoints with user input").
+   - **Skip the question** if the diff is small (<5 files, <200 lines) — just run all 4 passes.
+
+3. **Pass 1: Correctness** — Read every changed file. For each change:
    - Does the logic do what it claims?
    - Are edge cases handled (null, empty, boundary values)?
    - Are error paths complete (try/catch, error returns)?

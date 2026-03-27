@@ -22,6 +22,10 @@ node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js related-files "<path>"
 
 # Trace symbol usage to assess blast radius of changes
 node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-usages "<symbol>"
+```
+
+## Progress Tracking
+Use TodoWrite to track your review passes — create a todo item for each pass (Correctness, Security, Performance, Maintainability) before starting. Mark each completed as you finish. This lets the parent agent track which passes are done and which findings have been collected.
 
 # Find the definition of unfamiliar symbols
 node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-symbol "<name>"

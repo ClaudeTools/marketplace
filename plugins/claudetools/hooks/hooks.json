@@ -79,9 +79,29 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-native-task-hygiene.sh",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "PostToolUse": [
+      {
+        "matcher": "TaskCreate|TaskUpdate|TaskList",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/track-native-tasks.sh",
+            "timeout": 3
+          }
+        ]
+      },
       {
         "matcher": "Read",
         "hooks": [

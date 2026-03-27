@@ -21,7 +21,15 @@ Generate a health report for the claudetools plugin system.
 bash ${CLAUDE_PLUGIN_ROOT}/skills/session-dashboard/scripts/generate-report.sh ${ARGUMENTS:-10}
 ```
 
-2. Present the output as a formatted report. Explain each section:
+2. **Filter sections** — After running the report, if the output contains 4+ sections, use AskUserQuestion with multiSelect to let the user focus:
+
+   - **multiSelect: true** — user picks which sections to see
+   - **question**: state how many sessions were analyzed and offer to filter the report
+   - **header**: "Sections"
+   - **Each option**: label = the actual section name from the report output (e.g. "Failure Rate Trend"), description = a one-line summary of what THIS report's data shows for that section (e.g. "Failure rate dropped from 8% to 3% over 7 days" — derived from the actual numbers, not generic text)
+   - **Skip the question** if $ARGUMENTS was provided (user already scoped the request) or if the report has fewer than 4 sections
+
+3. Present the output as a formatted report. Explain each section:
 
 ### Session Summary
 - **avg_tool_calls**: Average tool uses per session. Typical range: 20-100. Higher = more active sessions.

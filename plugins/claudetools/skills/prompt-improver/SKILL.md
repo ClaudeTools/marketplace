@@ -2,7 +2,7 @@
 name: prompt-improver
 description: Transforms vague prompts into structured XML and executes them. Modes: execute (default), plan (review before running), task (create persistent tasks without executing). Use when the user says improve prompt, make this work better, prompt engineer, or structure a prompt.
 argument-hint: [plan|task] [prompt-text or description of what to improve]
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent, AskUserQuestion
 metadata:
   author: Owen Innes
   version: 6.0.0
@@ -23,6 +23,16 @@ Transform rough user input into structured XML prompts and execute them directly
 | `/prompt-improver task <prompt>` | **Task** | Generate, create persistent tasks via task_create, do not execute |
 
 When the first word of $ARGUMENTS is `plan` or `task` (case-insensitive), activate that mode. Strip the mode word from the arguments before passing the rest as raw input.
+
+**Mode ambiguity:** If $ARGUMENTS does not start with a mode word AND the input is complex enough that multiple modes could apply, use AskUserQuestion to disambiguate:
+
+- **Single-select** with `preview` enabled
+- **question**: describe what you received and why you're unsure (e.g. "This is a multi-step spec — should I execute it now or create a task tree for later?")
+- **header**: "Mode"
+- **Options**: the 3 modes (Execute, Plan, Task) — but tailor the descriptions to the ACTUAL input. E.g. if the input has 8 tasks, the Task option description should say "Creates 8 subtasks with dependencies" not generic text. The preview for each should show what the output would look like for THIS specific input.
+- **Recommend the best fit** by putting it first with "(Recommended)" in the label — base the recommendation on input complexity (simple → Execute, risky/large → Plan, multi-session/team → Task).
+
+If the input is clearly simple (single action, obvious intent), default to Execute without asking.
 
 ## Execution model
 

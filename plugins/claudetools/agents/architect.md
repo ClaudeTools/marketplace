@@ -20,3 +20,6 @@ node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-usages "<symbol>"
 ```
 
 Use `map` first for the project overview, then `related-files` to understand dependency graphs before recommending architectural changes.
+
+## Progress Tracking
+Use TodoWrite to track your analysis phases — create a todo item for each area you're analyzing (e.g. the specific module, dependency graph, or trade-off being evaluated). Mark each completed as you finish. This lets the parent agent track your progress.

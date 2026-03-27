@@ -2,7 +2,7 @@
 name: codebase-explorer
 description: Explores codebase structure, finds symbol definitions, traces dependency chains, and maps project architecture. Use when understanding unfamiliar code, finding where something is defined, tracing what calls a function, exploring how a module works, navigating dependencies, or getting a project overview.
 argument-hint: [query or file path]
-allowed-tools: Read, Bash, Grep, Glob
+allowed-tools: Read, Bash, Grep, Glob, AskUserQuestion
 metadata:
   author: Owen Innes
   version: 2.0.0
@@ -37,6 +37,17 @@ Before running commands, determine the right mode based on the user's intent:
 | "Find unused exports" / "What code is dead?" | **dead-code** | `dead-code` CLI command |
 | "What breaks if I change X?" / "Impact of modifying Y" | **change-impact** | `change-impact` CLI command |
 | "Which functions are too long?" / "Show complex code" | **complexity-report** | `complexity-report.sh` script |
+
+### Ambiguous Intent Resolution
+
+When the user's query maps to 2+ modes (e.g. "understand the auth system" could be explore, trace, or map+find), use AskUserQuestion to disambiguate:
+
+- **Single-select** with `preview` enabled
+- **question**: reference the user's actual query and explain why multiple approaches apply
+- **header**: "Approach"
+- **Each option**: label = the mode name, description = what it would reveal about the specific thing the user asked about, preview = the actual CLI commands that would run and what kind of output they produce (e.g. "Shows 12 files that import AuthService and how each uses it")
+- **Populate from context**: if you can quickly run `find-symbol` or `map` first to count results, use those numbers in the descriptions (e.g. "Traces 8 call sites of handleAuth across 5 files")
+- **If the intent clearly maps to one mode**, skip the question and proceed directly
 
 ## Mode: map
 
