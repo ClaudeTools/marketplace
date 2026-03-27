@@ -244,7 +244,12 @@ widget_session() {
   color="$GREEN"; (( int_pct > 50 )) && color="$YELLOW"; (( int_pct > 80 )) && color="$RED"
   reset_info=$(echo "$INPUT" | jq -r '
     .rate_limits.five_hour.resets_at // null |
-    if . and . > 0 then " @" + (. | strflocaltime("%H:%M"))
+    if . and . > 0 then
+      (. | strflocaltime("%I:%M%p")) |
+      # Strip leading zero, lowercase, drop minutes if :00
+      ltrimstr("0") | ascii_downcase |
+      gsub(":00";"") |
+      " @" + .
     else "" end
   ' 2>/dev/null) || reset_info=""
   printf "%s ${color}%d%%${RESET} ${DIM}5h%s${RESET}" "$(simple_bar "$int_pct" "$BAR_WIDTH")" "$int_pct" "$reset_info"
@@ -259,7 +264,10 @@ widget_weekly() {
   color="$GREEN"; (( int_pct > 50 )) && color="$YELLOW"; (( int_pct > 80 )) && color="$RED"
   reset_info=$(echo "$INPUT" | jq -r '
     .rate_limits.seven_day.resets_at // null |
-    if . and . > 0 then " @" + (. | strflocaltime("%a %H:%M"))
+    if . and . > 0 then
+      (. | strflocaltime("%a")) as $day |
+      (. | strflocaltime("%I:%M%p") | ltrimstr("0") | ascii_downcase | gsub(":00";"")) as $time |
+      " @" + $day + " " + $time
     else "" end
   ' 2>/dev/null) || reset_info=""
   printf "%s ${color}%d%%${RESET} ${DIM}7d%s${RESET}" "$(simple_bar "$int_pct" "$BAR_WIDTH")" "$int_pct" "$reset_info"
