@@ -207,6 +207,9 @@ widget_model() {
   local name
   name=$(echo "$INPUT" | jq -r '.model.display_name // .model.id // empty') || return
   [[ -z "$name" ]] && return
+  # Compact model name: strip " context", shorten "(1M context)" → "(1M)"
+  name="${name/ context/}"
+  name="${name/(1000000)/(1M)}"
   printf "${BOLD}%s${RESET}" "$name"
 }
 
@@ -264,9 +267,9 @@ widget_weekly() {
 
 widget_peak() {
   if is_peak_time; then
-    printf "${RED}▲ peak${RESET}"
+    printf "${RED}▲pk${RESET}"
   else
-    printf "${GREEN}▽ off-peak${RESET}"
+    printf "${GREEN}▽off${RESET}"
   fi
 }
 
