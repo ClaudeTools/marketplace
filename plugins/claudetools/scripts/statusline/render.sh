@@ -65,10 +65,11 @@ widget_context() {
   [[ -z "$pct" || "$pct" == "null" ]] && return
   local int_pct
   int_pct=$(echo "$INPUT" | jq -r '.context_window.used_percentage | floor')
-  # Always yellow to match Claude Code's native context display
-  local color="$YELLOW"
+  local color="$GREEN"
   if (( int_pct > 80 )); then
     color="$RED"
+  elif (( int_pct > 50 )); then
+    color="$YELLOW"
   fi
   printf "${color}%d%% ctx${RESET}" "$int_pct"
 }
