@@ -24,7 +24,7 @@ if [[ -f "$SNAPSHOT_FILE" ]]; then
   # Read existing and update
   UPDATED=$(jq \
     --arg status "closed" \
-    --arg closed_at "$(date -Iseconds)" \
+    --arg closed_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     --arg uncommitted "$UNCOMMITTED" \
     --arg recent_commits "$RECENT_COMMITS" \
     '. + {status: $status, closed_at: $closed_at, uncommitted_at_close: ($uncommitted | tonumber), recent_commits_at_close: $recent_commits}' \
@@ -41,7 +41,7 @@ if [[ -f "$LOG_FILE" ]]; then
     --arg sid "$SID" \
     --arg event "close" \
     --arg worktree "$(get_worktree_root)" \
-    --arg ts "$(date -Iseconds)" \
+    --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     '{session_id: $sid, event: $event, worktree: $worktree, timestamp: $ts}' \
     >> "$LOG_FILE" 2>/dev/null || true
 fi

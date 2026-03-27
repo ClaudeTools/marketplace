@@ -69,7 +69,7 @@ FAILURE_LOG="/tmp/claude-failures-${SESSION_ID:-$$}.jsonl"
 ERROR_KEY=$(echo "$ERROR" | head -c 80 | sed 's|/[^ ]*||g; s|line [0-9]*||g; s|[0-9]\{4,\}||g' | tr -d '"')
 
 # Append failure record with error_key for pattern matching
-jq -cn --arg tool "$TOOL_NAME" --arg error "$ERROR" --arg key "$ERROR_KEY" --arg time "$(date -Iseconds)" \
+jq -cn --arg tool "$TOOL_NAME" --arg error "$ERROR" --arg key "$ERROR_KEY" --arg time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   '{tool: $tool, error: $error, error_key: $key, time: $time}' >> "$FAILURE_LOG"
 
 # Count failures for this tool+error pattern (not just tool name)

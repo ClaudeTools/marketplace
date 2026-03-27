@@ -48,7 +48,7 @@ ENTRY=$(jq -cn \
   --argjson is_worktree "$IS_WT" \
   --arg cc_logs "$CC_SESSION_DIR" \
   --arg pid "$$" \
-  --arg ts "$(date -Iseconds)" \
+  --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   '{
     session_id: $sid,
     event: $event,
@@ -85,7 +85,7 @@ if [[ "$IS_WT" == "true" ]]; then
     --arg uncommitted "$UNCOMMITTED" \
     --arg recent_commits "$RECENT_COMMITS" \
     --arg active_tasks "$ACTIVE_TASKS" \
-    --arg ts "$(date -Iseconds)" \
+    --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     '{
       session_id: $sid,
       worktree: $worktree,

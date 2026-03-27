@@ -12,7 +12,7 @@ source "$SCRIPT_DIR/lib/hook-input.sh"
 hook_init
 
 # Diagnostic: log Stop event context for worktree session debugging
-echo "STOP-DIAG: $(date -Is) CWD=$(pwd) SESSION_ID=${SESSION_ID:-unknown} WORKTREE=$(git rev-parse --show-toplevel 2>/dev/null || echo none)" >> /tmp/claudetools-stop-diagnostic.log
+echo "STOP-DIAG: $(date -u +%Y-%m-%dT%H:%M:%SZ) CWD=$(pwd) SESSION_ID=${SESSION_ID:-unknown} WORKTREE=$(git rev-parse --show-toplevel 2>/dev/null || echo none)" >> /tmp/claudetools-stop-diagnostic.log
 
 # Phase 2: Source validators
 source "$SCRIPT_DIR/validators/task-quality.sh"
