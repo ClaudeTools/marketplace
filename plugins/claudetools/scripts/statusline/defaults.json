@@ -1,5 +1,6 @@
 {
-  "widgets": ["model", "git", "context", "session", "weekly", "duration", "worktree"],
+  "widgets": ["model", "git", "context", "session", "weekly", "peak", "duration", "worktree"],
   "separator": " | ",
-  "colors": true
+  "colors": true,
+  "bar_width": 10
 }

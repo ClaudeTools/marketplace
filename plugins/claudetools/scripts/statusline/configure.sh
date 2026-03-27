@@ -62,8 +62,9 @@ if [[ -f "$USER_CONFIG" && -f "$DEFAULT_CONFIG" ]]; then
 
   # Known old defaults that should be auto-migrated (exact order as shipped)
   OLD_V1='["model","git","context","cost","speed","duration","worktree"]'
+  OLD_V2='["model","git","context","session","weekly","duration","worktree"]'
 
-  if [[ "$current_widgets" == "$OLD_V1" && "$current_widgets" != "$desired_widgets" ]]; then
+  if [[ ("$current_widgets" == "$OLD_V1" || "$current_widgets" == "$OLD_V2") && "$current_widgets" != "$desired_widgets" ]]; then
     # Preserve user's separator and color prefs, only update widgets
     jq --argjson widgets "$(jq '.widgets' "$DEFAULT_CONFIG")" \
       '.widgets = $widgets' \
