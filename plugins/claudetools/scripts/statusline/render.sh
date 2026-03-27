@@ -51,7 +51,7 @@ if [[ "$USE_COLORS" == "true" ]]; then
   BG_YELLOW='\033[43m'
   BG_RED='\033[41m'
   BG_BLUE='\033[44m'
-  GRAY='\033[90m'
+  GRAY='\033[37m'
 else
   DIM='' RESET='' BOLD='' CYAN='' GREEN='' YELLOW='' MAGENTA='' RED='' BLUE='' WHITE='' BG_GREEN='' BG_YELLOW='' BG_RED='' BG_BLUE='' GRAY=''
 fi
