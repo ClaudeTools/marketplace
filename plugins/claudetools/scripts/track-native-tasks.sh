@@ -56,19 +56,20 @@ validate_state_file
 
 case "$TOOL_NAME" in
   TaskCreate)
+    # Extract tool_result first — only record if the create actually succeeded
+    TASK_RESULT=$(echo "$INPUT" | jq -r '.tool_result // ""' 2>/dev/null || echo "")
+
+    # Guard: only track successful creates (result contains "Task #N created" or similar)
+    # If the result looks like an error or is empty, skip — don't create phantom tasks
+    TASK_ID=$(echo "$TASK_RESULT" | grep -o '#[0-9]*' | head -1 | tr -d '#' || echo "")
+    if [[ -z "$TASK_ID" ]]; then
+      # No task ID found in result — tool likely failed or returned unexpected format
+      exit 0
+    fi
+
     # tool_input has subject and description
     SUBJECT=$(echo "$INPUT" | jq -r '.tool_input.subject // "unknown"' 2>/dev/null || echo "unknown")
     DESCRIPTION=$(echo "$INPUT" | jq -r '.tool_input.description // ""' 2>/dev/null || echo "")
-
-    # Extract task ID from tool_result (format: "Task #N created successfully")
-    TASK_RESULT=$(echo "$INPUT" | jq -r '.tool_result // ""' 2>/dev/null || echo "")
-    # POSIX-compatible extraction (no grep -P)
-    TASK_ID=$(echo "$TASK_RESULT" | grep -o '#[0-9]*' | head -1 | tr -d '#' || echo "")
-    if [[ -z "$TASK_ID" ]]; then
-      # Fallback: sequential ID from current task count
-      TASK_ID=$(jq -r '.tasks | length + 1' "$STATE_FILE" 2>/dev/null || echo "1")
-    fi
-
     # Add the task to state
     jq --arg id "$TASK_ID" \
        --arg subject "$SUBJECT" \
