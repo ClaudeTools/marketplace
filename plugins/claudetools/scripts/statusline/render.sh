@@ -294,9 +294,9 @@ widget_peak() {
   fi
 
   if is_peak_time; then
-    printf "${RED}▲ pk${RESET} ${DIM}til ${local_end}${RESET}"
+    printf "${RED}▲ pk ${local_start}-${local_end}${RESET}"
   else
-    printf "${GREEN}▽ off${RESET} ${DIM}pk ${local_start}-${local_end}${RESET}"
+    printf "${GREEN}▽ off ${local_end}-${local_start}${RESET}"
   fi
 }
 
