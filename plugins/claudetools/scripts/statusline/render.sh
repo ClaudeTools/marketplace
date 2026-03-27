@@ -217,6 +217,8 @@ widget_git() {
     branch=$(git --no-optional-locks branch --show-current 2>/dev/null) || branch=""
   fi
   [[ -z "$branch" ]] && return
+  # Strip worktree prefix from branch name to avoid redundancy with worktree widget
+  branch="${branch#worktree-}"
   printf "${CYAN}%s${RESET}" "$branch"
 }
 
@@ -224,37 +226,40 @@ widget_context() {
   local pct
   pct=$(echo "$INPUT" | jq -r '.context_window.used_percentage // empty')
   [[ -z "$pct" || "$pct" == "null" ]] && return
-  local int_pct
+  local int_pct color
   int_pct=$(echo "$INPUT" | jq -r '.context_window.used_percentage | floor')
-  printf "%s ${DIM}ctx${RESET}" "$(simple_bar "$int_pct" "$BAR_WIDTH")"
+  color="$GREEN"; (( int_pct > 50 )) && color="$YELLOW"; (( int_pct > 80 )) && color="$RED"
+  printf "%s ${color}%d%%${RESET} ${DIM}ctx${RESET}" "$(simple_bar "$int_pct" "$BAR_WIDTH")" "$int_pct"
 }
 
 widget_session() {
   local pct
   pct=$(echo "$INPUT" | jq -r '.rate_limits.five_hour.used_percentage // empty' 2>/dev/null) || true
   [[ -z "$pct" || "$pct" == "null" ]] && return
-  local int_pct reset_info
+  local int_pct color reset_info
   int_pct=$(echo "$INPUT" | jq -r '.rate_limits.five_hour.used_percentage | floor')
+  color="$GREEN"; (( int_pct > 50 )) && color="$YELLOW"; (( int_pct > 80 )) && color="$RED"
   reset_info=$(echo "$INPUT" | jq -r '
     .rate_limits.five_hour.resets_at // null |
     if . and . > 0 then " @" + (. | strflocaltime("%H:%M"))
     else "" end
   ' 2>/dev/null) || reset_info=""
-  printf "%s ${DIM}5h%s${RESET}" "$(simple_bar "$int_pct" "$BAR_WIDTH")" "$reset_info"
+  printf "%s ${color}%d%%${RESET} ${DIM}5h%s${RESET}" "$(simple_bar "$int_pct" "$BAR_WIDTH")" "$int_pct" "$reset_info"
 }
 
 widget_weekly() {
   local pct
   pct=$(echo "$INPUT" | jq -r '.rate_limits.seven_day.used_percentage // empty' 2>/dev/null) || true
   [[ -z "$pct" || "$pct" == "null" ]] && return
-  local int_pct reset_info
+  local int_pct color reset_info
   int_pct=$(echo "$INPUT" | jq -r '.rate_limits.seven_day.used_percentage | floor')
+  color="$GREEN"; (( int_pct > 50 )) && color="$YELLOW"; (( int_pct > 80 )) && color="$RED"
   reset_info=$(echo "$INPUT" | jq -r '
     .rate_limits.seven_day.resets_at // null |
     if . and . > 0 then " @" + (. | strflocaltime("%a %H:%M"))
     else "" end
   ' 2>/dev/null) || reset_info=""
-  printf "%s ${DIM}7d%s${RESET}" "$(simple_bar "$int_pct" "$BAR_WIDTH")" "$reset_info"
+  printf "%s ${color}%d%%${RESET} ${DIM}7d%s${RESET}" "$(simple_bar "$int_pct" "$BAR_WIDTH")" "$int_pct" "$reset_info"
 }
 
 widget_peak() {
@@ -299,9 +304,12 @@ widget_duration() {
 }
 
 widget_worktree() {
-  local wt_name
+  local wt_name branch
   wt_name=$(echo "$INPUT" | jq -r '.worktree.name // empty' 2>/dev/null) || true
   [[ -z "$wt_name" ]] && return
+  # Skip if git widget already shows this info (branch contains worktree name)
+  branch=$(echo "$INPUT" | jq -r '.worktree.branch // empty' 2>/dev/null) || true
+  [[ "$branch" == *"$wt_name"* ]] && return
   printf "${MAGENTA}wt:%s${RESET}" "$wt_name"
 }
 
