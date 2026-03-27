@@ -274,10 +274,29 @@ widget_weekly() {
 }
 
 widget_peak() {
-  if is_peak_time; then
-    printf "${RED}▲pk${RESET}"
+  # Show peak/off-peak with the ET window converted to user's local timezone
+  local local_start local_end
+  # Convert 8am ET and 2pm ET to user-local time for display
+  # TZ trick: set TZ to ET, create a date string, then format in local TZ
+  local et_8am_utc et_2pm_utc
+  # Get today's 8am ET and 2pm ET as epoch seconds
+  et_8am_utc=$(TZ='America/New_York' date -d 'today 08:00' +%s 2>/dev/null) || true
+  et_2pm_utc=$(TZ='America/New_York' date -d 'today 14:00' +%s 2>/dev/null) || true
+
+  if [[ -n "$et_8am_utc" && -n "$et_2pm_utc" ]]; then
+    # Format those UTC epochs in user's local timezone (12h, no leading zero)
+    local_start=$(date -d "@$et_8am_utc" '+%-I%P' 2>/dev/null) || local_start="8am"
+    local_end=$(date -d "@$et_2pm_utc" '+%-I%P' 2>/dev/null) || local_end="2pm"
   else
-    printf "${GREEN}▽off${RESET}"
+    # Fallback if date -d not available (macOS without coreutils)
+    local_start="8am ET"
+    local_end="2pm ET"
+  fi
+
+  if is_peak_time; then
+    printf "${RED}▲ pk${RESET} ${DIM}til ${local_end}${RESET}"
+  else
+    printf "${GREEN}▽ off${RESET} ${DIM}pk ${local_start}-${local_end}${RESET}"
   fi
 }
 
