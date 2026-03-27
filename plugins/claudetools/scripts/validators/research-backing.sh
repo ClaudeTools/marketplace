@@ -14,8 +14,17 @@ validate_research_backing() {
   # --- Skip non-code files and test files ---
   case "$FILE_PATH" in
     *.test.*|*.spec.*|*__tests__*|*__mocks__*|*fixtures*) return 0 ;;
-    *.md|*.json|*.yaml|*.yml|*.toml|*.lock|*.css|*.svg|*.sh) return 0 ;;
+    *.md|*.json|*.yaml|*.yml|*.toml|*.lock|*.svg|*.sh) return 0 ;;
     *.config.*|*.rc|*CLAUDE.md) return 0 ;;
+    *.css)
+      # CSS files: only check for viewport-dependent properties that are notoriously
+      # device-dependent and require cross-device testing. Skip all other CSS.
+      if echo "$CONTENT" | grep -qE '\b(100[dsl]?vh|[0-9]+[dsl]vh|dvh|svh|lvh|scroll-snap-(type|align)|position:\s*(fixed|sticky)|overflow:\s*(hidden|clip))\b' 2>/dev/null; then
+        echo "CSS viewport/layout pattern detected (vh/dvh/svh, position fixed/sticky, overflow hidden, scroll-snap). These properties behave differently across devices and browsers — test on mobile viewports before deploying."
+        return 1  # Warn, not block — CSS changes are common
+      fi
+      return 0
+      ;;
   esac
 
   # --- Pattern 1: External HTTP calls ---
@@ -47,15 +56,27 @@ validate_research_backing() {
     CONSTRUCTOR=1
   fi
 
-  # --- Pattern 4: OAuth/auth token patterns ---
+  # --- Pattern 4: CSS viewport patterns in code files (CSS-in-JS, Tailwind, inline styles) ---
+  local CSS_VIEWPORT=0
+  if echo "$CONTENT" | grep -qE '(100[dsl]?vh|[0-9]+[dsl]vh|dvh|svh|lvh|scroll-snap|position:\s*(fixed|sticky)|overflow:\s*(hidden|clip))' 2>/dev/null; then
+    CSS_VIEWPORT=1
+  fi
+
+  # --- Pattern 5: OAuth/auth token patterns ---
   local OAUTH=0
   if echo "$CONTENT" | grep -qE "(oauth|OAuth|getAccessToken|exchangeCode|authorizationUrl|tokenEndpoint|client_credentials|authorization_code)\b" 2>/dev/null; then
     OAUTH=1
   fi
 
   # --- Fast exit: no external patterns detected → allow immediately ---
-  if [ "$EXTERNAL_URL" -eq 0 ] && [ "$SDK_IMPORT" -eq 0 ] && [ "$CONSTRUCTOR" -eq 0 ] && [ "$OAUTH" -eq 0 ]; then
+  if [ "$EXTERNAL_URL" -eq 0 ] && [ "$SDK_IMPORT" -eq 0 ] && [ "$CONSTRUCTOR" -eq 0 ] && [ "$OAUTH" -eq 0 ] && [ "$CSS_VIEWPORT" -eq 0 ]; then
     return 0
+  fi
+
+  # CSS viewport patterns in code files → warn (don't require research, just testing)
+  if [ "$CSS_VIEWPORT" -eq 1 ] && [ "$EXTERNAL_URL" -eq 0 ] && [ "$SDK_IMPORT" -eq 0 ] && [ "$CONSTRUCTOR" -eq 0 ] && [ "$OAUTH" -eq 0 ]; then
+    echo "CSS viewport/layout pattern detected (vh/dvh/svh, position fixed/sticky, overflow hidden, scroll-snap). These behave differently across devices — verify on mobile viewports before deploying."
+    return 1  # Warn only
   fi
 
   # --- External pattern detected — check for research signals ---
@@ -90,6 +111,7 @@ validate_research_backing() {
     [ "$SDK_IMPORT" -eq 1 ] && DETECTED="${DETECTED}third-party SDK import, "
     [ "$CONSTRUCTOR" -eq 1 ] && DETECTED="${DETECTED}SDK constructor, "
     [ "$OAUTH" -eq 1 ] && DETECTED="${DETECTED}OAuth/auth pattern, "
+    [ "$CSS_VIEWPORT" -eq 1 ] && DETECTED="${DETECTED}CSS viewport/layout pattern, "
     DETECTED=${DETECTED%, }
 
     local REASON="Detected ${DETECTED} in code without prior research. Search current docs for the service/API before writing this code — never assume API formats from training data. Use WebSearch or WebFetch to verify current API shapes."

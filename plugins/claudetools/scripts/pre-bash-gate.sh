@@ -13,6 +13,7 @@ hook_init
 source "$SCRIPT_DIR/validators/dangerous-bash.sh"
 source "$SCRIPT_DIR/validators/ai-safety.sh"
 source "$SCRIPT_DIR/validators/unasked-restructure.sh"
+source "$SCRIPT_DIR/validators/deploy-loop-detector.sh"
 
 # Phase 3: Run validators — stop on FIRST block (safety-critical)
 # PreToolUse protocol: block via JSON stdout, warnings as systemMessage, exit 0
@@ -54,6 +55,7 @@ run_pretool_validator() {
 run_pretool_validator "block-dangerous-bash"      validate_dangerous_bash
 run_pretool_validator "ai-safety"                 validate_ai_safety
 run_pretool_validator "block-unasked-restructure" validate_unasked_restructure
+run_pretool_validator "deploy-loop-detector"      validate_deploy_loop
 
 record_hook_outcome "pre-bash-gate" "PreToolUse" "allow" "Bash" "" "" "$MODEL_FAMILY"
 exit 0
