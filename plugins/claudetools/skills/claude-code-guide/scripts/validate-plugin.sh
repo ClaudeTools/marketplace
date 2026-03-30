@@ -9,54 +9,46 @@ if [ -z "$PLUGIN_DIR" ] || [ ! -d "$PLUGIN_DIR" ]; then
   exit 1
 fi
 
-ERRORS=0
-WARNINGS=0
-
-pass() { echo "  PASS: $1"; }
-fail() { echo "  FAIL: $1"; ERRORS=$((ERRORS + 1)); }
-warn() { echo "  WARN: $1"; WARNINGS=$((WARNINGS + 1)); }
+# shellcheck source=lib/validator-framework.sh
+source "$(dirname "$0")/lib/validator-framework.sh"
 
 DIRNAME=$(basename "$PLUGIN_DIR")
 MANIFEST="$PLUGIN_DIR/.claude-plugin/plugin.json"
 
 echo "=== Validating plugin: $DIRNAME ==="
-echo ""
 
 # --- Structure ---
 echo "--- Structure ---"
 
 if [ ! -f "$MANIFEST" ]; then
-  fail ".claude-plugin/plugin.json not found"
-  echo ""
-  echo "=== RESULT ==="
-  echo "FAILED: $ERRORS error(s), $WARNINGS warning(s)"
-  exit "$ERRORS"
+  vf_fail ".claude-plugin/plugin.json not found"
+  vf_summary
+  vf_exit
 fi
-pass ".claude-plugin/plugin.json exists"
+vf_pass ".claude-plugin/plugin.json exists"
 
 # Validate JSON
 JSON_VALID=false
 if command -v jq &>/dev/null; then
   if jq . "$MANIFEST" > /dev/null 2>&1; then
-    pass "plugin.json is valid JSON (jq)"
+    vf_pass "plugin.json is valid JSON (jq)"
     JSON_VALID=true
   else
-    fail "plugin.json is not valid JSON"
+    vf_fail "plugin.json is not valid JSON"
   fi
 elif command -v python3 &>/dev/null; then
   if python3 -c "import json; json.load(open('$MANIFEST'))" 2>/dev/null; then
-    pass "plugin.json is valid JSON (python3)"
+    vf_pass "plugin.json is valid JSON (python3)"
     JSON_VALID=true
   else
-    fail "plugin.json is not valid JSON"
+    vf_fail "plugin.json is not valid JSON"
   fi
 else
-  warn "neither jq nor python3 available — skipping JSON content checks"
+  vf_warn "neither jq nor python3 available — skipping JSON content checks"
 fi
 
 # --- Manifest ---
-echo ""
-echo "--- Manifest ---"
+vf_section "Manifest"
 
 if [ "$JSON_VALID" = true ]; then
   # Helper to extract a field value from JSON
@@ -72,30 +64,30 @@ if [ "$JSON_VALID" = true ]; then
   # name
   NAME=$(json_field name)
   if [ -n "$NAME" ]; then
-    pass "name field present: $NAME"
+    vf_pass "name field present: $NAME"
   else
-    fail "missing 'name' field in plugin.json"
+    vf_fail "missing 'name' field in plugin.json"
   fi
 
   # version
   VERSION=$(json_field version)
   if [ -n "$VERSION" ]; then
-    pass "version field present: $VERSION"
+    vf_pass "version field present: $VERSION"
     if echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-      pass "version matches semver pattern (X.Y.Z)"
+      vf_pass "version matches semver pattern (X.Y.Z)"
     else
-      fail "version '$VERSION' does not match semver pattern X.Y.Z"
+      vf_fail "version '$VERSION' does not match semver pattern X.Y.Z"
     fi
   else
-    fail "missing 'version' field in plugin.json"
+    vf_fail "missing 'version' field in plugin.json"
   fi
 
   # description
   DESC=$(json_field description)
   if [ -n "$DESC" ]; then
-    pass "description field present"
+    vf_pass "description field present"
   else
-    fail "missing 'description' field in plugin.json"
+    vf_fail "missing 'description' field in plugin.json"
   fi
 
   # author (warn only)
@@ -106,9 +98,9 @@ if [ "$JSON_VALID" = true ]; then
     AUTHOR=$(json_field author)
   fi
   if [ -n "$AUTHOR" ]; then
-    pass "author field present: $AUTHOR"
+    vf_pass "author field present: $AUTHOR"
   else
-    warn "missing 'author' field in plugin.json"
+    vf_warn "missing 'author' field in plugin.json"
   fi
 
   # keywords (warn only)
@@ -119,39 +111,38 @@ if [ "$JSON_VALID" = true ]; then
     KEYWORDS=$(python3 -c "import json; d=json.load(open('$MANIFEST')); k=d.get('keywords',[]); print(k[0] if k else '')" 2>/dev/null || true)
   fi
   if [ -n "$KEYWORDS" ]; then
-    pass "keywords field present"
+    vf_pass "keywords field present"
   else
-    warn "missing 'keywords' field in plugin.json"
+    vf_warn "missing 'keywords' field in plugin.json"
   fi
 else
-  warn "skipping manifest field checks — JSON could not be parsed"
+  vf_warn "skipping manifest field checks — JSON could not be parsed"
 fi
 
 # --- Components ---
-echo ""
-echo "--- Components ---"
+vf_section "Components"
 
 # hooks/hooks.json
 HOOKS_JSON="$PLUGIN_DIR/hooks/hooks.json"
 if [ -f "$HOOKS_JSON" ]; then
-  pass "hooks/hooks.json exists"
+  vf_pass "hooks/hooks.json exists"
   HOOKS_VALID=false
   if command -v jq &>/dev/null; then
     if jq . "$HOOKS_JSON" > /dev/null 2>&1; then
-      pass "hooks.json is valid JSON"
+      vf_pass "hooks.json is valid JSON"
       HOOKS_VALID=true
     else
-      fail "hooks.json is not valid JSON"
+      vf_fail "hooks.json is not valid JSON"
     fi
   elif command -v python3 &>/dev/null; then
     if python3 -c "import json; json.load(open('$HOOKS_JSON'))" 2>/dev/null; then
-      pass "hooks.json is valid JSON"
+      vf_pass "hooks.json is valid JSON"
       HOOKS_VALID=true
     else
-      fail "hooks.json is not valid JSON"
+      vf_fail "hooks.json is not valid JSON"
     fi
   else
-    warn "cannot validate hooks.json — no JSON parser available"
+    vf_warn "cannot validate hooks.json — no JSON parser available"
   fi
 fi
 
@@ -160,9 +151,9 @@ if [ -d "$PLUGIN_DIR/skills" ]; then
   while IFS= read -r skill_dir; do
     SKILL_NAME=$(basename "$skill_dir")
     if [ -f "$skill_dir/SKILL.md" ]; then
-      pass "skill '$SKILL_NAME' has SKILL.md"
+      vf_pass "skill '$SKILL_NAME' has SKILL.md"
     else
-      fail "skill '$SKILL_NAME' missing SKILL.md"
+      vf_fail "skill '$SKILL_NAME' missing SKILL.md"
     fi
   done < <(find "$PLUGIN_DIR/skills" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
 fi
@@ -172,9 +163,9 @@ if [ -d "$PLUGIN_DIR/agents" ]; then
   while IFS= read -r agent_file; do
     AGENT_NAME=$(basename "$agent_file")
     if head -1 "$agent_file" | grep -q '^---$'; then
-      pass "agent '$AGENT_NAME' has frontmatter"
+      vf_pass "agent '$AGENT_NAME' has frontmatter"
     else
-      fail "agent '$AGENT_NAME' missing frontmatter (must start with ---)"
+      vf_fail "agent '$AGENT_NAME' missing frontmatter (must start with ---)"
     fi
   done < <(find "$PLUGIN_DIR/agents" -name "*.md" 2>/dev/null)
 fi
@@ -201,44 +192,34 @@ for k, v in d.get('mcpServers', {}).items():
       # Resolve ${CLAUDE_PLUGIN_ROOT} to the plugin directory
       resolved=$(echo "$mcp_path" | sed "s|\${CLAUDE_PLUGIN_ROOT}|$PLUGIN_DIR|g; s|\$CLAUDE_PLUGIN_ROOT|$PLUGIN_DIR|g")
       if [ -f "$resolved" ]; then
-        pass "MCP script exists: $(basename "$resolved")"
+        vf_pass "MCP script exists: $(basename "$resolved")"
       else
-        fail "MCP script missing: $mcp_path"
+        vf_fail "MCP script missing: $mcp_path"
       fi
     done <<< "$MCP_PATHS"
   fi
 fi
 
 # --- Hygiene ---
-echo ""
-echo "--- Hygiene ---"
+vf_section "Hygiene"
 
 if [ -d "$PLUGIN_DIR/node_modules" ]; then
-  fail "node_modules/ directory present — should not be committed"
+  vf_fail "node_modules/ directory present — should not be committed"
 else
-  pass "no node_modules/ directory"
+  vf_pass "no node_modules/ directory"
 fi
 
 if [ -d "$PLUGIN_DIR/logs" ]; then
-  warn "logs/ directory present — consider adding to .gitignore"
+  vf_warn "logs/ directory present — consider adding to .gitignore"
 else
-  pass "no logs/ directory"
+  vf_pass "no logs/ directory"
 fi
 
 if [ -f "$PLUGIN_DIR/README.md" ]; then
-  pass "README.md exists"
+  vf_pass "README.md exists"
 else
-  warn "no README.md — consider adding one for documentation"
+  vf_warn "no README.md — consider adding one for documentation"
 fi
 
-# --- Summary ---
-echo ""
-echo "=== RESULT ==="
-if [ "$ERRORS" -eq 0 ] && [ "$WARNINGS" -eq 0 ]; then
-  echo "ALL CHECKS PASSED"
-elif [ "$ERRORS" -eq 0 ]; then
-  echo "PASSED with $WARNINGS warning(s)"
-else
-  echo "FAILED: $ERRORS error(s), $WARNINGS warning(s)"
-fi
-exit "$ERRORS"
+vf_summary
+vf_exit

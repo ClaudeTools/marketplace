@@ -222,11 +222,6 @@ Find exported symbols that are never imported anywhere in the project.
 node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js dead-code
 ```
 
-Or via the shell wrapper:
-```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/dead-code.sh
-```
-
 **When to use:** "Find unused exports", "What code can I safely delete?", "Show dead code"
 
 ## Mode: change-impact
@@ -235,11 +230,6 @@ Show what files break if a symbol changes — separates direct importers from te
 
 ```bash
 node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js change-impact "handleAuth"
-```
-
-Or via the shell wrapper:
-```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/change-impact.sh "handleAuth"
 ```
 
 **When to use:** "What breaks if I change X?", "Impact analysis for refactoring Y", "Show blast radius"

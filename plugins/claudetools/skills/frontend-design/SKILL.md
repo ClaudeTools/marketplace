@@ -66,46 +66,11 @@ In Maintain Mode, replace creative principles with:
 
 ## Audit Mode (Maintain Mode)
 
-When the user asks to audit, fix design issues, or improve design consistency in an existing project:
+When the user asks to audit, fix design issues, or improve design consistency in an existing project.
 
-### Step 1: Run Diagnostics
-Run all three scripts in sequence:
-```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/extract-system.py --dir .
-bash ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/validate-design.sh .
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/audit-design.py --dir .
-```
+`Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/references/audit-mode.md` for the full 5-step workflow.
 
-### Step 2: Collate Results
-Combine all outputs into a single prioritized report. Order by severity: FAIL > WARN > INFO.
-
-### Step 3: Categorize Issues
-Classify each issue as auto-fixable or manual:
-
-**Auto-fixable** (safe to batch-fix):
-- Hardcoded colors → replace with semantic tokens
-- `space-*` classes → replace with `gap` classes
-- Missing `alt` text → add descriptive alt attributes
-
-**Manual** (requires design decisions):
-- Contrast failures → needs color adjustment decisions
-- Missing state handling → requires component logic
-- Large components → requires architectural decisions
-- Responsive issues → requires layout strategy
-
-### Step 4: Present Report and Prioritize
-Show the user: total issue count, breakdown by category, which are auto-fixable vs manual.
-
-If there are issues across multiple categories, use AskUserQuestion with multiSelect to let the user prioritize:
-
-- **multiSelect: true** — user picks which categories to address now
-- **question**: state the total issue count and that you've categorized them
-- **header**: "Fix scope"
-- **Each option**: label = category name with actual count from audit output (e.g. "Hardcoded colors (12)"), description = what fixing this category involves and whether it's auto-fixable or requires decisions
-- **Only show categories that have issues** — derive the option list entirely from the audit script output. If the audit found 3 categories with issues, show 3 options. If it found 1, skip the question and just fix it.
-
-### Step 5: Re-audit After Fixes
-After applying fixes, re-run the audit scripts. The audit history in `.frontend-design/audit-history.json` shows the score delta — confirm improvement.
+Quick reference: run `extract-system.py`, `validate-design.sh`, then `audit-design.py` in sequence → collate by severity (FAIL > WARN > INFO) → categorize auto-fixable vs manual → use AskUserQuestion multiSelect if multiple categories → re-audit after fixes, confirm positive score delta.
 
 ---
 
@@ -136,37 +101,13 @@ If existing tokens, fonts, or colors are found — ask the user: "This project h
 
 If you cannot answer with specifics, stop and ask the user.
 
-**Domain Exploration** — Produce all four before proposing anything:
+**Domain Exploration** — Produce all four before proposing: (1) 5+ domain concepts/metaphors, (2) 5+ colors from the physical world of this product, (3) one signature element that could only exist for THIS product, (4) 3 obvious defaults you will NOT use.
 
-| Output | Requirement |
-|--------|-------------|
-| Domain concepts | 5+ concepts, metaphors, vocabulary from this product's world |
-| Color world | 5+ colors that exist naturally in this domain — if the product were a physical space, what would you see? |
-| Signature element | One visual, structural, or interaction element that could only exist for THIS product |
-| Defaults to reject | 3 obvious choices you will NOT make — name them so you can avoid them |
+**Theme Selection** — Run `design-system.py --list-domains`, match to recommended themes, then use AskUserQuestion with `preview` (single-select, 2-3 options). Each option: label = theme name, description = domain mood, preview = real hex palette (██ chars), font pairing, depth strategy, and signature element — all from actual script output. Never use example palettes.
 
-**Theme Selection** — Choose a starting theme:
-```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/design-system.py --list-domains
-```
-Match the product's domain to recommended themes. Use AskUserQuestion with `preview` to present 2-3 visual direction options:
+**Proposal** — Present a direction referencing all four exploration outputs. Ask user to confirm, then run `generate-design-brief.sh "<goal>" "<context>"`.
 
-- **Single-select** with `preview` enabled — the side-by-side layout lets users compare directions visually
-- **question**: reference the specific product/domain from the intent exploration
-- **header**: "Direction"
-- **Each option**: label = theme name from `--list-domains` output, description = one-line mood derived from domain exploration, preview = real values from the theme script: hex palette with block chars (██), font pairing + ratio, depth strategy, mood line, and the signature element from your domain exploration
-- **Every value must come from the actual script output and your domain exploration** — palette hex codes from `design-system.py`, font names from the theme config, signature element from your earlier analysis. Never use example palettes.
-
-After the user selects, proceed with that direction.
-
-**Proposal** — Present a direction referencing all four exploration outputs. Ask user to confirm before proceeding.
-
-**Generate Design Brief:**
-```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/generate-design-brief.sh "<goal>" "<context>"
-```
-
-**Save system.md NOW** — immediately after the brief is confirmed, write `.frontend-design/system.md`. Do not wait until the end. This protects decisions against context compaction in long sessions.
+**Save system.md NOW** — write `.frontend-design/system.md` immediately after the brief is confirmed. Do not wait — context compaction will lose decisions.
 
 ### 3. When to Skip — evaluate in order, stop at first match
 
@@ -188,85 +129,35 @@ For projects with 3+ pages or distinct systems, write system.md FIRST (so all ag
 
 ## Stack Detection
 
-Before writing code, detect or establish the tech stack.
+Read `package.json` to detect framework (Next.js, Vite+React, Astro, SvelteKit, Remix), CSS approach (Tailwind, CSS Modules, vanilla), component library (shadcn/ui, Radix, MUI, none), and package manager. Apply throughout — do not install conflicting tools.
 
-### Existing Project
-Read `package.json` (or equivalent) to determine:
-- Framework: Next.js, Vite + React, Astro, SvelteKit, Remix, plain HTML/CSS
-- CSS approach: Tailwind, CSS Modules, styled-components, vanilla CSS
-- Component library: shadcn/ui, Radix, MUI, Chakra, Headless UI, none
-- Package manager: pnpm, npm, yarn, bun
-
-Apply the detected stack throughout. Do not install conflicting tools.
-
-### New Project
-If no project exists, ask the user what they want to use. If they have no preference, recommend:
-- **Framework:** Next.js with App Router (most mature, best ecosystem)
-- **CSS:** Tailwind CSS (utility-first, design token friendly)
-- **Components:** shadcn/ui (composable, themeable, accessible)
-- **Package manager:** pnpm (fast, disk efficient)
-
-These are recommendations, not requirements. Respect the user's choice.
+If no project exists, ask the user. Default recommendation: Next.js App Router + Tailwind CSS + shadcn/ui + pnpm. These are suggestions, not requirements.
 
 ---
 
 ## Globals First
 
-The design system is the foundation. Establish it before writing any component code.
+Establish the design system before writing any component code:
 
-### Workflow
-1. **Generate design brief** → establishes colors, typography, spacing decisions
-2. **Generate globals.css** → use a theme seed or custom colors:
-   - From theme: `python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/design-system.py --theme midnight`
-   - Custom: `python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/design-system.py --brand "<hex>" --bg "<hex>" --fg "<hex>" --ratio <ratio> --grid <grid>`
-   - List themes: `python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/design-system.py --list-themes`
-   - Override theme values: `--theme forest --brand "#10b981"` (theme as base, overrides applied)
-3. **Set up tailwind.config** → use the template at `${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/assets/tailwind-config-template.ts` to map CSS variables to Tailwind classes
-4. **Then build components** → every component references the global tokens, never raw values
+1. Generate design brief
+2. Generate `globals.css` via `design-system.py --theme <name>` or `--brand <hex> --bg <hex> --fg <hex>` (use `--list-themes` to browse; mix e.g. `--theme forest --brand "#10b981"`)
+3. Set up `tailwind.config` from `${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/assets/tailwind-config-template.ts`
+4. Build components — always reference global tokens, never raw values
 
 ---
 
 ## Design Guidelines
 
-For deeper guidance: `Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/references/design-principles.md`
+`Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/references/design-principles.md`
 
-### Color
+Critical safety rules (repeated here because they cause the most failures):
 
-- Stick to 3-5 colors total. More than five creates visual noise and makes theming harder — get explicit user permission before exceeding five.
-- Avoid purple or violet as a prominent color unless explicitly asked — it's the most overused AI-generated palette choice.
-- ALWAYS define semantic design tokens (bg-background, text-foreground, etc.) in globals.css — without tokens, theme switching and dark mode become impossible.
-- NEVER use raw color classes like `text-white`, `bg-black`, `bg-gray-800` — everything themed via tokens, because raw values break when themes change.
-- When overriding a background color, override its text color too — mismatched pairs fail contrast and become unreadable.
-- Avoid gradients unless explicitly asked. If used, only analogous colors with 2-3 stops.
-
-### Typography
-
-- Limit to 2 font families maximum. More fonts create visual chaos and add loading weight.
-- Don't use decorative fonts for body text — they destroy readability at paragraph length.
-- Keep font sizes at 14px or above for readable text — smaller sizes fail accessibility audits and strain eyes on high-DPI screens.
-- Use `font-sans`, `font-mono`, `font-serif` Tailwind classes — configure in tailwind.config and layout.tsx.
-- Build distinct levels: headlines (tight tracking, heavy weight), body (comfortable), labels (medium at smaller sizes), data (monospace with tabular numbers).
-
-### Layout and Spacing
-
-- Design mobile-first, then enhance for larger screens with responsive prefixes — desktop-first leads to cramped mobile layouts that require painful retrofitting.
-- Use 44px minimum touch targets for interactive elements — smaller targets cause frustration on mobile and fail WCAG 2.5.5.
-- Use 16px minimum font size for text inputs — anything smaller triggers iOS auto-zoom, which breaks layouts.
-- Prefer gap classes (`gap-4`, `gap-x-2`) over margin for spacing between elements — gap doesn't collapse and works predictably with flex/grid wrapping.
-- Avoid `space-*` classes — they apply margin to children, which breaks when elements wrap or reorder.
-- Don't mix margin/padding with gap on the same element because the spacing stacks unpredictably.
-- Pick a base spacing unit and stick to Tailwind scale multiples.
-- Compute spacing scale with `python3 ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/scripts/type-scale.py css --base 16 --ratio 1.25 --grid 4`
-- For design theory (Gestalt, visual weight, vertical rhythm): `Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/references/design-theory.md`
-
-### Visual Elements
-
-- NEVER use emojis as icons — they render inconsistently across platforms and look unprofessional. Use Lucide or Heroicons.
-- Don't generate abstract shapes, gradient blobs, or decorative SVGs as filler — they scream "AI-generated."
-- Don't hand-draw SVG paths for maps — use react-simple-maps, Leaflet, or Mapbox instead.
-- Use real images where visual content is needed — gray boxes destroy perceived quality.
-- NEVER use placeholder content like Lorem ipsum, "Example Item 1", or generic text — use plausible names, dates, metrics, and descriptions that fit the product domain.
-- Use consistent icon sizing: 16px, 20px, or 24px.
+- NEVER use raw color classes (`text-white`, `bg-black`, `bg-gray-800`) — everything via semantic tokens; raw values break when themes change.
+- ALWAYS override the text color when overriding a background — mismatched pairs fail contrast.
+- NEVER use emojis as icons — use Lucide or Heroicons instead.
+- NEVER use placeholder content (Lorem ipsum, "Example Item 1") — use plausible domain-appropriate content.
+- Stick to 3-5 colors total; get explicit permission before exceeding five.
+- For design theory: `Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/references/design-theory.md`
 
 ---
 
@@ -288,12 +179,7 @@ Key rules that survive context compaction (repeated here because they cause the 
 
 ## Context Gathering
 
-Before making changes, understand the existing system. Tools: Glob, Grep, Read.
-
-- **Do not stop at the first match.** Examine ALL matching files. Check variants and versions.
-- **Understand the full system.** Layout issues? Check parents + global styles. Adding features? Find existing implementations first.
-- **Use parallel tool calls.** Read independent files in parallel. Don't guess parameters.
-- **Before making changes:** Is this the right file? Does a parent handle this? Are there existing utilities to reuse?
+Before making changes: examine ALL matching files (not just the first match), check parents and global styles, find existing implementations before adding new ones. Use parallel tool calls for independent reads. Before editing: confirm this is the right file, check if a parent handles it, look for utilities to reuse.
 
 ---
 
@@ -320,32 +206,9 @@ Reference files (read on demand): `component-patterns.md`, `accessibility.md`, `
 
 ## Before Writing Each Component
 
-**Mandatory checkpoint.** Every time you write UI code, state:
+`Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/references/craft-checks.md` for the full checkpoint, gotchas, craft tests, and self-critique protocol.
 
-```
-Intent: [who is this human, what must they do, how should it feel]
-Palette: [colors from exploration — and WHY they fit this product's world]
-Depth: [borders / shadows / layered — and WHY this fits the intent]
-Surfaces: [elevation scale — and WHY this color temperature]
-Typography: [typeface — and WHY it fits the intent]
-Spacing: [base unit]
-```
-
-If you cannot explain WHY for each choice, you are defaulting. Stop and think.
-
-**WRONG:** `Palette: Blue primary, gray neutrals / Typography: Inter / Depth: Subtle shadows` — no reasoning, identical to what any AI would produce. **CORRECT:** `Palette: Deep teal (#0D4F4F) from brewery copper patina, warm cream (#F5F0E8) from unbleached paper — WHY: craft brewery inventory tool, colors from the physical space of brewing. Typography: DM Sans — WHY: geometric but slightly warm, matches precision-meets-craft feel.`
-
----
-
-## Gotchas
-
-These are concrete mistakes you WILL make without this section. Not general advice — specific corrections.
-
-- **Blue + gray default.** You will reach for `blue-600` primary and `gray-*` neutrals because training data is saturated with this palette. The domain exploration step exists to prevent this. If your palette could belong to any SaaS app, you defaulted.
-- **Dashboard clone layout.** Sidebar + card grid + icon-left-number-big-label-small metric boxes. Every AI produces this. The signature element requirement forces differentiation.
-- **Populated-only components.** You will skip loading, empty, and error states because they add complexity. Users see these states more than you think — an empty dashboard with no guidance feels broken.
-- **Raw Tailwind values.** `bg-white text-gray-800` instead of `bg-background text-foreground`. validate-design.sh catches these, but you should never write them. Raw values break when themes change.
-- **Purple/violet accent.** The most overused AI-generated color choice. Avoid unless the user explicitly requests it.
+**Minimum required:** state Intent, Palette (with WHY), Depth (with WHY), Typography (with WHY), Spacing before writing any UI code. If you cannot explain WHY for each choice, you are defaulting.
 
 ---
 
@@ -367,31 +230,11 @@ Do not present work you have not visually verified.
 
 ---
 
-## Craft Checks
+## Craft Checks and Critique
 
-**These checks apply in Build Mode only.** In Maintain Mode, replace with the consistency checks from Mode Detection above.
+`Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/references/craft-checks.md` for the full craft check protocol (swap test, squint test, signature test, token test) and the self-critique framework.
 
-Run these before presenting any output to the user.
-
-**Swap test:** If you swapped your typeface, layout, or palette for the most common alternatives and nothing felt different — you defaulted. Iterate.
-
-**Squint test:** Blur your eyes at the interface. Can you still perceive hierarchy? Nothing jumping out harshly? Craft whispers.
-
-**Signature test:** Can you point to 5 specific elements where your signature appears? Not "the overall feel" — actual components, actual decisions. A signature you cannot locate does not exist.
-
-**Token test:** Read your CSS variables out loud. Do they sound like THIS product's world? `--ink` and `--parchment` evoke a world. `--gray-700` and `--surface-2` evoke a template.
-
----
-
-## Critique (Correct → Crafted)
-
-After building, before presenting, run this self-critique:
-
-**Composition:** Layout has rhythm? Proportions declaring what matters? Clear focal point?
-**Craft:** Spacing on grid? Typography layers beyond size? Surfaces whisper hierarchy? All hover/press states?
-**Content:** Coherent story? Real person could see this data? Incoherence breaks illusion faster than visual flaws.
-
-If any critique reveals defaults — fix before presenting. For the full protocol: `Read ${CLAUDE_PLUGIN_ROOT}/skills/frontend-design/references/critique-protocol.md`
+These checks apply in **Build Mode only** — run before presenting any output.
 
 ---
 

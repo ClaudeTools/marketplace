@@ -9,12 +9,8 @@ if [ -z "$MCP_DIR" ] || [ ! -d "$MCP_DIR" ]; then
   exit 1
 fi
 
-ERRORS=0
-WARNINGS=0
-
-pass() { echo "  PASS: $1"; }
-fail() { echo "  FAIL: $1"; ERRORS=$((ERRORS + 1)); }
-warn() { echo "  WARN: $1"; WARNINGS=$((WARNINGS + 1)); }
+# shellcheck source=lib/validator-framework.sh
+source "$(dirname "$0")/lib/validator-framework.sh"
 
 DIRNAME=$(basename "$MCP_DIR")
 
@@ -22,9 +18,9 @@ echo "=== Validating MCP server: $DIRNAME ==="
 echo ""
 
 # --- Structure ---
-echo "--- Structure ---"
+vf_section "Structure"
 
-pass "directory exists"
+vf_pass "directory exists"
 
 # Check for entry point
 ENTRY_POINT=""
@@ -36,49 +32,46 @@ for candidate in server.js index.js server.mjs index.mjs; do
 done
 
 if [ -n "$ENTRY_POINT" ]; then
-  pass "entry point found: $ENTRY_POINT"
+  vf_pass "entry point found: $ENTRY_POINT"
 else
-  fail "no entry point found (expected server.js, index.js, server.mjs, or index.mjs)"
+  vf_fail "no entry point found (expected server.js, index.js, server.mjs, or index.mjs)"
 fi
 
 # package.json
 if [ -f "$MCP_DIR/package.json" ]; then
-  pass "package.json exists"
+  vf_pass "package.json exists"
 else
-  warn "no package.json — consider adding one for dependency management"
+  vf_warn "no package.json — consider adding one for dependency management"
 fi
 
 # --- Bootstrap ---
-echo ""
-echo "--- Bootstrap ---"
+vf_section "Bootstrap"
 
 START_SH="$MCP_DIR/start.sh"
 if [ -f "$START_SH" ]; then
-  pass "start.sh exists"
+  vf_pass "start.sh exists"
   if bash -n "$START_SH" 2>/dev/null; then
-    pass "start.sh passes bash -n syntax check"
+    vf_pass "start.sh passes bash -n syntax check"
   else
-    fail "start.sh fails bash -n syntax check"
+    vf_fail "start.sh fails bash -n syntax check"
   fi
 else
-  fail "start.sh not found — MCP servers need a start script"
+  vf_fail "start.sh not found — MCP servers need a start script"
 fi
 
 # --- Dependencies ---
-echo ""
-echo "--- Dependencies ---"
+vf_section "Dependencies"
 
 if [ -f "$MCP_DIR/package.json" ]; then
   if grep -q '@modelcontextprotocol/sdk' "$MCP_DIR/package.json" 2>/dev/null; then
-    pass "@modelcontextprotocol/sdk found in package.json"
+    vf_pass "@modelcontextprotocol/sdk found in package.json"
   else
-    warn "@modelcontextprotocol/sdk not found in package.json — most MCP servers use the official SDK"
+    vf_warn "@modelcontextprotocol/sdk not found in package.json — most MCP servers use the official SDK"
   fi
 fi
 
 # --- Safety ---
-echo ""
-echo "--- Safety ---"
+vf_section "Safety"
 
 # Collect all .js and .mjs files for safety checks
 JS_FILES=""
@@ -89,9 +82,9 @@ done < <(find "$MCP_DIR" -maxdepth 3 -name "*.js" -o -name "*.mjs" 2>/dev/null |
 if [ -n "$JS_FILES" ]; then
   # Signal handling check
   if grep -rlE 'SIGPIPE|uncaughtException|SIGTERM|SIGINT' $JS_FILES >/dev/null 2>&1; then
-    pass "signal handling found in source files"
+    vf_pass "signal handling found in source files"
   else
-    warn "no signal handling detected — consider handling SIGTERM/SIGPIPE/uncaughtException for graceful shutdown"
+    vf_warn "no signal handling detected — consider handling SIGTERM/SIGPIPE/uncaughtException for graceful shutdown"
   fi
 
   # External network calls check
@@ -101,22 +94,13 @@ if [ -n "$JS_FILES" ]; then
     for nf in $NETWORK_FILES; do
       NETWORK_FILENAMES="$NETWORK_FILENAMES $(basename "$nf")"
     done
-    warn "external network calls detected in:$NETWORK_FILENAMES — MCP servers should typically be local-only"
+    vf_warn "external network calls detected in:$NETWORK_FILENAMES — MCP servers should typically be local-only"
   else
-    pass "no external network calls detected"
+    vf_pass "no external network calls detected"
   fi
 else
-  warn "no .js or .mjs files found to check for safety patterns"
+  vf_warn "no .js or .mjs files found to check for safety patterns"
 fi
 
-# --- Summary ---
-echo ""
-echo "=== RESULT ==="
-if [ "$ERRORS" -eq 0 ] && [ "$WARNINGS" -eq 0 ]; then
-  echo "ALL CHECKS PASSED"
-elif [ "$ERRORS" -eq 0 ]; then
-  echo "PASSED with $WARNINGS warning(s)"
-else
-  echo "FAILED: $ERRORS error(s), $WARNINGS warning(s)"
-fi
-exit "$ERRORS"
+vf_summary
+vf_exit

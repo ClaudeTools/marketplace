@@ -32,6 +32,14 @@ Every iteration follows this discipline:
 | `--dry-run` | Run Phases 1-4 only — report findings, priorities, and baseline without implementing |
 | `--category CATEGORY` | Filter to only findings in the specified category |
 
+## Scripts
+
+| Script | LOC | Purpose |
+|---|---|---|
+| `scripts/collect-all-data.sh` | 301 | Gathers local telemetry, hook rates, memory files, changelog, prior improvements, consumed findings, and remote fleet-wide data into a single report |
+| `scripts/capture-snapshot.sh` | 114 | Saves a structured JSON baseline of current system health metrics (allow rate, hook rates, churn, failures, remote stats) for before/after comparison |
+| `scripts/log-improvement.sh` | 101 | Records what changed — category, description, before→after values, data sources — and appends to consumed-findings.jsonl to prevent duplicate work |
+
 ## Phase 1: Data Collection + Baseline Snapshot
 
 ### 1a. Collect all data
