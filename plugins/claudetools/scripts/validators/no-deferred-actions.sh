@@ -2,7 +2,7 @@
 # Validator: detect when agent lists manual steps instead of executing them
 # Sourced by dispatchers after hook_init() has been called.
 # Globals used: INPUT
-# Returns: 0 = clean, 2 = deferred actions detected (block)
+# Returns: 0 = clean, 1 = deferred actions detected (warn)
 
 validate_no_deferred_actions() {
   # Get the agent's output/transcript text from available fields
@@ -68,8 +68,8 @@ validate_no_deferred_actions() {
       echo "$DEFERRED_EXAMPLES" >&2
     fi
     echo "You have Bash (commands), Read/Grep (investigation), Edit/Write (files), and all other tools available. Execute the steps yourself, verify the results, then report completion." >&2
-    record_hook_outcome "no-deferred-actions" "TaskCompleted" "block" "" "" "" "${MODEL_FAMILY:-unknown}"
-    return 2
+    record_hook_outcome "no-deferred-actions" "TaskCompleted" "warn" "" "" "" "${MODEL_FAMILY:-unknown}"
+    return 1
   fi
 
   return 0

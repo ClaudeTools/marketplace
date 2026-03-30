@@ -234,99 +234,12 @@ SQL
     ('sonnet', '*', 1.0, 'Default: same as opus'),
     ('haiku', '*', 0.85, 'Tighter defaults for less capable model');" 2>/dev/null || true
 
-  # Migration: training framework tables (Phase 1)
-  sqlite3 "$METRICS_DB" "CREATE TABLE IF NOT EXISTS reference_codebases (
-    codebase_id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    repo_url TEXT,
-    language TEXT,
-    framework TEXT,
-    base_commit TEXT,
-    loc_estimate INTEGER,
-    domain TEXT,
-    test_command TEXT,
-    created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')));" 2>/dev/null || true
-
-  sqlite3 "$METRICS_DB" "CREATE TABLE IF NOT EXISTS prompt_chains (
-    chain_id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    description TEXT,
-    domain TEXT,
-    codebase_id TEXT REFERENCES reference_codebases(codebase_id),
-    num_steps INTEGER NOT NULL,
-    version INTEGER DEFAULT 1,
-    created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')));" 2>/dev/null || true
-
-  sqlite3 "$METRICS_DB" "CREATE TABLE IF NOT EXISTS chain_steps (
-    chain_id TEXT REFERENCES prompt_chains(chain_id),
-    step_number INTEGER NOT NULL,
-    prompt TEXT NOT NULL,
-    tools_allowed TEXT,
-    max_turns INTEGER DEFAULT 20,
-    files_in_scope TEXT,
-    files_must_modify TEXT,
-    files_must_not_touch TEXT,
-    must_contain TEXT,
-    must_not_contain TEXT,
-    PRIMARY KEY (chain_id, step_number));" 2>/dev/null || true
-
-  sqlite3 "$METRICS_DB" "CREATE TABLE IF NOT EXISTS chain_executions (
-    execution_id TEXT PRIMARY KEY,
-    chain_id TEXT REFERENCES prompt_chains(chain_id),
-    model_family TEXT NOT NULL,
-    trial_number INTEGER DEFAULT 1,
-    total_steps INTEGER,
-    steps_passed INTEGER,
-    total_duration_seconds INTEGER,
-    total_cost_usd REAL DEFAULT 0,
-    started_at TEXT,
-    completed_at TEXT);" 2>/dev/null || true
-
-  sqlite3 "$METRICS_DB" "CREATE TABLE IF NOT EXISTS step_executions (
-    step_execution_id TEXT PRIMARY KEY,
-    execution_id TEXT REFERENCES chain_executions(execution_id),
-    step_number INTEGER NOT NULL,
-    status TEXT NOT NULL,
-    duration_seconds INTEGER,
-    cost_usd REAL DEFAULT 0,
-    files_modified TEXT,
-    scope_compliance REAL,
-    diff_lines INTEGER,
-    gold_diff_lines INTEGER,
-    minimal_diff_score REAL,
-    tool_calls INTEGER,
-    backtrack_count INTEGER,
-    timestamp TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')));" 2>/dev/null || true
-
-  sqlite3 "$METRICS_DB" "CREATE TABLE IF NOT EXISTS deviations (
-    deviation_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    step_execution_id TEXT REFERENCES step_executions(step_execution_id),
-    deviation_type TEXT NOT NULL,
-    severity TEXT NOT NULL,
-    description TEXT,
-    file_path TEXT,
-    hook_that_should_catch TEXT,
-    hook_did_catch INTEGER DEFAULT 0,
-    created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')));" 2>/dev/null || true
-  sqlite3 "$METRICS_DB" "CREATE INDEX IF NOT EXISTS idx_deviations_step ON deviations(step_execution_id);" 2>/dev/null || true
-  sqlite3 "$METRICS_DB" "CREATE INDEX IF NOT EXISTS idx_deviations_type ON deviations(deviation_type);" 2>/dev/null || true
-
-  sqlite3 "$METRICS_DB" "CREATE TABLE IF NOT EXISTS guardrail_gaps (
-    gap_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    deviation_type TEXT NOT NULL,
-    frequency REAL,
-    severity TEXT,
-    affected_models TEXT,
-    root_cause TEXT,
-    suggested_hook_name TEXT,
-    suggested_action TEXT,
-    confidence REAL,
-    status TEXT DEFAULT 'open',
-    applied_at TEXT,
-    impact_before REAL,
-    impact_after REAL,
-    created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')));" 2>/dev/null || true
-  sqlite3 "$METRICS_DB" "CREATE INDEX IF NOT EXISTS idx_gaps_status ON guardrail_gaps(status);" 2>/dev/null || true
+  # --- Training framework tables (removed from metrics.db) ---
+  # These tables were never populated in production. If the safety-evaluator
+  # skill needs them, it should create a separate training.db on demand.
+  # Removed tables: reference_codebases, prompt_chains, chain_steps,
+  # chain_executions, step_executions, deviations, guardrail_gaps
+  # Original schema preserved in git history at this commit.
 
   # Migration: active memory system tables
   sqlite3 "$METRICS_DB" "CREATE TABLE IF NOT EXISTS memories (

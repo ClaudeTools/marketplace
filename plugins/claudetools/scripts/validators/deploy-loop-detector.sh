@@ -5,7 +5,9 @@
 # Globals used: INPUT, MODEL_FAMILY
 # Returns: 0 = no issue, 1 = cloudflare propagation note, 2 = deploy loop (block)
 
-DEPLOY_LOG="/tmp/claudetools-deploys-${PPID}.jsonl"
+_deploy_session_id=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)
+_deploy_session_id="${_deploy_session_id:-$$}"
+DEPLOY_LOG="/tmp/claudetools-deploys-${_deploy_session_id}.jsonl"
 
 validate_deploy_loop() {
   local COMMAND
