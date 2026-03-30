@@ -35,6 +35,7 @@ source "$SCRIPT_DIR/lib/hook-input.sh"
 hook_init <<< "$INPUT"
 
 # Source the shared validator
+source "$SCRIPT_DIR/lib/hook-skip.sh"
 source "$SCRIPT_DIR/validators/task-quality.sh"
 
 # --- Run the shared validator ---

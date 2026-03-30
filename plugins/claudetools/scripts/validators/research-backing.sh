@@ -12,8 +12,8 @@ validate_research_backing() {
   [ -z "$CONTENT" ] && return 0
 
   # --- Skip non-code files and test files ---
+  is_test_file "$FILE_PATH" && return 0
   case "$FILE_PATH" in
-    *.test.*|*.spec.*|*__tests__*|*__mocks__*|*fixtures*) return 0 ;;
     *.md|*.json|*.yaml|*.yml|*.toml|*.lock|*.svg|*.sh) return 0 ;;
     *.config.*|*.rc|*CLAUDE.md) return 0 ;;
     *.css)

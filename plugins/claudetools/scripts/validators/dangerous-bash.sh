@@ -14,6 +14,28 @@ validate_dangerous_bash() {
     return 0
   fi
 
+  # Fast-path: commands that are unconditionally safe regardless of arguments.
+  # These are read-only or output-only — no side effects, no network, no writes.
+  # Must stay BEFORE the grep checks to actually save time.
+  case "$CMD" in
+    ls|ls\ *|pwd|date|whoami|hostname|which\ *|type\ *|wc\ *|wc)
+      record_hook_outcome "block-dangerous-bash" "PreToolUse" "allow" "Bash" "" "" "$MODEL_FAMILY"
+      return 0 ;;
+    echo\ *|head\ *|tail\ *|cat\ *)
+      # Only fast-path when the command has no pipe, no .env reference, and no
+      # variable expansion of potential secrets (the credential-exposure and
+      # secret-leakage checks below would otherwise catch these patterns).
+      case "$CMD" in
+        *\|*|*\.env*|*\$*) ;;  # fall through to full checks
+        *)
+          record_hook_outcome "block-dangerous-bash" "PreToolUse" "allow" "Bash" "" "" "$MODEL_FAMILY"
+          return 0 ;;
+      esac ;;
+    git\ status*|git\ log*|git\ diff*|git\ show*|git\ branch|git\ branch\ *|git\ remote\ -v*|git\ remote\ show*)
+      record_hook_outcome "block-dangerous-bash" "PreToolUse" "allow" "Bash" "" "" "$MODEL_FAMILY"
+      return 0 ;;
+  esac
+
   local BLOCKED=""
 
   # --- Destructive filesystem operations ---

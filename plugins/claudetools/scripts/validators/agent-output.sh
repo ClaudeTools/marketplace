@@ -5,6 +5,8 @@
 # Returns: 0 = clean, 1 = violations found (warning)
 
 validate_agent_output() {
+  source "$(dirname "${BASH_SOURCE[0]}")/../lib/code-quality.sh"
+
   local CWD
   CWD=$(hook_get_field '.cwd' || echo ".")
   [ -z "$CWD" ] && CWD="."
@@ -56,8 +58,8 @@ validate_agent_output() {
     [ -f "$file" ] || continue
 
     # Skip non-code files
+    is_test_file "$file" && continue
     case "$file" in
-      *.test.*|*.spec.*|*__tests__*|*__mocks__*) continue ;;
       *.md|*.json|*.yaml|*.yml|*.toml|*.lock|*.sh) continue ;;
       *.config.*|*.rc|.env*|*.css|*.svg|*.png|*.jpg) continue ;;
     esac
@@ -67,23 +69,18 @@ validate_agent_output() {
 
     # --- Stub/placeholder patterns ---
     local STUBS
-    STUBS=$(grep -ncE 'throw new Error\(.*(not implemented|todo|fixme|placeholder)|//\s*(TODO|FIXME|HACK|STUB|PLACEHOLDER):?\s|NotImplementedError' "$file" 2>/dev/null || true)
+    STUBS=$(count_stubs_in_file "$file")
     [ "$STUBS" -gt 0 ] && FILE_ISSUES="${FILE_ISSUES}  - ${STUBS} stub/TODO markers\n"
-
-    # --- Empty or hardcoded-return functions ---
-    local EMPTY
-    EMPTY=$(grep -cE 'function\s+[a-zA-Z0-9_]+\([^)]*\)\s*\{\s*\}|function\s+[a-zA-Z0-9_]+\([^)]*\)\s*\{\s*return\s+(null|undefined|\{\}|\[\])' "$file" 2>/dev/null || true)
-    [ "$EMPTY" -gt 0 ] && FILE_ISSUES="${FILE_ISSUES}  - ${EMPTY} empty/stub function bodies\n"
 
     # --- TypeScript-specific ---
     case "$file" in
       *.ts|*.tsx)
         local ANY_COUNT
-        ANY_COUNT=$(grep -co 'as any\b\|: any\b' "$file" 2>/dev/null || true)
+        ANY_COUNT=$(count_type_abuse "$file")
         [ "$ANY_COUNT" -gt 3 ] && FILE_ISSUES="${FILE_ISSUES}  - ${ANY_COUNT} uses of 'any' type\n"
 
         local TS_IGNORE
-        TS_IGNORE=$(grep -cE '@ts-ignore|@ts-expect-error' "$file" 2>/dev/null || true)
+        TS_IGNORE=$(count_ts_ignores "$file")
         [ "$TS_IGNORE" -gt 1 ] && FILE_ISSUES="${FILE_ISSUES}  - ${TS_IGNORE} @ts-ignore/@ts-expect-error directives\n"
         ;;
     esac

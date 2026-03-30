@@ -1,56 +1,78 @@
 # The Intelligence Spectrum
 
-> Match the level of intelligence to the level of ambiguity. Use code where code works. Use AI where reasoning is required. Never use one where the other belongs.
+> Match the level of intelligence to the level of ambiguity. Use code where code works. Use AI where reasoning is required. NEVER use one where the other belongs.
 
 ---
 
-## The Problem
+## Core Principle
 
-Most AI agent systems route every interaction through a large language model. The LLM interprets intent, selects tools, resolves parameters, executes actions, and generates a response. It works - but it's like hiring a surgeon to apply band-aids.
-
-The reality: a significant portion of interactions in any domain-specific system follow predictable patterns. When a user asks "show my invoices", there is nothing to reason about. The intent is clear, the tool is obvious, the parameters are deterministic. Sending this through a $0.01+ LLM call is waste.
-
-The counterintuitive finding from production systems: **reducing AI involvement often improves accuracy**. When an LLM doesn't have to parse dates, resolve entity names, or select from 30 tools, it makes fewer mistakes on the tasks it *does* handle. Less noise in, better signal out.
+Every request MUST be handled at the lowest-cost tier capable of producing a correct result. There are three tiers. Evaluate from Tier 1 downward — only escalate when the current tier cannot produce the correct answer.
 
 ---
 
-## The Principle
-
-There are three fundamentally different types of processing, and each request should be handled at the lowest-cost tier capable of producing a correct result.
-
-### 1. Deterministic Processing
+## Tier 1: Deterministic Processing
 
 **What it is:** Code. Pattern matching. Regex. Lookup tables. Rule engines. Date arithmetic. Database queries.
 
-**When to use it:** The answer can be computed without judgement. "Last month" is always a date range. "Show my orders" always maps to the same API call. An entity name always resolves to the same database ID.
+**When to use it:** The answer can be computed without judgement.
 
-**Cost:** Effectively zero. Sub-millisecond. No tokens consumed.
+**Cost:** Zero tokens. Sub-millisecond.
 
-**Coverage:** Typically 40-60% of queries in a well-scoped domain application.
+**Coverage:** 40-60% of queries in a well-scoped domain.
 
-### 2. Semantic Processing
+<example>
+Input: "Show my invoices from last month"
+<reasoning>"Last month" is a computable date range. "Show invoices" maps to a known API call. No ambiguity exists. This is Tier 1.</reasoning>
+Action: Resolve date range deterministically. Execute API call directly. Return templated response.
+</example>
 
-**What it is:** Lightweight classification. Embeddings. Small language models (1-3B parameters). Fuzzy matching. Vector similarity search.
+<example>
+Input: "What's my GST liability for Q4?"
+<reasoning>"Q4" is October 1 to December 31 — deterministic. "GST liability" maps to a known report. No reasoning needed.</reasoning>
+Action: Resolve date range. Run report query. Return formatted result.
+</example>
 
-**When to use it:** The intent is recognisable but not exact. The user said something that *means* "show my invoices" but didn't use those words. Or multiple tools could apply and a fast classifier can disambiguate. Or an entity mention needs fuzzy matching against a database.
-
-**Cost:** Approximately $0.0001 per classification - roughly 100x cheaper than a full LLM call. Under 50ms.
-
-**Coverage:** Another 20-30% of queries, catching what deterministic rules miss.
-
-### 3. AI Inference
-
-**What it is:** Full LLM reasoning. Multi-step planning. Novel question answering. Contextual synthesis. Error recovery. Explanation and insight generation.
-
-**When to use it:** The query genuinely requires reasoning. "Why is my GST liability higher than expected?" "Review my finances and suggest where I can cut costs." Multi-turn conversations requiring context synthesis. Anything where the *answer isn't knowable in advance*.
-
-**Cost:** Full token pricing. 1-30+ seconds depending on complexity.
-
-**Coverage:** The remaining 10-30% of queries - the ones that actually need it.
+NEVER route these through an LLM: date/time parsing, keyword-to-tool mapping, entity ID lookups, known format conversions, template-based responses for structured data.
 
 ---
 
-## The Architecture
+## Tier 2: Semantic Processing
+
+**What it is:** Lightweight classification. Embeddings. Small models (1-3B parameters). Fuzzy matching. Vector similarity.
+
+**When to use it:** Intent is recognisable but not exact-match. Multiple tools could apply and a classifier can disambiguate. Entity mentions need fuzzy matching.
+
+**Cost:** ~$0.0001 per classification. ~100x cheaper than full LLM. Under 50ms.
+
+**Coverage:** 20-30% of queries.
+
+<example>
+Input: "How much did we spend on office stuff?"
+<reasoning>"Office stuff" does not match a known category exactly, but embeddings can match it to "Office Supplies" in the chart of accounts. The intent ("how much did we spend") maps to an expense report. Classification + fuzzy match resolves this without full LLM reasoning.</reasoning>
+Action: Classify intent as expense_query. Fuzzy-match "office stuff" to account category. Execute query. Return templated response.
+</example>
+
+---
+
+## Tier 3: AI Inference
+
+**What it is:** Full LLM reasoning. Multi-step planning. Novel question answering. Contextual synthesis. Explanation and insight generation.
+
+**When to use it:** The query genuinely requires reasoning. The answer is not knowable in advance. Multi-turn context synthesis is needed.
+
+**Cost:** Full token pricing. 1-30+ seconds.
+
+**Coverage:** 10-30% of queries — the ones that actually need it.
+
+<example>
+Input: "Why is my GST liability higher than expected this quarter?"
+<reasoning>This requires comparing current figures to expectations, identifying contributing factors, and explaining causation. The answer depends on context the user has not fully specified. This is genuine reasoning.</reasoning>
+Action: Route to full LLM with pre-resolved figures, narrowed tool set, and structured context from Tiers 1-2.
+</example>
+
+---
+
+## Architecture
 
 ```
                User Request
@@ -82,70 +104,48 @@ There are three fundamentally different types of processing, and each request sh
          +----------------+  +-------------------------+
 ```
 
-The key architectural insight: **each tier pre-processes for the next**. Even when a query reaches Tier 3, the LLM receives pre-resolved dates, matched entities, a narrowed tool set (5 instead of 30), and structured context rather than raw conversation history. This means Tier 3 performs better *because* Tiers 1 and 2 exist.
+IMPORTANT: Each tier pre-processes for the next. Even when a query reaches Tier 3, the LLM receives pre-resolved dates, matched entities, a narrowed tool set (5 instead of 30), and structured context. Tier 3 performs better BECAUSE Tiers 1 and 2 exist.
 
 ---
 
 ## Why This Works
 
-### 1. Deterministic operations have deterministic answers
+1. **Deterministic operations produce deterministic errors when handled by AI.** Date parsing is the #1 source of LLM tool-calling errors. A deterministic parser eliminates the most common failure mode outright.
 
-"Last month" is a date range. "Q4 2025" is October 1 to December 31. "YTD" is January 1 to today. These are the #1 source of LLM tool-calling errors, and they're entirely computable without AI. A deterministic date parser eliminates the most common failure mode in agent systems outright.
+2. **Less choice produces better choice.** 30 tools in a prompt consumes 2,000-5,000 tokens and creates a choice paradox. Narrowing to 2-5 relevant tools improves selection accuracy and reduces token cost by 40-60%.
 
-### 2. Less choice = better choice
+3. **Templates eliminate variance.** For structured outputs (tables, summaries, reports), templates produce 100% consistent formatting at zero token cost. LLM generation quality varies; templates do not.
 
-Injecting 30 tools into every prompt consumes 2,000-5,000 tokens and creates a "choice paradox" for the model. After Tier 1/2 classification narrows to the relevant 2-5 tools, the LLM selects more accurately from a smaller, relevant set. Measured impact: 40-60% token reduction in prompts, plus improved tool selection accuracy.
-
-### 3. Predictable responses for predictable queries
-
-For data tables, financial summaries, and status reports, templates produce 100% consistent formatting at zero token cost. The LLM's generation quality varies - sometimes it dumps raw JSON, sometimes it formats beautifully. Templates remove that variance entirely for structured outputs.
-
-### 4. The paradox: less AI = smarter AI
-
-When the LLM only handles genuinely complex queries, it starts from a better position: smaller prompts, pre-resolved parameters, relevant tools only, structured context. It's not wasting capacity on trivial pattern matching. The result is fewer compounding errors and higher quality reasoning on the problems that actually need it.
+4. **Less AI produces smarter AI.** When the LLM only handles genuinely complex queries, it starts from a better position: smaller prompts, pre-resolved parameters, relevant tools only, structured context. Fewer compounding errors. Higher quality reasoning on the problems that actually need it.
 
 ---
 
-## The Evidence
+## Decision Routing
 
-This isn't theoretical. It's the dominant production pattern in 2025-26.
+When evaluating which tier handles a request, apply this checklist top-to-bottom. STOP on first match:
 
-**Stripe** coined the "minion architecture" - deterministic code handles the predictable, LLMs tackle the ambiguous. Their blueprints are directed graphs where nodes are explicitly typed as either deterministic (code) or agentic (LLM). In production, only 14% of their nodes remain fully agentic.
+1. Can the answer be computed from known inputs without judgement? → **Tier 1.** STOP.
+2. Can intent be classified and entities resolved with lightweight matching? → **Tier 2.** STOP.
+3. Does the query require reasoning, synthesis, or multi-step planning? → **Tier 3.**
 
-**Intercom's Fin** uses a custom BERT model for 90% of routing decisions with >98% accuracy, escalating only 10% to a full LLM. The same pattern appears across Zendesk, customer support platforms, and enterprise AI deployments.
-
-**Cost evidence** from production systems consistently shows 60-80% reduction through tiered routing, with prompt caching adding another 50-90% discount on the system prompt tokens that survive to Tier 3.
-
-The academic literature converges on the same conclusion. Research on production-grade agentic workflows explicitly separates deterministic orchestration from agentic reasoning, arguing that mixing these concerns leads to "LLM drift" - where the model gradually deviates from intended behaviour because it's handling tasks that code could do better.
+NEVER skip this evaluation. NEVER default to Tier 3 because it is easier to implement. The cost of routing a Tier 1 query through Tier 3 is not just tokens — it is accuracy loss, latency, and variance in output quality.
 
 ---
 
-## The Mental Model
+## Implementation Priority
 
-Think of it as a funnel, not a pipeline:
+When building a tiered system, implement in this order. Each step compounds on the previous:
 
-- **Most requests** are routine and can be handled instantly by code
-- **Some requests** need a quick classification step before deterministic execution
-- **Few requests** genuinely require the full reasoning capability of a large model
+1. **Deterministic date/time parser** — eliminates the #1 error category immediately
+2. **Response templates** for the top 10 query types — removes 30-50% of generation tokens
+3. **Prompt caching** — enable platform-level caching for system prompts (up to 90% discount)
+4. **Intent pattern registry** — 30-50 regex patterns for common queries, bypassing the LLM entirely
+5. **Dynamic tool selection** — inject only relevant tools based on classified intent
 
-The goal isn't to replace AI. It's to give AI a better starting position by handling everything below its pay grade with the right tool for the job.
-
-Or more bluntly: **AI should reason, not route.**
-
----
-
-## Practical Starting Points
-
-The highest-ROI, lowest-effort sequence for any AI agent system:
-
-1. **Deterministic date/time parser** - eliminates the #1 error category immediately
-2. **Response templates** for the top 10 query types - removes 30-50% of generation tokens
-3. **Prompt caching** - enable platform-level caching for system prompts (up to 90% discount)
-4. **Intent pattern registry** - 30-50 regex patterns for common queries, bypassing the LLM entirely
-5. **Dynamic tool selection** - inject only relevant tools based on classified intent
-
-Each step compounds. By step 5, your LLM is handling only the queries that genuinely need it, with better context, fewer tools, and pre-resolved parameters.
+By step 5, the LLM handles only queries that genuinely need it, with better context, fewer tools, and pre-resolved parameters.
 
 ---
 
-*The right question isn't "how do I make my AI smarter?" It's "how do I make sure my AI only handles the problems worth being smart about?"*
+## Related
+
+- `docs/five-step-algorithm.md` — The engineering process for applying these principles: question, delete, simplify, accelerate, automate.

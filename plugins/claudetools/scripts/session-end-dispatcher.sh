@@ -18,26 +18,11 @@ source "$SCRIPT_DIR/lib/telemetry-sync.sh"
 
 # Phase 3: Run all validators sequentially — errors logged but never blocking
 # SessionEnd protocol: async side-effects only, exit 0 always
-run_async_validator() {
-  local name="$1"
-  local func="$2"
-  local output
-  local rc=0
-  local _t_start
-  _t_start=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)}
-  output=$("$func" 2>&1) || rc=$?
-  local decision="allow"
-  [ "$rc" -ge 2 ] && decision="block"
-  [ "$rc" -eq 1 ] && decision="warn"
-  if [ "$rc" -ne 0 ]; then
-    hook_log "session-end: $name failed (rc=$rc): $output"
-  fi
-  record_hook_outcome "$name" "SessionEnd" "$decision" "" "" "" "$MODEL_FAMILY"
-  local _t_end _duration_ms
-  _t_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)}
-  _duration_ms=$(awk "BEGIN {printf \"%d\", ($_t_end - $_t_start) * 1000}" 2>/dev/null || echo 0)
-  emit_validator_event "session-end-dispatcher" "$name" "$decision" "$_duration_ms" "$output" 2>/dev/null || true
-}
+DISPATCHER_EVENT="SessionEnd"
+DISPATCHER_TOOL=""
+DISPATCHER_NAME="session-end-dispatcher"
+DISPATCHER_MODEL_FAMILY="$MODEL_FAMILY"
+source "$SCRIPT_DIR/lib/dispatcher.sh"
 
 # Emit session end telemetry — include subagents (they have distinct metrics)
 _sid=$(hook_get_field '.session_id' 2>/dev/null || echo "unknown")

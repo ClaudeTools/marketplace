@@ -25,27 +25,11 @@ source "$SCRIPT_DIR/validators/mocks.sh"
 MAX_EXIT=0
 ALL_FINDINGS=""
 
-run_validator() {
-  local name="$1"
-  local func="$2"
-  local output
-  local rc=0
-  local _t_start
-  _t_start=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)}
-  output=$("$func" 2>&1) || rc=$?
-  local decision="allow"
-  [ "$rc" -ge 2 ] && decision="block"
-  [ "$rc" -eq 1 ] && decision="warn"
-  if [ "$rc" -gt 0 ] && [ -n "$output" ]; then
-    ALL_FINDINGS="${ALL_FINDINGS}${output}\n"
-    [ "$rc" -gt "$MAX_EXIT" ] && MAX_EXIT=$rc
-  fi
-  record_hook_outcome "$name" "PostToolUse" "$decision" "" "" "" "$MODEL_FAMILY"
-  local _t_end _duration_ms
-  _t_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)}
-  _duration_ms=$(awk "BEGIN {printf \"%d\", ($_t_end - $_t_start) * 1000}" 2>/dev/null || echo 0)
-  emit_validator_event "validate-content" "$name" "$decision" "$_duration_ms" "$output" 2>/dev/null || true
-}
+DISPATCHER_EVENT="PostToolUse"
+DISPATCHER_TOOL=""
+DISPATCHER_NAME="validate-content"
+DISPATCHER_MODEL_FAMILY="$MODEL_FAMILY"
+source "$SCRIPT_DIR/lib/dispatcher.sh"
 
 run_validator "verify-no-stubs" validate_stubs
 run_validator "detect-hardcoded-secrets" validate_secrets

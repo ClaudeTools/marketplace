@@ -9,11 +9,7 @@
 validate_mocks() {
   # Skip test files — mocks are expected there
   # (dispatcher may already handle this, but kept for safety)
-  case "$FILE_PATH" in
-    *.test.*|*.spec.*|*__tests__*|*__mocks__*|*.stories.*|*.story.*|*fixtures*|*__fixtures__*|*.mock.*)
-      return 0
-      ;;
-  esac
+  is_test_file "$FILE_PATH" && return 0
 
   # Skip non-code files
   case "$FILE_PATH" in

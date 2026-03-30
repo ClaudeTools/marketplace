@@ -6,6 +6,8 @@
 # Returns: 0 = pass, 1 = soft warnings, 2 = block (hard violations)
 
 validate_task_quality() {
+  source "$(dirname "${BASH_SOURCE[0]}")/../lib/code-quality.sh"
+
   # Prevent infinite loops — if this is a re-evaluation after blocking, allow stop
   local STOP_HOOK_ACTIVE
   STOP_HOOK_ACTIVE=$(hook_get_field '.stop_hook_active')
@@ -52,15 +54,15 @@ validate_task_quality() {
     esac
 
     # Skip non-code
+    is_test_file "$file" && continue
     case "$file" in
-      *.test.*|*.spec.*|*.bats|*__tests__*|*__mocks__*) continue ;;
+      *.bats) continue ;;
       *.md|*.json|*.yaml|*.yml|*.toml|*.lock|*.sh|*.css|*.svg|*.png|*.log|*.jsonl) continue ;;
     esac
 
     # Stub patterns
     local COUNT
-    COUNT=$(grep -cE 'throw new Error\(.*(not implemented|todo|fixme)|//\s*(TODO|FIXME|STUB|PLACEHOLDER):?\s|NotImplementedError|function\s+[a-zA-Z0-9_]+\([^)]*\)\s*\{\s*\}' "$file" 2>/dev/null || true)
-    COUNT=${COUNT:-0}
+    COUNT=$(count_stubs_in_file "$file")
     if [ "$COUNT" -gt 0 ]; then
       VIOLATIONS="${VIOLATIONS}\n$(basename "$file"): ${COUNT} stub/placeholder patterns"
       VIOLATION_COUNT=$((VIOLATION_COUNT + COUNT))
@@ -70,18 +72,22 @@ validate_task_quality() {
     case "$file" in
       *.ts|*.tsx)
         local ANY
-        ANY=$(grep -co 'as any\b\|: any\b' "$file" 2>/dev/null || true)
-        ANY=${ANY:-0}
+        ANY=$(count_type_abuse "$file")
         if [ "$ANY" -gt 3 ]; then
           WARNINGS="${WARNINGS}\n$(basename "$file"): ${ANY} uses of 'any' type — prefer explicit types over 'any'"
         fi
 
         # Circumvention: 'as unknown as Type' bypasses type safety same as 'as any'
         local UNKNOWN_AS
-        UNKNOWN_AS=$(grep -co 'as unknown as\b' "$file" 2>/dev/null || true)
-        UNKNOWN_AS=${UNKNOWN_AS:-0}
+        UNKNOWN_AS=$(count_unknown_as "$file")
         if [ "$UNKNOWN_AS" -gt 2 ]; then
           WARNINGS="${WARNINGS}\n$(basename "$file"): ${UNKNOWN_AS} uses of 'as unknown as' — often used to bypass type checking. Use a type guard or fix the types."
+        fi
+
+        local TS_IGNORES
+        TS_IGNORES=$(count_ts_ignores "$file")
+        if [ "$TS_IGNORES" -gt 1 ]; then
+          WARNINGS="${WARNINGS}\n$(basename "$file"): ${TS_IGNORES} @ts-ignore/@ts-expect-error directives"
         fi
         ;;
     esac

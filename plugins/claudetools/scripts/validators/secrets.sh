@@ -13,23 +13,17 @@ validate_secrets() {
       # .env files ARE the correct place for secrets
       return 0
       ;;
-    *.test.*|*.spec.*|*__tests__*|*__mocks__*|*fixtures*|*__fixtures__*)
-      # Test files may have fake keys for testing
-      return 0
-      ;;
-    *.md|*.txt|*.rst|*.adoc)
-      # Documentation may reference key formats
-      return 0
-      ;;
-    *.lock|*.sum|*.svg|*.png|*.jpg|*.gif|*.ico|*.woff*|*.ttf|*.eot)
-      # Binary/generated files
-      return 0
-      ;;
     *secret*template*|*secret*example*|*credential*example*)
       # Template files showing the expected format
       return 0
       ;;
   esac
+  # Test files may have fake keys for testing
+  is_test_file "$FILE_PATH" && return 0
+  # Documentation may reference key formats
+  is_doc_file "$FILE_PATH" && return 0
+  # Binary/generated files
+  is_binary_file "$FILE_PATH" && return 0
 
   # Extract the content being written
   local NEW_STRING

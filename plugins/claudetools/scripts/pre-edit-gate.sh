@@ -12,6 +12,7 @@ source "$SCRIPT_DIR/lib/hook-input.sh"
 hook_init
 
 # Phase 2: Source validators
+source "$SCRIPT_DIR/lib/hook-skip.sh"
 source "$SCRIPT_DIR/validators/blind-edit.sh"
 source "$SCRIPT_DIR/validators/task-scope.sh"
 source "$SCRIPT_DIR/validators/research-backing.sh"

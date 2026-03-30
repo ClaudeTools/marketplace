@@ -11,20 +11,12 @@ validate_localhost() {
   BASENAME_LOWER=$(echo "$BASENAME" | tr '[:upper:]' '[:lower:]')
 
   # --- Allowlist: files where localhost is expected ---
-  case "$FILE_PATH" in
-    *.test.*|*.spec.*|*__tests__*|*__mocks__*|*fixtures*|*__fixtures__*)
-      # Test files may reference localhost for test servers
-      return 0
-      ;;
-    *.md|*.txt|*.rst|*.adoc)
-      # Documentation may reference localhost as examples
-      return 0
-      ;;
-    *.lock|*.sum|*.svg|*.png|*.jpg|*.gif|*.ico|*.woff*|*.ttf|*.eot)
-      # Binary/generated files
-      return 0
-      ;;
-  esac
+  # Test files may reference localhost for test servers
+  is_test_file "$FILE_PATH" && return 0
+  # Documentation may reference localhost as examples
+  is_doc_file "$FILE_PATH" && return 0
+  # Binary/generated files
+  is_binary_file "$FILE_PATH" && return 0
 
   # --- Target: production config files ---
   # Only flag localhost in files that are likely production config

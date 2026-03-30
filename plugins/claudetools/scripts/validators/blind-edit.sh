@@ -22,9 +22,7 @@ validate_blind_edit() {
   esac
 
   # Skip test files — lower risk for blind edits
-  case "$FILE_PATH" in
-    *.test.*|*.spec.*|*__tests__/*|*__mocks__/*|*.stories.*) return 0 ;;
-  esac
+  is_test_file "$FILE_PATH" && return 0
 
   # Find session reads tracking file
   # Source worktree lib (safe to re-source due to guard)
