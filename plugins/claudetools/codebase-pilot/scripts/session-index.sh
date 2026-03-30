@@ -118,18 +118,40 @@ else
   fi
 fi
 
+# Incremental indexing: skip full rebuild if index is recent (< 1 hour)
+INDEX_DB="$PROJECT_ROOT/.codeindex/db.sqlite"
+SKIP_FULL_INDEX=0
+
+if [ -f "$INDEX_DB" ]; then
+  INDEX_AGE=$(( $(date +%s) - $(stat -c %Y "$INDEX_DB" 2>/dev/null || stat -f %m "$INDEX_DB" 2>/dev/null || echo 0) ))
+  if [ "$INDEX_AGE" -lt 3600 ]; then
+    CHANGED_SINCE=$(git -C "$PROJECT_ROOT" diff --name-only HEAD~3 HEAD 2>/dev/null | head -50 || true)
+    if [ -n "$CHANGED_SINCE" ]; then
+      hook_log "codebase-pilot: incremental reindex (${INDEX_AGE}s old, $(echo "$CHANGED_SINCE" | wc -l) files changed)" 2>/dev/null || true
+      echo "$CHANGED_SINCE" | while IFS= read -r f; do
+        [ -f "$PROJECT_ROOT/$f" ] && node "$CLI" index-file "$PROJECT_ROOT/$f" 2>/dev/null || true
+      done
+    else
+      hook_log "codebase-pilot: index fresh and no changes — skipping" 2>/dev/null || true
+    fi
+    SKIP_FULL_INDEX=1
+  fi
+fi
+
 # Run the indexer — capture stderr so we get the actual error in telemetry
 _idx_start=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)} 2>/dev/null || true
 _idx_ok=1
-IDX_OUTPUT=$(node "$CLI" index "$PROJECT_ROOT" 2>&1) || _idx_ok=0
-if [[ "$_idx_ok" -eq 0 ]]; then
-  IDX_ERR_SHORT="${IDX_OUTPUT:0:200}"
-  hook_log "codebase-pilot: indexing FAILED for $PROJECT_ROOT: $IDX_ERR_SHORT" 2>/dev/null || true
-  emit_event "codebase-pilot" "index_failed" "error" 2>/dev/null || true
-else
-  _idx_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)} 2>/dev/null || true
-  _idx_ms=$(awk "BEGIN {printf \"%d\", ($_idx_end - $_idx_start) * 1000}" 2>/dev/null || echo 0)
-  emit_event "codebase-pilot" "index_success" "allow" "$_idx_ms" 2>/dev/null || true
+if [ "$SKIP_FULL_INDEX" -eq 0 ]; then
+  IDX_OUTPUT=$(node "$CLI" index "$PROJECT_ROOT" 2>&1) || _idx_ok=0
+  if [[ "$_idx_ok" -eq 0 ]]; then
+    IDX_ERR_SHORT="${IDX_OUTPUT:0:200}"
+    hook_log "codebase-pilot: indexing FAILED for $PROJECT_ROOT: $IDX_ERR_SHORT" 2>/dev/null || true
+    emit_event "codebase-pilot" "index_failed" "error" 2>/dev/null || true
+  else
+    _idx_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)} 2>/dev/null || true
+    _idx_ms=$(awk "BEGIN {printf \"%d\", ($_idx_end - $_idx_start) * 1000}" 2>/dev/null || echo 0)
+    emit_event "codebase-pilot" "index_success" "allow" "$_idx_ms" 2>/dev/null || true
+  fi
 fi
 
 # Output the project map to stdout (injected as context for the agent)

@@ -57,3 +57,38 @@ git_status_porcelain() {
   export _CACHED_GIT_STATUS="$status"
   echo "$status"
 }
+
+# git_state_cache_path — Returns session-scoped git state cache file path.
+git_state_cache_path() {
+  local session_id="${SESSION_ID:-${_deploy_session_id:-$$}}"
+  echo "/tmp/claude-git-state-${session_id}.json"
+}
+
+# git_save_state [DIR] — Write git state to session temp file for cross-hook sharing.
+git_save_state() {
+  local dir="${1:-.}"
+  local cache
+  cache=$(git_state_cache_path)
+  local branch is_repo
+  is_repo=false
+  git_is_repo "$dir" && is_repo=true
+  branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+  local changed_files
+  changed_files=$(git_changed_files "$dir" | tr '\n' '|')
+  printf '{"is_repo":%s,"branch":"%s","changed_files":"%s","ts":%s}\n' \
+    "$is_repo" "$branch" "$changed_files" "$(date +%s)" > "$cache" 2>/dev/null || true
+}
+
+# git_load_state — Load cached git state if fresh (< 30s). Returns 0 if loaded, 1 if stale.
+git_load_state() {
+  local cache
+  cache=$(git_state_cache_path)
+  [ -f "$cache" ] || return 1
+  local cache_age
+  cache_age=$(( $(date +%s) - $(stat -c %Y "$cache" 2>/dev/null || stat -f %m "$cache" 2>/dev/null || echo 0) ))
+  [ "$cache_age" -gt 30 ] && return 1
+  export _CACHED_GIT_IS_REPO=$(jq -r '.is_repo' "$cache" 2>/dev/null || echo "false")
+  export _CACHED_GIT_BRANCH=$(jq -r '.branch' "$cache" 2>/dev/null || echo "")
+  export _CACHED_CHANGED_FILES=$(jq -r '.changed_files' "$cache" 2>/dev/null | tr '|' '\n' || true)
+  return 0
+}

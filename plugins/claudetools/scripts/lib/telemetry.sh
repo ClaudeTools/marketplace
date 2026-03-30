@@ -246,3 +246,12 @@ emit_error() {
     "$(printf '{"tool":"%s","error_class":"%s","catching_hook":"%s","retried":%s}' \
       "$tool_name" "$error_class" "$catching_hook" "$retried")"
 }
+
+# emit_skill_invocation SKILL_NAME SESSION_ID [MATCHED_BY]
+emit_skill_invocation() {
+  local skill="${1:-}" session_id="${2:-}" matched_by="${3:-keyword}"
+  [ -z "$skill" ] && return 0
+  command -v sqlite3 &>/dev/null || return 0
+  [ -n "${METRICS_DB:-}" ] || return 0
+  sqlite3 "$METRICS_DB" "INSERT INTO skill_invocations (skill_name, session_id, matched_by) VALUES ('$skill', '$session_id', '$matched_by');" 2>/dev/null &
+}

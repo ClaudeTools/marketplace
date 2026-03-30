@@ -20,6 +20,15 @@ source "$SCRIPT_DIR/validators/bulk-edit.sh"
 source "$SCRIPT_DIR/validators/prefer-edit-over-write.sh"
 source "$SCRIPT_DIR/validators/mesh-lock.sh"
 
+# Tier 1 fast-path: skip edit validators for non-code files
+FILE_PATH=$(hook_get_field '.tool_input.file_path // .tool_input.path // empty' 2>/dev/null || true)
+if [ -n "$FILE_PATH" ]; then
+  if is_test_file "$FILE_PATH" || is_doc_file "$FILE_PATH" || is_binary_file "$FILE_PATH"; then
+    record_hook_outcome "pre-edit-gate" "PreToolUse" "allow" "" "" "" "${MODEL_FAMILY:-}"
+    exit 0
+  fi
+fi
+
 # Phase 3: Run validators in order — stop on first block
 # PreToolUse protocol: block via JSON stdout, warnings as systemMessage, exit 0
 run_pretool_validator() {

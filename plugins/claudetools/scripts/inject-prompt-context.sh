@@ -32,6 +32,24 @@ if [[ -f "$STOP_FLAG" ]] && [[ -n "$USER_TEXT" ]]; then
   rm -f "$STOP_FLAG"
 fi
 
+# --- Skill intent classification (Tier 1: deterministic) ---
+source "$(dirname "$0")/lib/skill-router.sh"
+USER_TEXT=$(echo "$INPUT" | jq -r '
+  if (.content | type) == "array" then
+    [.content[] | select(.type == "text") | .text] | join(" ")
+  else
+    .content // ""
+  end' 2>/dev/null || true)
+
+MATCHED_SKILL=$(classify_intent "$USER_TEXT")
+if [ -n "$MATCHED_SKILL" ]; then
+  SKILL_HINT=$(format_skill_hint "$MATCHED_SKILL")
+  echo "$SKILL_HINT"
+  # Track skill invocation for usage analytics
+  source "$(dirname "$0")/lib/telemetry.sh"
+  emit_skill_invocation "$MATCHED_SKILL" "$SESSION_ID" "keyword" 2>/dev/null || true
+fi
+
 # --- Agent mesh inbox (only if messages waiting) ---
 MESH_CLI="$(dirname "$(dirname "$0")")/agent-mesh/cli.js"
 if [[ -f "$MESH_CLI" ]]; then

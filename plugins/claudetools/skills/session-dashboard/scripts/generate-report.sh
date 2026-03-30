@@ -81,3 +81,11 @@ fi
 if [ "$AVG_CHURN" = "0" ] && [ "$AVG_FAILURES" = "0" ]; then
   echo "- No issues detected. System operating normally."
 fi
+
+# Plugin health metrics
+_HEALTH_LIB="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}/scripts/lib/health-report.sh"
+if [ -f "$_HEALTH_LIB" ]; then
+  source "$_HEALTH_LIB"
+  echo ""
+  full_health_report 30
+fi

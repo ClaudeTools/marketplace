@@ -3,6 +3,7 @@
 # Sourced by the dispatcher after hook_init() has been called.
 # Globals used: MODEL_FAMILY
 # Calls: ensure_metrics_db, get_threshold, hook_log
+  ensure_memory_db 2>/dev/null || true
 # Returns: 0 always (side-effect runner)
 
 run_memory_consolidate() {
@@ -12,6 +13,7 @@ run_memory_consolidate() {
   fi
 
   ensure_metrics_db 2>/dev/null || return 0
+  ensure_memory_db 2>/dev/null || true
 
   hook_log "memory-consolidate: starting"
 

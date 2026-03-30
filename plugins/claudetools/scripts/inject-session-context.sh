@@ -41,6 +41,7 @@ fi
 
 # Ensure DB exists
 ensure_metrics_db || exit 0
+  ensure_memory_db 2>/dev/null || true
 
 # --- Bulk reindex memory files into DB (ensures FTS is populated) ---
 MEMORY_DIR="$HOME/.claude/projects/$(get_repo_root | sed 's|^/|-|' | tr '/' '-')/memory"
