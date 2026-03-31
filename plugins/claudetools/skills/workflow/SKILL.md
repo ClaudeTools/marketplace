@@ -45,12 +45,12 @@ First, classify the task:
 **Skip if:** You're already deeply familiar with this area of the code.
 
 ### 3. DESIGN — Think before you build
-**Skill:** Use `superpowers:brainstorming` then `superpowers:writing-plans`
+**Skill:** `/design` → invokes `claudetools:brainstorm` then `claudetools:plan`
 **When complete:** Design approved by user, implementation plan written and saved.
 **Skip if:** Task is a simple, well-defined bug fix with obvious solution.
 
 ### 4. BUILD — Implement with discipline
-**Skill:** Use `superpowers:subagent-driven-development` or `superpowers:executing-plans`
+**Skill:** `/build` → executes plan tasks using `claudetools:tdd` (test-first for each task)
 **When complete:** All plan tasks done, tests passing, code committed.
 **NEVER skip.**
 
@@ -65,7 +65,7 @@ First, classify the task:
 **NEVER skip** for changes that will be merged.
 
 ### 7. SHIP — Deliver with confidence
-**Skill:** Use `superpowers:finishing-a-development-branch`
+**Skill:** `/ship` → invokes `claudetools:verify` then `claudetools:finish`
 **When complete:** Branch merged or PR created, docs updated.
 **NEVER skip.**
 
