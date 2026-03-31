@@ -1,11 +1,6 @@
 ---
-description: "Execute an implementation plan with TDD and subagent dispatch."
-argument-hint: "[plan-file-path]"
+description: "Build phase — execute the plan with test-driven development, dispatch subagents for independent tasks. Second step: /design → /build → /ship"
+argument-hint: "[plan-file-path or 'continue']"
 ---
 
-This is a workflow command. Execute the plan task by task:
-1. Read the plan file
-2. For each task, use the `claudetools:tdd` skill (test first, implement, verify)
-3. Dispatch subagents for independent tasks when possible
-4. After each task: verify tests pass, commit
-5. If no plan exists, tell the user: "No plan found. Run **/design** first to create one."
+Invoke the `claudetools:build` skill with the user's arguments.

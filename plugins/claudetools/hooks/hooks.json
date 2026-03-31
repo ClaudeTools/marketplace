@@ -5,180 +5,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-user-stop.sh",
-            "timeout": 2
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/pre-bash-gate.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Read|Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/guard-sensitive-files.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-read-efficiency.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/guard-context-reread.sh",
-            "timeout": 2
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/pre-edit-gate.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Agent",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-team-usage.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-memory-preferences.sh",
-            "timeout": 2
-          }
-        ]
-      },
-      {
-        "matcher": "Grep",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/intercept-grep.sh",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write|Agent",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/enforce-native-task-hygiene.sh",
-            "timeout": 3
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/pre-tool-dispatcher.sh",
+            "timeout": 10
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "TaskCreate|TaskUpdate|TaskList",
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/track-native-tasks.sh",
-            "timeout": 3
-          }
-        ]
-      },
-      {
-        "matcher": "Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/track-file-reads.sh",
-            "timeout": 2
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/validate-content.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/edit-frequency-guard.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/doc-manager.sh"
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/track-file-edits.sh",
-            "timeout": 2
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/memory-index.sh",
-            "timeout": 5,
-            "async": true
-          },
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/reindex-on-edit.sh",
-            "timeout": 5,
-            "async": true
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/post-bash-gate.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Agent",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/post-agent-gate.sh"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/browser-circuit-breaker.sh",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/capture-outcome.sh",
-            "timeout": 5
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/post-tool-dispatcher.sh",
+            "timeout": 10
           }
         ]
       }
@@ -271,53 +110,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/codebase-pilot/scripts/session-index.sh",
-            "timeout": 30
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/inject-session-context.sh",
-            "timeout": 10
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/doc-stale-detector.sh",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/mesh-lifecycle.sh register",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/track-worktree-session.sh",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/statusline/configure.sh",
-            "timeout": 5
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-start-dispatcher.sh",
+            "timeout": 60
           }
         ]
       }
