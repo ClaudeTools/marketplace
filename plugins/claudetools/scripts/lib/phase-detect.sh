@@ -21,9 +21,9 @@ detect_phase() {
   local has_plan=0
   [ -d "$cwd/docs/plans" ] && [ -n "$(ls "$cwd/docs/plans/"*.md 2>/dev/null)" ] && has_plan=1
 
-  # Check for commits since branch point
-  local commit_count
-  commit_count=$(git -C "$cwd" rev-list --count main..HEAD 2>/dev/null || git -C "$cwd" rev-list --count master..HEAD 2>/dev/null || echo "0")
+  # Check for implementation commits (files outside docs/ and .claude/)
+  local impl_files
+  impl_files=$(git -C "$cwd" diff --name-only main..HEAD 2>/dev/null | grep -vE '^docs/|^\\.claude/' | head -1 || true)
 
   # Check for review evidence
   local has_review=0
@@ -38,7 +38,7 @@ detect_phase() {
     echo "ship"
   elif [ "$has_review" -eq 1 ]; then
     echo "ship"
-  elif [ "$commit_count" -gt 0 ] && [ "$has_plan" -eq 1 ]; then
+  elif [ -n "$impl_files" ] && [ "$has_plan" -eq 1 ]; then
     echo "review"
   elif [ "$has_plan" -eq 1 ]; then
     echo "build"

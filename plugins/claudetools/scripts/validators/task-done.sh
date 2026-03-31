@@ -58,9 +58,13 @@ EOF
 
   # 2. Deterministic verification — check file relevance without AI
   local CODE_CHANGED ONLY_CONFIG HAS_TEST_FILES
-  CODE_CHANGED=$(echo "$CHANGED" | grep -cE '\.(ts|tsx|js|jsx|py|go|rs|rb|java|sh)$' 2>/dev/null || echo "0")
+  CODE_CHANGED=$(echo "$CHANGED" | grep -cE '\.(ts|tsx|js|jsx|py|go|rs|rb|java|sh)$' 2>/dev/null || true)
+  CODE_CHANGED=$(echo "$CODE_CHANGED" | tr -d '[:space:]')
+  CODE_CHANGED="${CODE_CHANGED:-0}"
   ONLY_CONFIG=$([ "$CODE_CHANGED" -eq 0 ] && echo "true" || echo "false")
-  HAS_TEST_FILES=$(echo "$CHANGED" | grep -cE '\.(test|spec)\.' 2>/dev/null || echo "0")
+  HAS_TEST_FILES=$(echo "$CHANGED" | grep -cE '\.(test|spec)\.' 2>/dev/null || true)
+  HAS_TEST_FILES=$(echo "$HAS_TEST_FILES" | tr -d '[:space:]')
+  HAS_TEST_FILES="${HAS_TEST_FILES:-0}"
 
   # Block: implementation task with only config/doc changes
   case "$TASK_SUBJECT" in

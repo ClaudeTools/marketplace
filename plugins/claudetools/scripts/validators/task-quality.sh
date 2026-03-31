@@ -261,7 +261,9 @@ validate_task_quality() {
 
   if echo "$TASK_TEXT" | grep -qiE '\b(bug|fix|error|crash|issue|broken|failing)\b'; then
     local EVIDENCE
-    EVIDENCE=$(echo "$INPUT" | grep -ciE 'error:|stack.?trace|reproduced|observed|caused by|root cause|logs show|exception|traceback|reproduction' 2>/dev/null || echo 0)
+    EVIDENCE=$(echo "$INPUT" | grep -ciE 'error:|stack.?trace|reproduced|observed|caused by|root cause|logs show|exception|traceback|reproduction' 2>/dev/null || true)
+    EVIDENCE=$(echo "$EVIDENCE" | tr -d '[:space:]')
+    EVIDENCE="${EVIDENCE:-0}"
     if [ "$EVIDENCE" -eq 0 ]; then
       WARNINGS="${WARNINGS}\nBug fix without diagnostic evidence — reproduce the error first, read logs/traces"
     fi
