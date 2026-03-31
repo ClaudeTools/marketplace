@@ -71,6 +71,34 @@ you chose JWT because of the stateless requirement. Same approach here?"
    - What constraints exist? (performance, compatibility, etc.)
    - What does success look like?
 
+### Visual Companion (optional)
+
+For tasks involving visual decisions (UI layouts, architecture diagrams, design comparisons), offer the browser companion:
+
+> "Some of what we're designing might be easier to show visually. I can display mockups, diagrams, and comparisons in your browser. Want to try it?"
+
+If accepted:
+
+```bash
+bash ${CLAUDE_PLUGIN_ROOT}/scripts/visual-companion/start-server.sh --project-dir "$PWD"
+```
+
+Save the returned `screen_dir` and `state_dir`. Then for visual questions:
+
+1. Write HTML fragments to `screen_dir/` (unique filenames: `layout.html`, `layout-v2.html`)
+2. Tell the user the URL and what's on screen
+3. On next turn, read `state_dir/events` for click selections (JSONL)
+4. Use terminal for text questions, browser for visual questions
+
+Available CSS classes: `.options`, `.option`, `.cards`, `.card`, `.mockup`, `.split`, `.pros-cons`
+
+When returning to terminal questions, push a waiting screen:
+```html
+<div style="display:flex;align-items:center;justify-content:center;min-height:60vh">
+  <p class="subtitle">Continuing in terminal...</p>
+</div>
+```
+
 ### Phase 2: Architect
 
 Present 2-3 approaches with tradeoffs.

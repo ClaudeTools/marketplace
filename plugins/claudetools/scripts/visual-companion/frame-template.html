@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Claudetools Design</title>
+  <style>
+    /* ── CSS custom properties (light / dark) ── */
+    :root {
+      --bg:           #f9f9fb;
+      --surface:      #ffffff;
+      --border:       #e2e2e8;
+      --text:         #1a1a2e;
+      --text-muted:   #6b6b80;
+      --accent:       #6b5cff;
+      --accent-hover: #5748d9;
+      --accent-text:  #ffffff;
+      --selected-bg:  #ede9ff;
+      --selected-border: #6b5cff;
+      --header-bg:    #ffffff;
+      --footer-bg:    #f2f2f6;
+      --card-bg:      #ffffff;
+      --card-hover:   #f5f3ff;
+      --mock-bg:      #e8e8ee;
+      --mock-border:  #d0d0da;
+      --radius:       8px;
+      --radius-sm:    4px;
+      --shadow:       0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:           #111118;
+        --surface:      #1c1c28;
+        --border:       #2e2e3e;
+        --text:         #e8e8f0;
+        --text-muted:   #888899;
+        --accent:       #8b78ff;
+        --accent-hover: #a090ff;
+        --accent-text:  #ffffff;
+        --selected-bg:  #2a2545;
+        --selected-border: #8b78ff;
+        --header-bg:    #1c1c28;
+        --footer-bg:    #16161f;
+        --card-bg:      #1c1c28;
+        --card-hover:   #252535;
+        --mock-bg:      #252535;
+        --mock-border:  #3a3a4e;
+        --shadow:       0 1px 3px rgba(0,0,0,0.3);
+      }
+    }
+
+    /* ── Reset + base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    #app-header {
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: var(--shadow);
+    }
+
+    #app-header .brand {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .ws-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      margin-left: auto;
+      transition: background 0.3s;
+    }
+    .ws-dot--connected    { background: #22c55e; }
+    .ws-dot--disconnected { background: #ef4444; }
+
+    /* ── Main content ── */
+    #app-main {
+      flex: 1;
+      padding: 24px 20px;
+      max-width: 960px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ── Footer indicator ── */
+    #app-footer {
+      background: var(--footer-bg);
+      border-top: 1px solid var(--border);
+      padding: 8px 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ── Typography helpers ── */
+    .subtitle {
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    /* ── Option lists ── */
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 16px 0;
+    }
+
+    .option {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+
+    .option:hover {
+      border-color: var(--accent);
+      background: var(--card-hover);
+    }
+
+    .option.selected {
+      border-color: var(--selected-border);
+      background: var(--selected-bg);
+    }
+
+    .option .letter {
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      border-radius: var(--radius-sm);
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .option .content {
+      flex: 1;
+    }
+
+    /* ── Card grid ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .card {
+      padding: 16px;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+      user-select: none;
+    }
+
+    .card:hover {
+      border-color: var(--accent);
+      background: var(--card-hover);
+      box-shadow: var(--shadow);
+    }
+
+    .card.selected {
+      border-color: var(--selected-border);
+      background: var(--selected-bg);
+    }
+
+    /* ── Split layout (pros/cons, comparison) ── */
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 16px 0;
+    }
+
+    .pros-cons {
+      padding: 16px;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .pros-cons h3 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .pros-cons ul {
+      padding-left: 16px;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    /* ── Mockup wireframes ── */
+    .mockup {
+      border: 1.5px solid var(--mock-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--surface);
+      margin: 16px 0;
+    }
+
+    .mockup-header {
+      background: var(--mock-bg);
+      border-bottom: 1px solid var(--mock-border);
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mockup-header .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--mock-border);
+    }
+
+    .mockup-body {
+      padding: 16px;
+      min-height: 80px;
+    }
+
+    .mock-nav {
+      height: 36px;
+      background: var(--mock-bg);
+      border-radius: var(--radius-sm);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      gap: 8px;
+    }
+
+    .mock-nav span {
+      height: 8px;
+      border-radius: 4px;
+      background: var(--mock-border);
+      display: inline-block;
+    }
+
+    .mock-button {
+      display: inline-block;
+      padding: 6px 14px;
+      background: var(--accent);
+      color: var(--accent-text);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: default;
+    }
+
+    .mock-input {
+      height: 32px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+    }
+
+    .mock-sidebar {
+      width: 160px;
+      flex-shrink: 0;
+      background: var(--mock-bg);
+      border-right: 1px solid var(--mock-border);
+      padding: 12px;
+      min-height: 120px;
+    }
+
+    .placeholder {
+      height: 14px;
+      background: var(--border);
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
+    .placeholder.sm  { width: 60%; }
+    .placeholder.md  { width: 80%; }
+    .placeholder.lg  { width: 100%; }
+  </style>
+</head>
+<body>
+
+  <header id="app-header">
+    <span class="brand">Claudetools Design</span>
+    <span id="ws-status-dot" class="ws-dot" title="Connecting..."></span>
+  </header>
+
+  <main id="app-main">
+    <div id="claude-content">
+<!-- CONTENT -->
+    </div>
+  </main>
+
+  <footer id="app-footer">
+    <span id="indicator-text">Click an option, then return to terminal</span>
+  </footer>
+
+  <script src="/helper.js"></script>
+</body>
+</html>

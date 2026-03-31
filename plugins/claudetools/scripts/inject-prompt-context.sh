@@ -50,6 +50,15 @@ if [ -n "$MATCHED_CMD" ]; then
   emit_skill_invocation "$MATCHED_CMD" "$SESSION_ID" "keyword" 2>/dev/null || true
 fi
 
+# --- Phase-aware context (Tier 1: deterministic) ---
+source "$(dirname "$0")/lib/phase-detect.sh"
+_CWD=$(echo "$INPUT" | jq -r '.cwd // "."' 2>/dev/null || echo ".")
+CURRENT_PHASE=$(detect_phase "$_CWD" 2>/dev/null || true)
+if [ -n "$CURRENT_PHASE" ] && [ "$CURRENT_PHASE" != "unknown" ]; then
+  PHASE_CTX=$(format_phase_context "$CURRENT_PHASE")
+  [ -n "$PHASE_CTX" ] && echo "$PHASE_CTX"
+fi
+
 # --- Agent mesh inbox (only if messages waiting) ---
 MESH_CLI="$(dirname "$(dirname "$0")")/agent-mesh/cli.js"
 if [[ -f "$MESH_CLI" ]]; then
