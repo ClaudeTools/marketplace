@@ -1,6 +1,6 @@
 ---
-description: Manage project documentation with standardized structure, auditing, archiving, and index generation.
-argument-hint: "<command> [init|audit|archive|reindex]"
+description: Manage project documentation with standardized structure, auditing, and archiving.
+argument-hint: "<command> [init|audit|archive]"
 ---
 
 # Documentation Manager
@@ -25,12 +25,6 @@ bash ${CLAUDE_PLUGIN_ROOT}/skills/docs-manager/scripts/docs-audit.sh
 Find docs with `status: deprecated` in front matter, move them to docs/archive/, and update indexes.
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/skills/docs-manager/scripts/docs-archive.sh
-```
-
-### reindex
-Force-regenerate index.md files for all docs/ directories.
-```bash
-bash ${CLAUDE_PLUGIN_ROOT}/skills/docs-manager/scripts/docs-reindex.sh
 ```
 
 ## Workflow

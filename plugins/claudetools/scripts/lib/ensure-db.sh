@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ensure-db.sh — Create metrics.db and memory.db with schema if missing
+# ensure-db.sh — Create metrics.db with schema if missing
 # Usage: source "$(dirname "$0")/lib/ensure-db.sh"
 
 # DB path: prefer a stable location that survives plugin version upgrades.
@@ -13,8 +13,6 @@ else
   _data_dir="${_plugin_root}/data"
 fi
 METRICS_DB="${_data_dir}/metrics.db"
-MEMORY_DB="${_data_dir}/memory.db"
-export MEMORY_DB
 
 ensure_metrics_db() {
   local db_dir
@@ -131,6 +129,70 @@ INSERT OR IGNORE INTO threshold_overrides (metric_name, default_value, current_v
   ('large_change_threshold', 15, 15, 5, 50, 'session-stop-gate: files in commit before scope warning'),
   ('ai_audit_diff_threshold', 30, 30, 10, 100, 'session-stop-gate: diff lines before AI audit triggers'),
   ('outcome_retention_days', 90, 90, 30, 365, 'aggregate-session: days to keep tool_outcomes');
+
+-- Memory tables (all memory ops use metrics.db via $METRICS_DB)
+CREATE TABLE IF NOT EXISTS memories (
+  id TEXT PRIMARY KEY,
+  content TEXT NOT NULL,
+  type TEXT NOT NULL,
+  name TEXT,
+  description TEXT,
+  tags TEXT DEFAULT '[]',
+  confidence REAL DEFAULT 1.0,
+  access_count INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now')),
+  last_accessed TEXT,
+  source TEXT DEFAULT 'human',
+  file_path TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(type);
+CREATE INDEX IF NOT EXISTS idx_memories_confidence_desc ON memories(confidence DESC);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(
+  name, description, content,
+  content='memories',
+  content_rowid='rowid',
+  tokenize='porter unicode61'
+);
+
+-- Triggers to keep FTS in sync
+CREATE TRIGGER IF NOT EXISTS memories_ai AFTER INSERT ON memories BEGIN
+  INSERT INTO memories_fts(rowid, name, description, content)
+  VALUES (new.rowid, new.name, new.description, new.content);
+END;
+CREATE TRIGGER IF NOT EXISTS memories_au AFTER UPDATE ON memories BEGIN
+  INSERT INTO memories_fts(memories_fts, rowid, name, description, content)
+  VALUES ('delete', old.rowid, old.name, old.description, old.content);
+  INSERT INTO memories_fts(rowid, name, description, content)
+  VALUES (new.rowid, new.name, new.description, new.content);
+END;
+CREATE TRIGGER IF NOT EXISTS memories_ad AFTER DELETE ON memories BEGIN
+  INSERT INTO memories_fts(memories_fts, rowid, name, description, content)
+  VALUES ('delete', old.rowid, old.name, old.description, old.content);
+END;
+
+CREATE TABLE IF NOT EXISTS project_memories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  category TEXT NOT NULL,
+  content TEXT NOT NULL,
+  confidence REAL DEFAULT 0.5,
+  times_reinforced INTEGER DEFAULT 1,
+  times_contradicted INTEGER DEFAULT 0,
+  first_seen TEXT NOT NULL DEFAULT (datetime('now')),
+  last_seen TEXT NOT NULL DEFAULT (datetime('now')),
+  project_type TEXT,
+  source TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_memories_category ON project_memories(category);
+CREATE INDEX IF NOT EXISTS idx_memories_confidence ON project_memories(confidence DESC);
+
+CREATE TABLE IF NOT EXISTS memory_effectiveness (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  memory_id INTEGER REFERENCES project_memories(id),
+  session_id TEXT,
+  was_relevant INTEGER DEFAULT 0,
+  timestamp TEXT DEFAULT (datetime('now'))
+);
 SQL
   fi
 
@@ -206,118 +268,41 @@ SQL
   sqlite3 "$METRICS_DB" "CREATE INDEX IF NOT EXISTS idx_skill_inv_name ON skill_invocations(skill_name);" 2>/dev/null || true
   sqlite3 "$METRICS_DB" "CREATE INDEX IF NOT EXISTS idx_skill_inv_ts ON skill_invocations(timestamp);" 2>/dev/null || true
 
-  # Enable WAL mode and busy timeout for concurrent write safety
-  sqlite3 "$METRICS_DB" "PRAGMA journal_mode=WAL;" >/dev/null 2>/dev/null || true
-  sqlite3 "$METRICS_DB" "PRAGMA busy_timeout=5000;" >/dev/null 2>/dev/null || true
-}
-
-ensure_memory_db() {
-  local db_dir
-  db_dir=$(dirname "$MEMORY_DB")
-  [ -d "$db_dir" ] || mkdir -p "$db_dir" 2>/dev/null || true
-
-  if [ ! -f "$MEMORY_DB" ]; then
-    sqlite3 "$MEMORY_DB" <<'SQL'
-CREATE TABLE IF NOT EXISTS memories (
-  id TEXT PRIMARY KEY,
-  content TEXT NOT NULL,
-  type TEXT NOT NULL,
-  name TEXT,
-  description TEXT,
-  tags TEXT DEFAULT '[]',
-  confidence REAL DEFAULT 1.0,
-  access_count INTEGER DEFAULT 0,
-  created_at TEXT DEFAULT (datetime('now')),
-  last_accessed TEXT,
-  source TEXT DEFAULT 'human',
-  file_path TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(type);
-CREATE INDEX IF NOT EXISTS idx_memories_confidence_desc ON memories(confidence DESC);
-
-CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(
-  name, description, content,
-  content='memories',
-  content_rowid='rowid',
-  tokenize='porter unicode61'
-);
-
--- Triggers to keep FTS in sync
-CREATE TRIGGER IF NOT EXISTS memories_ai AFTER INSERT ON memories BEGIN
-  INSERT INTO memories_fts(rowid, name, description, content)
-  VALUES (new.rowid, new.name, new.description, new.content);
-END;
-CREATE TRIGGER IF NOT EXISTS memories_au AFTER UPDATE ON memories BEGIN
-  INSERT INTO memories_fts(memories_fts, rowid, name, description, content)
-  VALUES ('delete', old.rowid, old.name, old.description, old.content);
-  INSERT INTO memories_fts(rowid, name, description, content)
-  VALUES (new.rowid, new.name, new.description, new.content);
-END;
-CREATE TRIGGER IF NOT EXISTS memories_ad AFTER DELETE ON memories BEGIN
-  INSERT INTO memories_fts(memories_fts, rowid, name, description, content)
-  VALUES ('delete', old.rowid, old.name, old.description, old.content);
-END;
-
-CREATE TABLE IF NOT EXISTS project_memories (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  category TEXT NOT NULL,
-  content TEXT NOT NULL,
-  confidence REAL DEFAULT 0.5,
-  times_reinforced INTEGER DEFAULT 1,
-  times_contradicted INTEGER DEFAULT 0,
-  first_seen TEXT NOT NULL DEFAULT (datetime('now')),
-  last_seen TEXT NOT NULL DEFAULT (datetime('now')),
-  project_type TEXT,
-  source TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_memories_category ON project_memories(category);
-CREATE INDEX IF NOT EXISTS idx_memories_confidence ON project_memories(confidence DESC);
-
-CREATE TABLE IF NOT EXISTS memory_effectiveness (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  memory_id INTEGER REFERENCES project_memories(id),
-  session_id TEXT,
-  was_relevant INTEGER DEFAULT 0,
-  timestamp TEXT DEFAULT (datetime('now'))
-);
-SQL
-  fi
-
-  # Migration: add tables that may not exist yet in older memory.db files
-  sqlite3 "$MEMORY_DB" "CREATE TABLE IF NOT EXISTS memories (
+  # Migration: memory tables (moved back from memory.db — all callers use $METRICS_DB)
+  sqlite3 "$METRICS_DB" "CREATE TABLE IF NOT EXISTS memories (
     id TEXT PRIMARY KEY, content TEXT NOT NULL, type TEXT NOT NULL,
     name TEXT, description TEXT, tags TEXT DEFAULT '[]', confidence REAL DEFAULT 1.0,
     access_count INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')),
     last_accessed TEXT, source TEXT DEFAULT 'human', file_path TEXT);" 2>/dev/null || true
-  sqlite3 "$MEMORY_DB" "CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(type);" 2>/dev/null || true
-  sqlite3 "$MEMORY_DB" "CREATE INDEX IF NOT EXISTS idx_memories_confidence_desc ON memories(confidence DESC);" 2>/dev/null || true
+  sqlite3 "$METRICS_DB" "CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(type);" 2>/dev/null || true
+  sqlite3 "$METRICS_DB" "CREATE INDEX IF NOT EXISTS idx_memories_confidence_desc ON memories(confidence DESC);" 2>/dev/null || true
   # FTS5 virtual table — CREATE VIRTUAL TABLE doesn't support IF NOT EXISTS in all SQLite builds
-  sqlite3 "$MEMORY_DB" "CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(
+  sqlite3 "$METRICS_DB" "CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(
     name, description, content, content='memories', content_rowid='rowid',
     tokenize='porter unicode61');" 2>/dev/null || true
-  sqlite3 "$MEMORY_DB" "CREATE TRIGGER IF NOT EXISTS memories_ai AFTER INSERT ON memories BEGIN
+  sqlite3 "$METRICS_DB" "CREATE TRIGGER IF NOT EXISTS memories_ai AFTER INSERT ON memories BEGIN
     INSERT INTO memories_fts(rowid, name, description, content)
     VALUES (new.rowid, new.name, new.description, new.content); END;" 2>/dev/null || true
-  sqlite3 "$MEMORY_DB" "CREATE TRIGGER IF NOT EXISTS memories_au AFTER UPDATE ON memories BEGIN
+  sqlite3 "$METRICS_DB" "CREATE TRIGGER IF NOT EXISTS memories_au AFTER UPDATE ON memories BEGIN
     INSERT INTO memories_fts(memories_fts, rowid, name, description, content)
     VALUES ('delete', old.rowid, old.name, old.description, old.content);
     INSERT INTO memories_fts(rowid, name, description, content)
     VALUES (new.rowid, new.name, new.description, new.content); END;" 2>/dev/null || true
-  sqlite3 "$MEMORY_DB" "CREATE TRIGGER IF NOT EXISTS memories_ad AFTER DELETE ON memories BEGIN
+  sqlite3 "$METRICS_DB" "CREATE TRIGGER IF NOT EXISTS memories_ad AFTER DELETE ON memories BEGIN
     INSERT INTO memories_fts(memories_fts, rowid, name, description, content)
     VALUES ('delete', old.rowid, old.name, old.description, old.content); END;" 2>/dev/null || true
-  sqlite3 "$MEMORY_DB" "CREATE TABLE IF NOT EXISTS project_memories (
+  sqlite3 "$METRICS_DB" "CREATE TABLE IF NOT EXISTS project_memories (
     id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT NOT NULL, content TEXT NOT NULL,
     confidence REAL DEFAULT 0.5, times_reinforced INTEGER DEFAULT 1, times_contradicted INTEGER DEFAULT 0,
     first_seen TEXT NOT NULL DEFAULT (datetime('now')), last_seen TEXT NOT NULL DEFAULT (datetime('now')),
     project_type TEXT, source TEXT);" 2>/dev/null || true
-  sqlite3 "$MEMORY_DB" "CREATE INDEX IF NOT EXISTS idx_memories_category ON project_memories(category);" 2>/dev/null || true
-  sqlite3 "$MEMORY_DB" "CREATE INDEX IF NOT EXISTS idx_memories_confidence ON project_memories(confidence DESC);" 2>/dev/null || true
-  sqlite3 "$MEMORY_DB" "CREATE TABLE IF NOT EXISTS memory_effectiveness (
+  sqlite3 "$METRICS_DB" "CREATE INDEX IF NOT EXISTS idx_memories_category ON project_memories(category);" 2>/dev/null || true
+  sqlite3 "$METRICS_DB" "CREATE INDEX IF NOT EXISTS idx_memories_confidence ON project_memories(confidence DESC);" 2>/dev/null || true
+  sqlite3 "$METRICS_DB" "CREATE TABLE IF NOT EXISTS memory_effectiveness (
     id INTEGER PRIMARY KEY AUTOINCREMENT, memory_id INTEGER REFERENCES project_memories(id),
     session_id TEXT, was_relevant INTEGER DEFAULT 0, timestamp TEXT DEFAULT (datetime('now')));" 2>/dev/null || true
 
   # Enable WAL mode and busy timeout for concurrent write safety
-  sqlite3 "$MEMORY_DB" "PRAGMA journal_mode=WAL;" >/dev/null 2>/dev/null || true
-  sqlite3 "$MEMORY_DB" "PRAGMA busy_timeout=5000;" >/dev/null 2>/dev/null || true
+  sqlite3 "$METRICS_DB" "PRAGMA journal_mode=WAL;" >/dev/null 2>/dev/null || true
+  sqlite3 "$METRICS_DB" "PRAGMA busy_timeout=5000;" >/dev/null 2>/dev/null || true
 }

@@ -23,5 +23,5 @@ Standardized documentation workflows for project docs directories.
 |---------|--------|---------|
 | `init` | `${CLAUDE_SKILL_DIR}/scripts/docs-init.sh` | Set up docs/ directory structure |
 | `audit` | `${CLAUDE_SKILL_DIR}/scripts/docs-audit.sh` | Check for stale, orphaned, or missing docs |
-| `reindex` | `bash ${CLAUDE_PLUGIN_ROOT}/scripts/doc-index-generator.sh < /dev/null` | Regenerate docs/index.md from frontmatter |
+| `reindex` | Handled automatically at session end by `validators/doc-index.sh` | Regenerate docs/index.md from frontmatter |
 | `archive` | `${CLAUDE_SKILL_DIR}/scripts/docs-archive.sh` | Move outdated docs to docs/archive/ |

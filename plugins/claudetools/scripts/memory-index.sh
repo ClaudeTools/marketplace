@@ -42,7 +42,6 @@ if ! command -v sqlite3 &>/dev/null; then
 fi
 
 ensure_metrics_db 2>/dev/null || exit 0
-  ensure_memory_db 2>/dev/null || true
 
 hook_log "memory-index: indexing $FILE_PATH"
 

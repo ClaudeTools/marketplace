@@ -1,5 +1,5 @@
 #!/bin/bash
-# PreToolUse:Bash dispatcher — ai-safety, dangerous-bash, unasked-restructure, no-deferred-actions
+# PreToolUse:Bash dispatcher — dangerous-bash, ai-safety, unasked-restructure, deploy-loop-detector
 # Safety-critical — stops on FIRST block, does not continue to further validators.
 set -euo pipefail
 

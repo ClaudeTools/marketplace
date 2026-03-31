@@ -16,7 +16,6 @@ if should_skip_content_check "$FILE_PATH"; then
 fi
 
 # Tier 1 fast-path: skip content validators for non-code files
-FILE_PATH=$(hook_get_field '.tool_input.file_path // .tool_input.path // empty' 2>/dev/null || true)
 if [ -n "$FILE_PATH" ]; then
   if is_test_file "$FILE_PATH" || is_doc_file "$FILE_PATH" || is_config_file "$FILE_PATH" || is_binary_file "$FILE_PATH"; then
     record_hook_outcome "validate-content" "PostToolUse" "allow" "" "" "" "${MODEL_FAMILY:-}"
