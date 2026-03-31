@@ -143,7 +143,7 @@ function cmdHeartbeat(opts) {
   if (!agent) fail(`Agent ${id} not found`);
   agent.last_heartbeat = now();
   atomicWrite(agentFile, agent);
-  console.log(`Heartbeat updated for ${id}`);
+  console.error(`Heartbeat updated for ${id}`);
 }
 
 function cmdList(opts) {
@@ -243,7 +243,6 @@ function cmdInbox(opts) {
   messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
   if (messages.length === 0) {
-    console.log('No messages');
     return;
   }
 

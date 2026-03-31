@@ -4,23 +4,23 @@
 # Everything here costs context tokens — keep it SHORT.
 
 INPUT=$(cat)
-CWD=$(echo "$INPUT" | jq -r '.cwd // "."' 2>/dev/null || echo ".")
 
-# --- User STOP detection ---
-# Extract the user's message text
-USER_TEXT=$(echo "$INPUT" | jq -r '
-  if (.content | type) == "array" then
-    [.content[] | if type == "string" then . elif .type == "text" then .text else "" end] | join(" ")
-  elif (.content | type) == "string" then .content
-  else ""
-  end
-' 2>/dev/null || true)
-
-SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)
+# --- Single extraction of all needed fields (one jq fork instead of four) ---
+eval "$(echo "$INPUT" | jq -r '
+  @sh "SESSION_ID=\(.session_id // "")",
+  @sh "CWD=\(.cwd // ".")",
+  @sh "USER_TEXT=\(
+    if (.content | type) == "array" then
+      [.content[] | if type == "string" then . elif .type == "text" then .text else "" end] | join(" ")
+    elif (.content | type) == "string" then .content
+    else ""
+    end
+  )"
+' 2>/dev/null)" || { SESSION_ID=""; CWD="."; USER_TEXT=""; }
 [[ -z "$SESSION_ID" ]] && SESSION_ID="$PPID"
 STOP_FLAG="/tmp/claude-user-stop-${SESSION_ID}"
 
-# Check if user message is a stop command (case-insensitive, with frustration variants)
+# --- User STOP detection ---
 if echo "$USER_TEXT" | grep -qiE '^\s*(stop|STOP|stop it|i said stop|can you stop|please stop|fucking stop|just stop)\s*[.!?]*\s*$'; then
   touch "$STOP_FLAG"
   echo "User requested STOP. All tool calls are blocked until you receive a new non-stop instruction." >&2
@@ -34,26 +34,24 @@ fi
 
 # --- Skill intent classification (Tier 1: deterministic) ---
 source "$(dirname "$0")/lib/skill-router.sh"
-USER_TEXT=$(echo "$INPUT" | jq -r '
-  if (.content | type) == "array" then
-    [.content[] | select(.type == "text") | .text] | join(" ")
-  else
-    .content // ""
-  end' 2>/dev/null || true)
 
 MATCHED_CMD=$(classify_intent "$USER_TEXT")
 if [ -n "$MATCHED_CMD" ]; then
-  WORKFLOW_CTX=$(format_workflow_context "$MATCHED_CMD")
-  echo "$WORKFLOW_CTX"
-  # Track skill invocation for usage analytics
+  # Only inject workflow context once per session per command
+  SKILL_FLAG="/tmp/.claude-workflow-injected-${MATCHED_CMD}-${SESSION_ID}"
+  if [ ! -f "$SKILL_FLAG" ]; then
+    WORKFLOW_CTX=$(format_workflow_context "$MATCHED_CMD")
+    echo "$WORKFLOW_CTX"
+    touch "$SKILL_FLAG"
+  fi
+  # Always track the invocation for analytics
   source "$(dirname "$0")/lib/telemetry.sh"
   emit_skill_invocation "$MATCHED_CMD" "$SESSION_ID" "keyword" 2>/dev/null || true
 fi
 
 # --- Phase-aware context (Tier 1: deterministic) ---
 source "$(dirname "$0")/lib/phase-detect.sh"
-_CWD=$(echo "$INPUT" | jq -r '.cwd // "."' 2>/dev/null || echo ".")
-CURRENT_PHASE=$(detect_phase "$_CWD" 2>/dev/null || true)
+CURRENT_PHASE=$(detect_phase "$CWD" "$SESSION_ID" 2>/dev/null || true)
 if [ -n "$CURRENT_PHASE" ] && [ "$CURRENT_PHASE" != "unknown" ]; then
   PHASE_CTX=$(format_phase_context "$CURRENT_PHASE")
   [ -n "$PHASE_CTX" ] && echo "$PHASE_CTX"
@@ -62,13 +60,11 @@ fi
 # --- Agent mesh inbox (only if messages waiting) ---
 MESH_CLI="$(dirname "$(dirname "$0")")/agent-mesh/cli.js"
 if [[ -f "$MESH_CLI" ]]; then
-  _MESH_SID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)
-  [[ -z "$_MESH_SID" ]] && _MESH_SID="$PPID"
-  MESSAGES=$(node "$MESH_CLI" inbox --id "$_MESH_SID" --ack 2>/dev/null) || true
+  MESSAGES=$(node "$MESH_CLI" inbox --id "$SESSION_ID" --ack 2>/dev/null) || true
   if [[ -n "$MESSAGES" ]]; then
     echo "[mesh] $MESSAGES"
   fi
-  { node "$MESH_CLI" heartbeat --id "$_MESH_SID" 2>/dev/null || true; } &
+  { node "$MESH_CLI" heartbeat --id "$SESSION_ID" 2>/dev/null || true; } &
 fi
 
 exit 0

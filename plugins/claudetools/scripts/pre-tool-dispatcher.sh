@@ -55,14 +55,12 @@ run_pretool_hook() {
   fi
 }
 
-# ─── Phase 1: Always — enforce-user-stop (runs for ALL tools) ───────────────
-# This script uses exit 2 for stop-flag. We capture and convert.
-user_stop_output=""
-rc_stop=0
-user_stop_output=$(echo "$INPUT" | bash "$SCRIPT_DIR/enforce-user-stop.sh" 2>&1) || rc_stop=$?
-if [ "${rc_stop:-0}" -eq 2 ]; then
-  jq -n --arg reason "${user_stop_output:-User said STOP. Do not make any tool calls.}" \
-    '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"block","permissionDecisionReason":$reason}}'
+# ─── Phase 1: Always — enforce-user-stop (inlined for performance) ─────
+# Check for user stop flag. SESSION_ID from input, fallback to PPID.
+_STOP_SID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)
+[[ -z "$_STOP_SID" ]] && _STOP_SID="$PPID"
+if [[ -f "/tmp/claude-user-stop-${_STOP_SID}" ]]; then
+  jq -n '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"block","permissionDecisionReason":"BLOCKED: User said STOP. Do not make any tool calls. Wait for new instructions."}}'
   exit 0
 fi
 

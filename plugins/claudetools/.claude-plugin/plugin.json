@@ -20,6 +20,12 @@
       "args": [
         "${CLAUDE_PLUGIN_ROOT}/task-system/start.sh"
       ]
+    },
+    "think": {
+      "command": "bash",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/mcp-servers/think/start.sh"
+      ]
     }
   }
 }

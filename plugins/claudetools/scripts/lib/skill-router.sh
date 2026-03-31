@@ -31,7 +31,7 @@ classify_intent() {
       echo "ship"; return 0 ;;
   esac
   case "$lower" in
-    *build*|*create*|*implement*|*"add feature"*|*"add a "*|*"new feature"*|*"write a "*|*refactor*|*restructure*|*"set up"*|*"integrate"*)
+    *"build feature"*|*"build a "*|*"create feature"*|*"create a new"*|*"implement feature"*|*"implement a "*|*"add feature"*|*"add a feature"*|*"new feature"*|*"write a new"*|*"refactor the"*|*"refactor this"*|*"restructure"*|*"set up"*|*"set up a "*|*"integrate with"*)
       echo "design"; return 0 ;;
   esac
   echo ""; return 0

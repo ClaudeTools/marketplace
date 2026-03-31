@@ -91,6 +91,6 @@ if [ -n "$ISSUES" ]; then
 fi
 
 # Clean — but still remind orchestrator to verify
-echo "Subagent (${AGENT_TYPE}) changed ${FILE_COUNT} files. Typecheck and tests pass."
-echo "Review the changed files before proceeding."
+echo "Subagent (${AGENT_TYPE}) changed ${FILE_COUNT} files. Typecheck and tests pass." >&2
+echo "Review the changed files before proceeding." >&2
 exit 0

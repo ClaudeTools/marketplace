@@ -70,6 +70,10 @@ case "$TOOL_NAME" in
     run_post_hook "post-agent-gate.sh"
     ;;
 
+  mcp__claude-in-chrome__*)
+    run_post_hook "browser-circuit-breaker.sh"
+    ;;
+
   *)
     # No tool-specific validators for this tool
     ;;
@@ -77,7 +81,6 @@ case "$TOOL_NAME" in
 esac
 
 # ─── Phase 2: Always — run for ALL tools ────────────────────────────────────
-run_post_hook "browser-circuit-breaker.sh"
 run_post_hook "capture-outcome.sh"
 
 exit "$MAX_EXIT"

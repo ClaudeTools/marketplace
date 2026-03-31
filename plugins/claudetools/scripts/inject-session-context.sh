@@ -113,12 +113,10 @@ total_failures=$(sqlite3 "$METRICS_DB" \
   "SELECT COALESCE(SUM(total_failures), 0) FROM (SELECT total_failures FROM session_metrics ORDER BY timestamp DESC LIMIT 5);" \
   2>/dev/null) || total_failures="0"
 
-# Only output if there's something meaningful to say
-if [ -n "$avg_churn" ] && [ "$avg_churn" != "0" ] && [ "$avg_churn" != "0.0" ] && [ "$avg_churn" != "0.00" ]; then
-  echo "[Session History] Avg edit churn: ${avg_churn} | Recent failures: ${total_failures}"
-
-  # High churn warning (behavioral text now in rules/session-orientation.md)
-  CHURN_WARN=$(get_threshold "churn_warning")
+# Only output if churn exceeds the warning threshold (not just non-zero)
+CHURN_WARN=$(get_threshold "churn_warning")
+if [ -n "$avg_churn" ] && [ -n "$CHURN_WARN" ] && awk "BEGIN{exit !($avg_churn >= $CHURN_WARN)}" 2>/dev/null; then
+  echo "[Session History] Edit churn elevated: ${avg_churn} (threshold: ${CHURN_WARN}) | Recent failures: ${total_failures}"
 fi
 
 # High failure warning threshold check (behavioral text now in rules/session-orientation.md)
@@ -149,7 +147,7 @@ if [ -f "$METRICS_DB" ]; then
     "SELECT type, description FROM memories
      WHERE confidence >= ${MEM_CONFIDENCE}
      ORDER BY confidence DESC, COALESCE(last_accessed, created_at) DESC
-     LIMIT 5;" \
+     LIMIT 3;" \
     2>/dev/null || true)
 
   if [ -n "$MEMORIES" ]; then
@@ -157,23 +155,6 @@ if [ -f "$METRICS_DB" ]; then
       [ -z "$mdesc" ] && continue
       echo "[memory:${mtype}] ${mdesc}"
     done
-  fi
-
-  # Also check legacy project_memories if table exists
-  HAS_LEGACY=$(sqlite3 "$METRICS_DB" "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='project_memories';" 2>/dev/null || echo "0")
-  if [ "$HAS_LEGACY" -gt 0 ] 2>/dev/null; then
-    LEGACY_MEMS=$(sqlite3 "$METRICS_DB" \
-      "SELECT content FROM project_memories
-       WHERE confidence > ${MEM_CONFIDENCE}
-       AND content NOT IN (SELECT description FROM memories WHERE description IS NOT NULL)
-       ORDER BY confidence DESC, last_seen DESC
-       LIMIT 3;" \
-      2>/dev/null || true)
-    if [ -n "$LEGACY_MEMS" ]; then
-      echo "$LEGACY_MEMS" | while IFS= read -r line; do
-        echo "[memory:project] ${line}"
-      done
-    fi
   fi
 
   # Decay old memories (active table)
@@ -190,17 +171,6 @@ if [ -f "$METRICS_DB" ]; then
   sqlite3 "$METRICS_DB" \
     "DELETE FROM memories
      WHERE confidence < ${MEM_PRUNE} AND access_count < 2 AND source != 'human';" 2>/dev/null || true
-
-  # Legacy table decay/prune (if exists)
-  if [ "$HAS_LEGACY" -gt 0 ] 2>/dev/null; then
-    sqlite3 "$METRICS_DB" \
-      "UPDATE project_memories SET confidence = confidence * ${MEM_DECAY_RATE}
-       WHERE last_seen < datetime('now', '-${MEM_DECAY_DAYS} days')
-       AND confidence > ${MEM_PRUNE};" 2>/dev/null || true
-    sqlite3 "$METRICS_DB" \
-      "DELETE FROM project_memories
-       WHERE confidence < ${MEM_PRUNE} AND times_reinforced < 2;" 2>/dev/null || true
-  fi
 fi
 
 fi  # end session_count > 0

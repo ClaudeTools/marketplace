@@ -5,16 +5,28 @@
 
 detect_phase() {
   local cwd="${1:-.}"
+  local session_id="${2:-${SESSION_ID:-$PPID}}"
+  local cache_file="/tmp/.claude-phase-${session_id}"
+  local cache_ttl=120  # seconds
+
+  # Return cached result if fresh
+  if [ -f "$cache_file" ]; then
+    local file_age=$(( $(date +%s) - $(stat -c %Y "$cache_file" 2>/dev/null || echo 0) ))
+    if [ "$file_age" -lt "$cache_ttl" ]; then
+      cat "$cache_file"
+      return 0
+    fi
+  fi
 
   # Not a git repo → unknown
-  git -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "unknown"; return 0; }
+  git -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "unknown" | tee "$cache_file"; return 0; }
 
   local branch
   branch=$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
 
-  # On main/master → done or not started
+  # On main/master → done
   case "$branch" in
-    main|master) echo "done"; return 0 ;;
+    main|master) echo "done" | tee "$cache_file"; return 0 ;;
   esac
 
   # Check for plan files
@@ -25,26 +37,37 @@ detect_phase() {
   local impl_files
   impl_files=$(git -C "$cwd" diff --name-only main..HEAD 2>/dev/null | grep -vE '^docs/|^\\.claude/' | head -1 || true)
 
-  # Check for review evidence
+  # Check for review evidence (local only — no network call)
   local has_review=0
   git -C "$cwd" log --oneline -20 2>/dev/null | grep -qi 'review\|reviewed\|code review' && has_review=1
 
-  # Check for PR
+  # Check for PR — cached separately with longer TTL (network call)
   local has_pr=0
-  command -v gh &>/dev/null && gh pr view HEAD --json state 2>/dev/null | grep -q '"state"' && has_pr=1
+  local pr_cache="/tmp/.claude-phase-pr-${session_id}"
+  if command -v gh &>/dev/null; then
+    if [ ! -f "$pr_cache" ] || [ $(( $(date +%s) - $(stat -c %Y "$pr_cache" 2>/dev/null || echo 0) )) -ge 300 ]; then
+      gh pr view HEAD --json state 2>/dev/null | grep -q '"state"' && has_pr=1
+      echo "$has_pr" > "$pr_cache"
+    else
+      has_pr=$(cat "$pr_cache" 2>/dev/null || echo 0)
+    fi
+  fi
 
   # Decision tree
+  local result
   if [ "$has_pr" -eq 1 ]; then
-    echo "ship"
+    result="ship"
   elif [ "$has_review" -eq 1 ]; then
-    echo "ship"
+    result="ship"
   elif [ -n "$impl_files" ] && [ "$has_plan" -eq 1 ]; then
-    echo "review"
+    result="review"
   elif [ "$has_plan" -eq 1 ]; then
-    echo "build"
+    result="build"
   else
-    echo "design"
+    result="design"
   fi
+
+  echo "$result" | tee "$cache_file"
 }
 
 # format_phase_context PHASE → echoes phase-specific guidance
