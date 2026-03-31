@@ -41,13 +41,13 @@ USER_TEXT=$(echo "$INPUT" | jq -r '
     .content // ""
   end' 2>/dev/null || true)
 
-MATCHED_CMD=$(classify_intent "$USER_TEXT")
-if [ -n "$MATCHED_CMD" ]; then
-  WORKFLOW_CTX=$(format_workflow_context "$MATCHED_CMD")
-  echo "$WORKFLOW_CTX"
+MATCHED_SKILL=$(classify_intent "$USER_TEXT")
+if [ -n "$MATCHED_SKILL" ]; then
+  SKILL_HINT=$(format_skill_hint "$MATCHED_SKILL")
+  echo "$SKILL_HINT"
   # Track skill invocation for usage analytics
   source "$(dirname "$0")/lib/telemetry.sh"
-  emit_skill_invocation "$MATCHED_CMD" "$SESSION_ID" "keyword" 2>/dev/null || true
+  emit_skill_invocation "$MATCHED_SKILL" "$SESSION_ID" "keyword" 2>/dev/null || true
 fi
 
 # --- Agent mesh inbox (only if messages waiting) ---
