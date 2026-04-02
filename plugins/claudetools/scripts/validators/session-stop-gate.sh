@@ -30,20 +30,19 @@ validate_session_stop_gate() {
   git_is_repo "$cwd" && is_git=1
 
   # --- 1a. Main branch check ---
+  # Only block if on main AND there are uncommitted changes — the risk is unreviewed
+  # direct commits, not simply being on main after a clean merge.
   if [ "$is_git" -eq 1 ]; then
     local current_branch
     current_branch=$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
     if [ "$current_branch" = "main" ] || [ "$current_branch" = "master" ]; then
-      # Skip if recent commits came from a worktree merge — work was done on a branch
-      local recent_merge
-      recent_merge=$(git -C "$cwd" log -3 --format="%s" 2>/dev/null | grep -cE "^(Merge branch 'worktree-|chore: auto-bump|chore: sync plugin)" || true)
-      if [ "${recent_merge:-0}" -gt 0 ]; then
-        record_hook_outcome "session-stop-gate" "Stop" "allow" "" "" "" "$MODEL_FAMILY"
-        return 0
+      local dirty
+      dirty=$(git -C "$cwd" status --porcelain 2>/dev/null | grep -c '^[^?]' || true)
+      if [ "${dirty:-0}" -gt 0 ]; then
+        echo "On $current_branch with uncommitted changes — create a feature branch to keep code review in the loop." >&2
+        record_hook_outcome "session-stop-gate" "Stop" "block" "" "" "" "$MODEL_FAMILY"
+        return 2
       fi
-      echo "On $current_branch — working directly on main skips code review. Create a feature branch first." >&2
-      record_hook_outcome "session-stop-gate" "Stop" "block" "" "" "" "$MODEL_FAMILY"
-      return 2
     fi
   fi
 
