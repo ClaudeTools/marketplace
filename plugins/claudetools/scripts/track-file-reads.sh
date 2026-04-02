@@ -23,7 +23,7 @@ if [ -z "$SESSION_ID" ]; then
   SESSION_ID="$PPID"
 fi
 
-READS_FILE="/tmp/codebase-pilot-reads-${SESSION_ID}.jsonl"
+READS_FILE="/tmp/srcpilot-reads-${SESSION_ID}.jsonl"
 TS=$(date +%s)
 
 # Use jq for proper JSON encoding (handles quotes, backslashes, unicode in paths)

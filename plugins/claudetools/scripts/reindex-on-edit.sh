@@ -22,13 +22,7 @@ case "$FILE_PATH" in
 esac
 
 CWD=$(echo "$INPUT" | jq -r '.cwd // "."' 2>/dev/null || echo ".")
-PROJECT_ROOT="${CODEBASE_PILOT_PROJECT_ROOT:-$CWD}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CLI="$SCRIPT_DIR/../codebase-pilot/dist/cli.js"
-
-if [ ! -f "$CLI" ]; then
-  exit 0
-fi
+PROJECT_ROOT="${SRCPILOT_PROJECT_ROOT:-$CWD}"
 
 # Convert absolute path to relative (portable — no realpath dependency)
 REL_PATH="${FILE_PATH#"$PROJECT_ROOT"/}"
@@ -37,6 +31,6 @@ if [ "$REL_PATH" = "$FILE_PATH" ]; then
   REL_PATH=$(python3 -c "import os; print(os.path.relpath('$FILE_PATH', '$PROJECT_ROOT'))" 2>/dev/null || echo "$FILE_PATH")
 fi
 
-node "$CLI" index-file "$REL_PATH" --project "$PROJECT_ROOT" 2>/dev/null >/dev/null || true
+srcpilot index-file "$REL_PATH" --project "$PROJECT_ROOT" 2>/dev/null >/dev/null || true
 
 exit 0

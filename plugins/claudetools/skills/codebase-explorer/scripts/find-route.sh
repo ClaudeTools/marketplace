@@ -6,7 +6,6 @@ set -uo pipefail
 
 ROUTE="${1:?Usage: find-route.sh <route-pattern> [project-root]}"
 PROJECT="${2:-$(pwd)}"
-CLI="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}/codebase-pilot/dist/cli.js"
 
 INCLUDES=(
   --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.mjs"

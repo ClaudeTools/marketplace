@@ -52,14 +52,14 @@ project_type="${PROJECT_TYPE:-general}"
 # Timestamp
 timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-# Session reads from codebase-pilot — merge ALL session reads files
+# Session reads from srcpilot — merge ALL session reads files
 session_reads='[]'
-SESSION_IDS_FILE="$(get_worktree_root)/.codeindex/session-ids"
+SESSION_IDS_FILE="$(get_worktree_root)/.srcpilot/session-ids"
 if [ -f "$SESSION_IDS_FILE" ]; then
   ALL_READS=""
   while IFS= read -r sid; do
     [ -z "$sid" ] && continue
-    READS_FILE="/tmp/codebase-pilot-reads-${sid}.jsonl"
+    READS_FILE="/tmp/srcpilot-reads-${sid}.jsonl"
     if [ -f "$READS_FILE" ]; then
       ALL_READS="${ALL_READS}$(cat "$READS_FILE" 2>/dev/null || true)"$'\n'
     fi
@@ -99,7 +99,7 @@ if [ -f "$SESSION_IDS_FILE" ]; then
   COMPACT_TS=$(date +%s)
   while IFS= read -r sid; do
     [ -z "$sid" ] && continue
-    READS_FILE="/tmp/codebase-pilot-reads-${sid}.jsonl"
+    READS_FILE="/tmp/srcpilot-reads-${sid}.jsonl"
     [ -f "$READS_FILE" ] || continue
     jq -nc --argjson t "$COMPACT_TS" '{"event":"compact","ts":$t}' >> "$READS_FILE" 2>/dev/null || true
   done < "$SESSION_IDS_FILE"

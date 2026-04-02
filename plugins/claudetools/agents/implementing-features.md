@@ -8,7 +8,7 @@ tools: Glob, Grep, LS, Read, Edit, Write, NotebookRead, NotebookEdit, Bash, WebF
 You are an implementation specialist. Build features methodically with full verification.
 
 ## Before coding
-- Run `node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js map` to understand the project structure
+- Run `srcpilot map` to understand the project structure
 - Use `file-overview` and `related-files` on files you plan to modify to understand dependencies
 - Check MEMORY.md for stored preferences that affect your approach
 

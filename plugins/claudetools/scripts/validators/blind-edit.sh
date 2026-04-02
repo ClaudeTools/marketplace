@@ -30,7 +30,7 @@ validate_blind_edit() {
   local SESSION_ID
   SESSION_ID=$(get_session_id "$INPUT")
 
-  local READS_FILE="/tmp/codebase-pilot-reads-${SESSION_ID}.jsonl"
+  local READS_FILE="/tmp/srcpilot-reads-${SESSION_ID}.jsonl"
 
   # If no tracking file exists, this is early in the session — allow
   [ ! -f "$READS_FILE" ] && return 0
@@ -44,13 +44,13 @@ validate_blind_edit() {
   fi
 
   # Also check session-ids file for cross-session reads (continued sessions)
-  local PROJECT_ROOT="${CODEBASE_PILOT_PROJECT_ROOT:-$(get_worktree_root)}"
-  local SESSION_IDS_FILE="$PROJECT_ROOT/.codeindex/session-ids"
+  local PROJECT_ROOT="${SRCPILOT_PROJECT_ROOT:-$(get_worktree_root)}"
+  local SESSION_IDS_FILE="$PROJECT_ROOT/.srcpilot/session-ids"
   if [ -f "$SESSION_IDS_FILE" ]; then
     while IFS= read -r sid; do
       [ -z "$sid" ] && continue
       [ "$sid" = "$SESSION_ID" ] && continue
-      local OTHER_READS="/tmp/codebase-pilot-reads-${sid}.jsonl"
+      local OTHER_READS="/tmp/srcpilot-reads-${sid}.jsonl"
       [ -f "$OTHER_READS" ] || continue
       if grep -qF "\"$FILE_PATH\"" "$OTHER_READS" 2>/dev/null; then
         return 0

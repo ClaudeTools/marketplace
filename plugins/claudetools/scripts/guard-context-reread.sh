@@ -27,20 +27,20 @@ fi
 
 # Find session IDs file
 CWD=$(echo "$INPUT" | jq -r '.cwd // "."' 2>/dev/null || echo ".")
-PROJECT_ROOT="${CODEBASE_PILOT_PROJECT_ROOT:-$CWD}"
-SESSION_IDS_FILE="$PROJECT_ROOT/.codeindex/session-ids"
+PROJECT_ROOT="${SRCPILOT_PROJECT_ROOT:-$CWD}"
+SESSION_IDS_FILE="$PROJECT_ROOT/.srcpilot/session-ids"
 
 if [ ! -f "$SESSION_IDS_FILE" ]; then
   exit 0
 fi
 
 # Collect entries into temp file (avoids O(n²) string concatenation)
-ENTRIES_FILE=$(mktemp 2>/dev/null || echo "/tmp/codebase-pilot-guard-$$")
+ENTRIES_FILE=$(mktemp 2>/dev/null || echo "/tmp/srcpilot-guard-$$")
 trap "rm -f '$ENTRIES_FILE'" EXIT
 
 while IFS= read -r sid; do
   [ -z "$sid" ] && continue
-  READS_FILE="/tmp/codebase-pilot-reads-${sid}.jsonl"
+  READS_FILE="/tmp/srcpilot-reads-${sid}.jsonl"
   [ -f "$READS_FILE" ] || continue
   # File-specific entries + compact events
   grep -F "$FILE_PATH" "$READS_FILE" >> "$ENTRIES_FILE" 2>/dev/null || true
@@ -84,7 +84,7 @@ BASENAME=$(basename "$FILE_PATH")
 
 # --- Symbol hints from SQLite index (appended to warnings) ---
 SYMBOL_HINTS=""
-DB_PATH="$PROJECT_ROOT/.codeindex/db.sqlite"
+DB_PATH="$PROJECT_ROOT/.srcpilot/db.sqlite"
 if command -v sqlite3 &>/dev/null && [ -f "$DB_PATH" ]; then
   # Convert absolute path to relative for index lookup
   REL_PATH="${FILE_PATH#"$PROJECT_ROOT"/}"

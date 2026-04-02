@@ -7,20 +7,18 @@ const { execFileSync } = require('child_process');
 
 const { getTasksDir, generateTaskId } = require(path.join(__dirname, '..', '..', '..', 'scripts', 'lib', 'task-store.js'));
 
-const PILOT_CLI = path.join(__dirname, '..', '..', '..', 'codebase-pilot', 'dist', 'cli.js');
-
 /**
- * Look up a symbol in the codebase-pilot index.
+ * Look up a symbol in the srcpilot index.
  * Uses execFileSync (not exec/execSync) to avoid shell injection.
  * Returns trimmed stdout or null if unavailable/no results.
  */
 function getPilotSymbol(symbol, projectRoot) {
-  const dbPath = path.join(projectRoot, '.codeindex', 'db.sqlite');
-  if (!fs.existsSync(dbPath) || !fs.existsSync(PILOT_CLI)) return null;
+  const dbPath = path.join(projectRoot, '.srcpilot', 'db.sqlite');
+  if (!fs.existsSync(dbPath)) return null;
   try {
     const result = execFileSync(
-      process.execPath,
-      [PILOT_CLI, 'find-symbol', symbol, '--project', projectRoot],
+      'srcpilot',
+      ['find-symbol', symbol, '--project', projectRoot],
       { encoding: 'utf8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] }
     );
     return result.trim() || null;

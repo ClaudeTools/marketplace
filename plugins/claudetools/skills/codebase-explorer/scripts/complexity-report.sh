@@ -22,9 +22,8 @@ done
 PROJECT="${PROJECT:-$(pwd)}"
 
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-CLI="node ${PLUGIN_ROOT}/codebase-pilot/dist/cli.js"
 
-export CODEBASE_PILOT_PROJECT_ROOT="$PROJECT"
+export SRCPILOT_PROJECT_ROOT="$PROJECT"
 
 # Source pilot-query library for consistency
 # shellcheck source=../../../scripts/lib/pilot-query.sh
@@ -37,9 +36,9 @@ echo "=== Complexity Report (threshold: ${THRESHOLD} lines) ==="
 echo ""
 
 # Query the index for all functions with line ranges
-DBPATH="${PROJECT}/.codeindex/db.sqlite"
+DBPATH="${PROJECT}/.srcpilot/db.sqlite"
 if [ ! -f "$DBPATH" ]; then
-  echo "No index found. Run: codebase-pilot index"
+  echo "No index found. Run: srcpilot index"
   exit 1
 fi
 

@@ -5,14 +5,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PILOT_DIR="$(dirname "$SCRIPT_DIR")"
-CLI="$PILOT_DIR/dist/cli.js"
 
 # Read stdin unconditionally (before LOG_SCRIPT check — stdin must be consumed first)
 INPUT=$(cat 2>/dev/null || true)
 
 # Source shared logging and telemetry
-PLUGIN_ROOT="$(dirname "$PILOT_DIR")"
+PLUGIN_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 LOG_SCRIPT="$PLUGIN_ROOT/scripts/hook-log.sh"
 if [[ -f "$LOG_SCRIPT" ]]; then
   source "$LOG_SCRIPT"
@@ -23,47 +21,13 @@ if [[ -f "$TELEM_SCRIPT" ]]; then
 fi
 
 # Determine project root from CWD (Claude Code sets this to the project)
-PROJECT_ROOT="${CODEBASE_PILOT_PROJECT_ROOT:-$(pwd)}"
+PROJECT_ROOT="${SRCPILOT_PROJECT_ROOT:-$(pwd)}"
 
-# Auto-install/repair dependencies
-# Two failure modes: (1) node_modules missing entirely, (2) native bindings broken
-# (e.g., Node version upgrade invalidates compiled better-sqlite3 .node binary)
-_needs_install=0
-_needs_rebuild=0
-if [[ ! -d "$PILOT_DIR/node_modules" ]]; then
-  _needs_install=1
-  hook_log "codebase-pilot: node_modules missing" 2>/dev/null || true
-elif ! node -e "require('$PILOT_DIR/node_modules/better-sqlite3')" &>/dev/null 2>&1; then
-  _needs_rebuild=1
-  hook_log "codebase-pilot: better-sqlite3 native bindings broken" 2>/dev/null || true
-fi
-
-if [[ "$_needs_install" -eq 1 ]]; then
-  if command -v npm &>/dev/null; then
-    hook_log "codebase-pilot: npm install --production" 2>/dev/null || true
-    NPM_ERR=$(cd "$PILOT_DIR" && npm install --production --no-audit --no-fund --legacy-peer-deps 2>&1) || {
-      hook_log "codebase-pilot: npm install FAILED: ${NPM_ERR:0:200}" 2>/dev/null || true
-      emit_event "codebase-pilot" "npm_install_failed" "error" 2>/dev/null || true
-    }
-  else
-    hook_log "codebase-pilot: npm not available, cannot install deps" 2>/dev/null || true
-    emit_event "codebase-pilot" "npm_not_found" "error" 2>/dev/null || true
-  fi
-elif [[ "$_needs_rebuild" -eq 1 ]]; then
-  if command -v npm &>/dev/null; then
-    hook_log "codebase-pilot: npm rebuild better-sqlite3" 2>/dev/null || true
-    NPM_ERR=$(cd "$PILOT_DIR" && npm rebuild better-sqlite3 2>&1) || {
-      # Rebuild failed — try full reinstall as fallback
-      hook_log "codebase-pilot: rebuild failed, trying full install" 2>/dev/null || true
-      cd "$PILOT_DIR" && rm -rf node_modules && npm install --production --no-audit --no-fund --legacy-peer-deps 2>&1 || true
-    }
-  fi
-fi
-
-# Skip if CLI not built
-if [[ ! -f "$CLI" ]]; then
-  hook_log "codebase-pilot: CLI not built at $CLI, skipping" 2>/dev/null || true
-  emit_event "codebase-pilot" "cli_not_built" "error" 2>/dev/null || true
+# Require globally installed srcpilot
+if ! command -v srcpilot &>/dev/null; then
+  hook_log "srcpilot: not found in PATH — install with: npm install -g srcpilot" 2>/dev/null || true
+  emit_event "srcpilot" "not_installed" "warn" 2>/dev/null || true
+  echo "[srcpilot] not installed — run: npm install -g srcpilot"
   exit 0
 fi
 
@@ -72,13 +36,13 @@ fi
 MAX_FILES=10000
 SOURCE_COUNT=$(find "$PROJECT_ROOT" -maxdepth 5 \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" \) -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/__pycache__/*" -not -path "*/.venv/*" -not -path "*/dist/*" -not -path "*/build/*" -not -path "*/.next/*" 2>/dev/null | head -$((MAX_FILES + 1)) | wc -l)
 if [[ "$SOURCE_COUNT" -eq 0 ]]; then
-  hook_log "codebase-pilot: no source files in $PROJECT_ROOT, skipping" 2>/dev/null || true
-  emit_event "codebase-pilot" "no_source_files" "allow" 2>/dev/null || true
+  hook_log "srcpilot: no source files in $PROJECT_ROOT, skipping" 2>/dev/null || true
+  emit_event "srcpilot" "no_source_files" "allow" 2>/dev/null || true
   exit 0
 fi
 if [[ "$SOURCE_COUNT" -gt "$MAX_FILES" ]]; then
-  hook_log "codebase-pilot: project too large (>${MAX_FILES} source files), skipping" 2>/dev/null || true
-  emit_event "codebase-pilot" "index_skipped_too_large" "warn" 2>/dev/null || true
+  hook_log "srcpilot: project too large (>${MAX_FILES} source files), skipping" 2>/dev/null || true
+  emit_event "srcpilot" "index_skipped_too_large" "warn" 2>/dev/null || true
   exit 0
 fi
 
@@ -87,7 +51,7 @@ SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)
 if [ -z "$SESSION_ID" ]; then
   SESSION_ID="$$"
 fi
-INDEX_DIR="$PROJECT_ROOT/.codeindex"
+INDEX_DIR="$PROJECT_ROOT/.srcpilot"
 mkdir -p "$INDEX_DIR" 2>/dev/null || true
 # Determine hook event type
 HOOK_EVENT=$(echo "$INPUT" | jq -r '.hook_event_name // empty' 2>/dev/null || true)
@@ -106,7 +70,7 @@ if [ "$HOOK_EVENT" = "SessionStart" ] || [ "$HOOK_EVENT" = "WorktreeCreate" ]; t
     echo "$SESSION_ID" >> "$tmp_ids"
     mv "$tmp_ids" "$INDEX_DIR/session-ids"
   ) 200>"$INDEX_DIR/session-ids.lock"
-  : > "/tmp/codebase-pilot-reads-${SESSION_ID}.jsonl" 2>/dev/null || true
+  : > "/tmp/srcpilot-reads-${SESSION_ID}.jsonl" 2>/dev/null || true
 else
   if ! grep -qxF "$SESSION_ID" "$INDEX_DIR/session-ids" 2>/dev/null; then
     (
@@ -119,7 +83,7 @@ else
 fi
 
 # Incremental indexing: skip full rebuild if index is recent (< 1 hour)
-INDEX_DB="$PROJECT_ROOT/.codeindex/db.sqlite"
+INDEX_DB="$PROJECT_ROOT/.srcpilot/db.sqlite"
 SKIP_FULL_INDEX=0
 
 if [ -f "$INDEX_DB" ]; then
@@ -127,12 +91,12 @@ if [ -f "$INDEX_DB" ]; then
   if [ "$INDEX_AGE" -lt 3600 ]; then
     CHANGED_SINCE=$(git -C "$PROJECT_ROOT" diff --name-only HEAD~3 HEAD 2>/dev/null | head -50 || true)
     if [ -n "$CHANGED_SINCE" ]; then
-      hook_log "codebase-pilot: incremental reindex (${INDEX_AGE}s old, $(echo "$CHANGED_SINCE" | wc -l) files changed)" 2>/dev/null || true
+      hook_log "srcpilot: incremental reindex (${INDEX_AGE}s old, $(echo "$CHANGED_SINCE" | wc -l) files changed)" 2>/dev/null || true
       echo "$CHANGED_SINCE" | while IFS= read -r f; do
-        [ -f "$PROJECT_ROOT/$f" ] && node "$CLI" index-file "$PROJECT_ROOT/$f" 2>/dev/null || true
+        [ -f "$PROJECT_ROOT/$f" ] && srcpilot index-file "$PROJECT_ROOT/$f" 2>/dev/null || true
       done
     else
-      hook_log "codebase-pilot: index fresh and no changes — skipping" 2>/dev/null || true
+      hook_log "srcpilot: index fresh and no changes — skipping" 2>/dev/null || true
     fi
     SKIP_FULL_INDEX=1
   fi
@@ -142,15 +106,15 @@ fi
 _idx_start=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)} 2>/dev/null || true
 _idx_ok=1
 if [ "$SKIP_FULL_INDEX" -eq 0 ]; then
-  IDX_OUTPUT=$(node "$CLI" index "$PROJECT_ROOT" 2>&1) || _idx_ok=0
+  IDX_OUTPUT=$(srcpilot index "$PROJECT_ROOT" 2>&1) || _idx_ok=0
   if [[ "$_idx_ok" -eq 0 ]]; then
     IDX_ERR_SHORT="${IDX_OUTPUT:0:200}"
-    hook_log "codebase-pilot: indexing FAILED for $PROJECT_ROOT: $IDX_ERR_SHORT" 2>/dev/null || true
-    emit_event "codebase-pilot" "index_failed" "error" 2>/dev/null || true
+    hook_log "srcpilot: indexing FAILED for $PROJECT_ROOT: $IDX_ERR_SHORT" 2>/dev/null || true
+    emit_event "srcpilot" "index_failed" "error" 2>/dev/null || true
   else
     _idx_end=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)} 2>/dev/null || true
     _idx_ms=$(awk "BEGIN {printf \"%d\", ($_idx_end - $_idx_start) * 1000}" 2>/dev/null || echo 0)
-    emit_event "codebase-pilot" "index_success" "allow" "$_idx_ms" 2>/dev/null || true
+    emit_event "srcpilot" "index_success" "allow" "$_idx_ms" 2>/dev/null || true
   fi
 fi
 
@@ -159,12 +123,12 @@ fi
 MAP_OUTPUT=""
 if [[ "$_idx_ok" -eq 1 ]]; then
   MAP_ERR=""
-  MAP_OUTPUT=$(node "$CLI" map "$PROJECT_ROOT" 2>/tmp/codebase-pilot-map-err-$$.txt) || true
-  MAP_ERR=$(head -c 200 /tmp/codebase-pilot-map-err-$$.txt 2>/dev/null || true)
-  rm -f /tmp/codebase-pilot-map-err-$$.txt 2>/dev/null || true
+  MAP_OUTPUT=$(srcpilot map "$PROJECT_ROOT" 2>/tmp/srcpilot-map-err-$$.txt) || true
+  MAP_ERR=$(head -c 200 /tmp/srcpilot-map-err-$$.txt 2>/dev/null || true)
+  rm -f /tmp/srcpilot-map-err-$$.txt 2>/dev/null || true
   if [[ -z "$MAP_OUTPUT" ]]; then
-    hook_log "codebase-pilot: map generation returned empty for $PROJECT_ROOT${MAP_ERR:+: $MAP_ERR}" 2>/dev/null || true
-    emit_event "codebase-pilot" "map_empty" "warn" 2>/dev/null || true
+    hook_log "srcpilot: map generation returned empty for $PROJECT_ROOT${MAP_ERR:+: $MAP_ERR}" 2>/dev/null || true
+    emit_event "srcpilot" "map_empty" "warn" 2>/dev/null || true
   fi
 fi
 
@@ -190,7 +154,7 @@ if [[ "$_inject_context" -eq 0 ]]; then
 fi
 
 DB_PATH=""
-for d in "$PROJECT_ROOT" "$PROJECT_ROOT/.codeindex"; do
+for d in "$PROJECT_ROOT" "$PROJECT_ROOT/.srcpilot"; do
   [[ -f "$d/db.sqlite" ]] && DB_PATH="$d/db.sqlite" && break
 done
 
@@ -249,7 +213,7 @@ if [[ -n "$DB_PATH" ]] && command -v sqlite3 &>/dev/null; then
 fi
 
 # --- Subagent memory + capabilities injection ---
-PLUGIN_ROOT_DIR="$(dirname "$PILOT_DIR")"
+PLUGIN_ROOT_DIR="$PLUGIN_ROOT"
 SUBAGENT_CONTEXT="$PLUGIN_ROOT_DIR/assets/subagent-context.md"
 METRICS_DB_PATH="$PLUGIN_ROOT_DIR/data/metrics.db"
 
@@ -314,7 +278,7 @@ elif [[ -f "$SUBAGENT_CONTEXT" ]]; then
 fi
 
 echo ""
-echo "Use codebase-pilot tools: find_symbol, find_usages, file_overview, related_files, navigate for code navigation."
+echo "Use srcpilot tools: find_symbol, find_usages, file_overview, related_files, navigate for code navigation."
 
 # --- Agent mesh registration ---
 MESH_CLI="$PLUGIN_ROOT/agent-mesh/cli.js"

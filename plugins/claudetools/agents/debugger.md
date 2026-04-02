@@ -16,7 +16,7 @@ Follow these steps in order. Do not skip steps.
 - If the bug cannot be reproduced, say so and ask for more context
 
 ### 2. OBSERVE
-- Use `node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-symbol "<error-source>"` to locate relevant code
+- Use `srcpilot find-symbol "<error-source>"` to locate relevant code
 - Use `related-files` to understand the dependency chain
 - Read the actual code at the error location
 - Check git log for recent changes to affected files

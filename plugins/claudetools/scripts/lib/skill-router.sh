@@ -42,7 +42,7 @@ format_workflow_context() {
   case "$cmd" in
     design) cat <<'CTX'
 [workflow] This task needs the design phase first. Follow this process:
-1. DISCOVER: Explore codebase (codebase-pilot), check memory, research external deps
+1. DISCOVER: Explore codebase (srcpilot), check memory, research external deps
 2. ARCHITECT: Present 2-3 approaches via AskUserQuestion with preview panels
 3. PLAN: Write implementation plan with exact file paths and TDD steps
 4. HANDOFF: Ask user "Ready to build?" → /build
@@ -66,7 +66,7 @@ CTX
 CTX
       ;;
     debug) echo "[workflow] Debug: reproduce → observe → hypothesize → verify → fix → confirm. Evidence before fixes." ;;
-    explore) echo "[workflow] Explore: use codebase-pilot (map, find-symbol, related-files) to understand the code." ;;
+    explore) echo "[workflow] Explore: use srcpilot (map, find-symbol, related-files) to understand the code." ;;
     research) echo "[workflow] Research: find current docs (WebSearch), verify API endpoints, check SDK versions before implementing." ;;
     review) echo "[workflow] Review: 4-pass (correctness → security → performance → maintainability)." ;;
     health) echo "[workflow] Health: run session-dashboard + field-review for combined metrics." ;;

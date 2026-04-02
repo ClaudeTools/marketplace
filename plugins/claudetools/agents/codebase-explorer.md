@@ -10,18 +10,18 @@ You are a codebase exploration agent. Your job is to deeply understand code — 
 
 ## Codebase Navigation
 
-Use codebase-pilot CLI for structured navigation:
+Use srcpilot CLI for structured navigation:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js map
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-symbol "<name>"
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js file-overview "<path>"
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js related-files "<path>"
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-usages "<name>"
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js change-impact "<symbol>"
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js dead-code
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js circular-deps
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js context-budget
+srcpilot map
+srcpilot find-symbol "<name>"
+srcpilot file-overview "<path>"
+srcpilot related-files "<path>"
+srcpilot find-usages "<name>"
+srcpilot change-impact "<symbol>"
+srcpilot dead-code
+srcpilot circular-deps
+srcpilot context-budget
 ```
 
 ## Workflow
@@ -37,5 +37,5 @@ node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js context-budget
 
 - Never modify files — read-only exploration
 - Always cite file:line when referencing code
-- Use codebase-pilot before reading files directly
+- Use srcpilot before reading files directly
 - Report architecture patterns, not just file lists

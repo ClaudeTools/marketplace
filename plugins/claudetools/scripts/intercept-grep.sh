@@ -1,5 +1,5 @@
 #!/bin/bash
-# PreToolUse:Grep — Intercept symbol-like grep queries and redirect to codebase-pilot.
+# PreToolUse:Grep — Intercept symbol-like grep queries and redirect to srcpilot.
 # Falls back to grep when pilot returns nothing or the DB is unavailable.
 set -euo pipefail
 
@@ -70,21 +70,15 @@ fi
 
 # === PILOT LOOKUP ===
 
-# Check DB exists
+# Require srcpilot binary and indexed DB
 PROJECT_ROOT=$(get_repo_root)
-DB_PATH="$PROJECT_ROOT/.codeindex/db.sqlite"
-if [ ! -f "$DB_PATH" ]; then
+DB_PATH="$PROJECT_ROOT/.srcpilot/db.sqlite"
+if ! command -v srcpilot &>/dev/null || [ ! -f "$DB_PATH" ]; then
   exit 0
 fi
 
-# Check CLI exists
-CLI="$SCRIPT_DIR/../codebase-pilot/dist/cli.js"
-if [ ! -f "$CLI" ]; then
-  exit 0
-fi
-
-# Run pilot with a hard timeout guard (node has 5s total; give pilot 4s)
-PILOT_RESULT=$(timeout 4 node "$CLI" "$PILOT_CMD" "$PATTERN" 2>/dev/null | head -40 | cut -c1-200 || true)
+# Run srcpilot with a hard timeout guard
+PILOT_RESULT=$(timeout 4 srcpilot "$PILOT_CMD" "$PATTERN" 2>/dev/null | head -40 | cut -c1-200 || true)
 
 # Fallback: if pilot returns < 2 non-empty lines, allow grep
 NON_EMPTY=$(echo "$PILOT_RESULT" | grep -c '\S' || true)
@@ -97,7 +91,7 @@ TRUNCATED=$(echo "$PILOT_RESULT" | head -c 2000)
 
 # === DENY — inject pilot results ===
 jq -n \
-  --arg context "codebase-pilot ($PILOT_CMD) results for \"$PATTERN\":
+  --arg context "srcpilot ($PILOT_CMD) results for \"$PATTERN\":
 
 $TRUNCATED" \
   '{

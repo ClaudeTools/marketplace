@@ -38,7 +38,7 @@ Capture all output. Group findings by severity: CRITICAL → HIGH → MEDIUM →
 Check for unused security validators and hooks that may have been silently disabled:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js dead-code
+srcpilot dead-code
 ```
 
 Flag any security-related files (validators, guards, hooks) that appear unused.
@@ -67,7 +67,7 @@ Ordered by risk: what to fix first, why, and which team should own it.
 
 ## Tools
 
-- Bash (full-audit.sh, security-scan.sh, npm audit, codebase-pilot CLI)
+- Bash (full-audit.sh, security-scan.sh, npm audit, srcpilot CLI)
 - Read, Glob, Grep (evidence gathering)
 - Read-only — no file modifications
 

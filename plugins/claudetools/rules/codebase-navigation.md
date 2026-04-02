@@ -13,20 +13,20 @@ paths:
 
 # Codebase Navigation — CLI Commands
 
-Use the codebase-pilot CLI to navigate code precisely before reading files directly.
+Use the srcpilot CLI to navigate code precisely before reading files directly.
 
-**CLI path:** `node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js <command>`
+**CLI path:** `srcpilot <command>`
 
 ## Commands
 
 | Command | Usage | Purpose |
 |---------|-------|---------|
-| `map` | `node .../cli.js map` | Project overview: languages, structure, entry points, key exports |
-| `find-symbol` | `node .../cli.js find-symbol "<name>"` | Find functions, classes, types by name (supports prefix matching) |
-| `find-usages` | `node .../cli.js find-usages "<name>"` | Find all files that import a given symbol |
-| `file-overview` | `node .../cli.js file-overview "<path>"` | List all symbols in a file, grouped by kind |
-| `related-files` | `node .../cli.js related-files "<path>"` | Find files connected via imports (both directions) |
-| `navigate` | `node .../cli.js navigate "<query>"` | Query-driven search across symbols, paths, and imports — ranked results |
+| `map` | `srcpilot map` | Project overview: languages, structure, entry points, key exports |
+| `find-symbol` | `srcpilot find-symbol "<name>"` | Find functions, classes, types by name (supports prefix matching) |
+| `find-usages` | `srcpilot find-usages "<name>"` | Find all files that import a given symbol |
+| `file-overview` | `srcpilot file-overview "<path>"` | List all symbols in a file, grouped by kind |
+| `related-files` | `srcpilot related-files "<path>"` | Find files connected via imports (both directions) |
+| `navigate` | `srcpilot navigate "<query>"` | Query-driven search across symbols, paths, and imports — ranked results |
 
 ## Context Awareness
 
@@ -41,7 +41,7 @@ Files marked `[in context]` are already in your context window — do NOT re-rea
 
 ## Required Behavior
 
-ALWAYS use codebase-pilot CLI to locate code before reading files directly.
+ALWAYS use srcpilot CLI to locate code before reading files directly.
 
 **WRONG:** Reading random files hoping to find the right code:
 ```bash
@@ -50,7 +50,7 @@ Read plugin/scripts/validators/ai-safety.sh  # guessing the file path
 
 **CORRECT:** Using the CLI to locate code precisely:
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-symbol "validate_ai_safety"
+srcpilot find-symbol "validate_ai_safety"
 ```
 
 Then read the exact file and line reported by the CLI.

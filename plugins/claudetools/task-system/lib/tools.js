@@ -132,7 +132,7 @@ export const TOOLS = [
   {
     name: 'task_decompose',
     description:
-      'Get context for decomposing a task into subtasks. Returns the parent task, existing subtasks, and decomposition guidance including codebase-pilot instructions.',
+      'Get context for decomposing a task into subtasks. Returns the parent task, existing subtasks, and decomposition guidance including srcpilot instructions.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -381,7 +381,7 @@ async function handleTaskDecompose(args, projectRoot) {
   // Only include guidance on first decomposition (no subtasks yet)
   if (existingSubtasks.length === 0) {
     result.decomposition_guidance = {
-      context_gathering: 'Use codebase-pilot MCP tools before creating subtasks: project_map to orient, find_symbol to locate functions/classes, file_overview to understand file structure, related_files to discover dependencies. Use REAL paths from these tools — do not invent file paths.',
+      context_gathering: 'Use srcpilot MCP tools before creating subtasks: project_map to orient, find_symbol to locate functions/classes, file_overview to understand file structure, related_files to discover dependencies. Use REAL paths from these tools — do not invent file paths.',
       subtask_structure: 'Each subtask must include: Title, Description, Acceptance Criteria (verb-led, measurable, ≥2 items), File References (read/modify/do-not-touch with real paths, ≥1), Constraints, Out of Scope, Verification (exact shell commands, ≥1), Risk Level.',
       completeness: 'Create ALL subtasks upfront — not just the first phase. Verification, testing, polish, and documentation tasks require the same depth as implementation tasks. Do not defer later phases.',
       anti_deferral: 'Create all phases with equal detail. A task an agent cannot execute autonomously is not a task — it is a reminder.',

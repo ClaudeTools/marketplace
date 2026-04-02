@@ -16,16 +16,16 @@ Before starting work, create a TaskCreate for the overall feature. Then create a
 Follow these steps in order. Do not skip steps.
 
 ### 1. EXPLORE
-Use codebase-pilot to understand the area where the feature will land:
+Use srcpilot to understand the area where the feature will land:
 
 ```bash
 # Get project overview
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js map
+srcpilot map
 
 # Understand the relevant area
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-symbol "<feature-area>"
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js related-files "<entry-file>"
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js file-overview "<entry-file>"
+srcpilot find-symbol "<feature-area>"
+srcpilot related-files "<entry-file>"
+srcpilot file-overview "<entry-file>"
 ```
 
 Read the code at relevant locations before forming a plan.
@@ -68,7 +68,7 @@ All checks must pass before declaring the feature complete.
 
 ## Tools
 
-- Bash (codebase-pilot CLI, agent-mesh CLI, typecheck, tests)
+- Bash (srcpilot CLI, agent-mesh CLI, typecheck, tests)
 - Read, Glob, Grep (codebase exploration)
 - Edit, Write (implementation)
 - All tools available

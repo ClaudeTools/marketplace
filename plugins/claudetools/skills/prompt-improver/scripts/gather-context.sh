@@ -311,7 +311,7 @@ if [ "$BUILD_CMD_FOUND" = false ]; then
 fi
 
 if [[ -f "$_PILOT_LIB" ]] && declare -f pilot_map &>/dev/null; then
-  if [[ -f "${ROOT}/.codeindex/db.sqlite" ]]; then
+  if [[ -f "${ROOT}/.srcpilot/db.sqlite" ]]; then
     echo ""
     echo "=== Project Structure (from index) ==="
     pilot_map 2>/dev/null || true

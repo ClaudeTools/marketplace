@@ -16,15 +16,15 @@ Before starting work, create a TaskCreate for the overall bugfix. Then create a 
 Follow these steps in order. Do not skip steps.
 
 ### 1. EXPLORE
-Use codebase-pilot to understand the affected area before touching anything:
+Use srcpilot to understand the affected area before touching anything:
 
 ```bash
 # Locate the failing symbol or module
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-symbol "<error-source>"
+srcpilot find-symbol "<error-source>"
 
 # Understand its dependencies and callers
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js related-files "<affected-file>"
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-usages "<symbol>"
+srcpilot related-files "<affected-file>"
+srcpilot find-usages "<symbol>"
 
 # Check recent changes to the affected area
 git log --oneline -20 -- <affected-file>
@@ -68,7 +68,7 @@ Commit with a descriptive `fix:` conventional commit message.
 
 ## Tools
 
-- Bash (codebase-pilot CLI, git log, test runner)
+- Bash (srcpilot CLI, git log, test runner)
 - Read, Glob, Grep (codebase exploration)
 - Edit, Write (fix implementation)
 

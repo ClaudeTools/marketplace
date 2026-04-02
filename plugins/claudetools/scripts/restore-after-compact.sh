@@ -82,36 +82,31 @@ P1_CONTENT="=== Context Recovery (post-compaction) ==="$'\n'
 P1_CONTENT+="Project type: ${project_type}"$'\n'
 
 # Session reads — remind agent what it already read
-SCRIPT_DIR="$(dirname "$0")"
-CLI="$SCRIPT_DIR/../codebase-pilot/dist/cli.js"
-
-if [ -f "$CLI" ]; then
-  session_reads=$(jq -r '.session_reads // [] | .[-10:][]' "$STATE_FILE" 2>/dev/null) || session_reads=""
-  if [ -n "$session_reads" ]; then
-    P1_CONTENT+=$'\n'"=== Files Already in Context (do NOT re-read) ==="$'\n'
-    while IFS= read -r rpath; do
-      [ -n "$rpath" ] && P1_CONTENT+="  $rpath"$'\n'
-    done <<< "$session_reads"
-  fi
+session_reads=$(jq -r '.session_reads // [] | .[-10:][]' "$STATE_FILE" 2>/dev/null) || session_reads=""
+if [ -n "$session_reads" ]; then
+  P1_CONTENT+=$'\n'"=== Files Already in Context (do NOT re-read) ==="$'\n'
+  while IFS= read -r rpath; do
+    [ -n "$rpath" ] && P1_CONTENT+="  $rpath"$'\n'
+  done <<< "$session_reads"
 fi
 
 emit_if_fits "$P1_CONTENT" "$P1_BUDGET"
 
-# --- P2: Abbreviated project map ---
-if [ -f "$CLI" ] && [ "$BYTES_USED" -lt "$TOTAL_BUDGET" ]; then
-  # Cross-platform timeout wrapper
-  run_with_timeout() {
-    local secs="$1"; shift
-    if command -v timeout &>/dev/null; then
-      timeout "$secs" "$@"
-    elif command -v gtimeout &>/dev/null; then
-      gtimeout "$secs" "$@"
-    else
-      "$@"
-    fi
-  }
+# Cross-platform timeout wrapper
+run_with_timeout() {
+  local secs="$1"; shift
+  if command -v timeout &>/dev/null; then
+    timeout "$secs" "$@"
+  elif command -v gtimeout &>/dev/null; then
+    gtimeout "$secs" "$@"
+  else
+    "$@"
+  fi
+}
 
-  MAP_OUTPUT=$(run_with_timeout 3 node "$CLI" map 2>/dev/null | head -20) || true
+# --- P2: Abbreviated project map ---
+if command -v srcpilot &>/dev/null && [ "$BYTES_USED" -lt "$TOTAL_BUDGET" ]; then
+  MAP_OUTPUT=$(run_with_timeout 3 srcpilot map 2>/dev/null | head -20) || true
   if [ -n "$MAP_OUTPUT" ]; then
     P2_CONTENT=$'\n'"=== Codebase Map (abbreviated) ==="$'\n'"$MAP_OUTPUT"$'\n'
     emit_if_fits "$P2_CONTENT" "$P2_BUDGET"
@@ -119,7 +114,7 @@ if [ -f "$CLI" ] && [ "$BYTES_USED" -lt "$TOTAL_BUDGET" ]; then
 fi
 
 # --- P3: File overviews for modified files (lowest priority) ---
-if [ -f "$CLI" ] && [ "$BYTES_USED" -lt "$TOTAL_BUDGET" ]; then
+if command -v srcpilot &>/dev/null && [ "$BYTES_USED" -lt "$TOTAL_BUDGET" ]; then
   mod_files_json=$(jq -r '.modified_files // []' "$STATE_FILE" 2>/dev/null) || mod_files_json="[]"
   if [ -n "$mod_files_json" ] && [ "$mod_files_json" != "[]" ]; then
     mod_list=$(echo "$mod_files_json" | jq -r '.[:3][]' 2>/dev/null) || mod_list=""
@@ -127,7 +122,7 @@ if [ -f "$CLI" ] && [ "$BYTES_USED" -lt "$TOTAL_BUDGET" ]; then
       P3_CONTENT=$'\n'"=== Modified File Symbols ==="$'\n'
       while IFS= read -r mpath; do
         [ -z "$mpath" ] && continue
-        overview=$(run_with_timeout 2 node "$CLI" file-overview "$mpath" 2>/dev/null | head -10) || true
+        overview=$(run_with_timeout 2 srcpilot file-overview "$mpath" 2>/dev/null | head -10) || true
         if [ -n "$overview" ]; then
           P3_CONTENT+="$overview"$'\n'
         fi

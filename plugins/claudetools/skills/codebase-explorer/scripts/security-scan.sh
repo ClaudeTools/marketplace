@@ -96,10 +96,10 @@ done < <(grep -rnE '(redirect|location)\s*[=(]\s*(req\.|request\.|params\.|query
 
 # --- Pilot-powered checks (structural, requires codebase index) ---
 _PILOT_LIB="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}/scripts/lib/pilot-query.sh"
-if [[ -f "$_PILOT_LIB" ]] && [[ -f "${PROJECT}/.codeindex/db.sqlite" ]]; then
+if [[ -f "$_PILOT_LIB" ]] && [[ -f "${PROJECT}/.srcpilot/db.sqlite" ]]; then
   # shellcheck source=/dev/null
   source "$_PILOT_LIB"
-  export CODEBASE_PILOT_PROJECT_ROOT="$PROJECT"
+  export SRCPILOT_PROJECT_ROOT="$PROJECT"
 
   # 6. Dead security validators — exported auth/validate/sanitize functions never imported
   dead_output=$(pilot_dead_code 2>/dev/null || true)

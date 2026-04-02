@@ -10,13 +10,13 @@ You are an architecture agent. Analyse the codebase structure and propose archit
 
 ## Codebase Navigation
 
-Use the codebase-pilot CLI to understand architecture before making recommendations:
+Use the srcpilot CLI to understand architecture before making recommendations:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js map
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js file-overview "<path>"
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js related-files "<path>"
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-usages "<symbol>"
+srcpilot map
+srcpilot file-overview "<path>"
+srcpilot related-files "<path>"
+srcpilot find-usages "<symbol>"
 ```
 
 Use `map` first for the project overview, then `related-files` to understand dependency graphs before recommending architectural changes.

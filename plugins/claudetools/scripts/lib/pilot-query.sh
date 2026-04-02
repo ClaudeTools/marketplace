@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# pilot-query.sh — Shared library for codebase-pilot queries
+# pilot-query.sh — Shared library for srcpilot queries
 # Usage: source "${CLAUDE_PLUGIN_ROOT}/scripts/lib/pilot-query.sh"
 #        result=$(pilot_find_symbol "handleAuth")
 
@@ -7,14 +7,14 @@
 [[ -n "${_PILOT_QUERY_LOADED:-}" ]] && return 0
 _PILOT_QUERY_LOADED=1
 
-# Auto-detect plugin root: env var > relative from this file's location
-_PILOT_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
-_PILOT_CLI="node ${_PILOT_ROOT}/codebase-pilot/dist/cli.js"
+# Detect global srcpilot once at source time
+_SRCPILOT_AVAILABLE=0
+command -v srcpilot &>/dev/null && _SRCPILOT_AVAILABLE=1
 
 _pilot_project_root() {
   # Return project root: env var > git root > cwd
-  if [[ -n "${CODEBASE_PILOT_PROJECT_ROOT:-}" ]]; then
-    echo "$CODEBASE_PILOT_PROJECT_ROOT"
+  if [[ -n "${SRCPILOT_PROJECT_ROOT:-}" ]]; then
+    echo "$SRCPILOT_PROJECT_ROOT"
   elif git -C "${PWD}" rev-parse --show-toplevel 2>/dev/null; then
     :
   else
@@ -24,18 +24,23 @@ _pilot_project_root() {
 
 _pilot_run() {
   # Internal: run CLI command with project root set
+  [[ "$_SRCPILOT_AVAILABLE" -eq 0 ]] && return 1
   local cmd="$1"; shift
-  CODEBASE_PILOT_PROJECT_ROOT="$(_pilot_project_root)" ${_PILOT_CLI} "$cmd" "$@"
+  SRCPILOT_PROJECT_ROOT="$(_pilot_project_root)" srcpilot "$cmd" "$@"
 }
 
 pilot_ensure_index() {
   # Run index if DB doesn't exist yet
+  [[ "$_SRCPILOT_AVAILABLE" -eq 0 ]] && return 1
   local project_root
   project_root="$(_pilot_project_root)"
-  if [[ ! -f "${project_root}/.codeindex/db.sqlite" ]]; then
-    CODEBASE_PILOT_PROJECT_ROOT="$project_root" ${_PILOT_CLI} index >/dev/null 2>&1
+  if [[ ! -f "${project_root}/.srcpilot/db.sqlite" ]]; then
+    SRCPILOT_PROJECT_ROOT="$project_root" srcpilot index >/dev/null 2>&1
   fi
 }
+
+# Returns 0 if srcpilot is available, 1 otherwise
+pilot_available() { [[ "$_SRCPILOT_AVAILABLE" -eq 1 ]]; }
 
 pilot_find_symbol()    { _pilot_run find-symbol "$@"; }
 pilot_find_usages()    { _pilot_run find-usages "$@"; }

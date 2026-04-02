@@ -155,11 +155,11 @@ Safety hooks always run regardless of quiet mode.
 Tree-sitter + SQLite indexing engine. Semantic code navigation across 14 languages.
 
 ```bash
-codebase-pilot map                        # Project overview
-codebase-pilot find-symbol "handleAuth"   # Locate any function, class, or type
-codebase-pilot change-impact "handleAuth" # What breaks if this changes?
-codebase-pilot dead-code                  # Find unused exports
-codebase-pilot circular-deps              # Detect circular imports
+srcpilot map                        # Project overview
+srcpilot find-symbol "handleAuth"   # Locate any function, class, or type
+srcpilot change-impact "handleAuth" # What breaks if this changes?
+srcpilot dead-code                  # Find unused exports
+srcpilot circular-deps              # Detect circular imports
 ```
 
 <p>
@@ -214,7 +214,7 @@ claudetools/
     validators/                  26 modular validators
   skills/                        14 skill definitions
   agents/                        10 agent pipelines
-  codebase-pilot/                Tree-sitter indexing engine
+  codebase-pilot/                Tree-sitter indexing engine (uses global srcpilot CLI)
   agent-mesh/                    Multi-agent coordination
   task-system/                   MCP task persistence server
 ```

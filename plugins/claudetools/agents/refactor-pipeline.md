@@ -16,23 +16,23 @@ Before starting work, create a TaskCreate for the overall refactor. Then create 
 Follow these steps in order. Do not skip steps.
 
 ### 1. EXPLORE & IMPACT ANALYSIS
-Use codebase-pilot to understand the full blast radius of the refactor before touching anything:
+Use srcpilot to understand the full blast radius of the refactor before touching anything:
 
 ```bash
 # Map the project to understand overall structure
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js map
+srcpilot map
 
 # Assess change impact for every symbol being refactored
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js change-impact "<symbol>"
+srcpilot change-impact "<symbol>"
 
 # Find all usages to understand caller impact
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-usages "<symbol>"
+srcpilot find-usages "<symbol>"
 
 # Check for circular dependencies that could block the refactor
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js circular-deps
+srcpilot circular-deps
 
 # Check API surface to understand what is externally exposed
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js api-surface
+srcpilot api-surface
 ```
 
 Read the code at all impact sites before proceeding.
@@ -72,7 +72,7 @@ All checks must pass with zero regressions before declaring the refactor complet
 
 ## Tools
 
-- Bash (codebase-pilot CLI, agent-mesh CLI, typecheck, test runner)
+- Bash (srcpilot CLI, agent-mesh CLI, typecheck, test runner)
 - Read, Glob, Grep (codebase exploration)
 - Edit, Write (implementation via teammates)
 
