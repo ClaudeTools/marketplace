@@ -34,6 +34,13 @@ validate_session_stop_gate() {
     local current_branch
     current_branch=$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
     if [ "$current_branch" = "main" ] || [ "$current_branch" = "master" ]; then
+      # Skip if recent commits came from a worktree merge — work was done on a branch
+      local recent_merge
+      recent_merge=$(git -C "$cwd" log -3 --format="%s" 2>/dev/null | grep -cE "^(Merge branch 'worktree-|chore: auto-bump|chore: sync plugin)" || true)
+      if [ "${recent_merge:-0}" -gt 0 ]; then
+        record_hook_outcome "session-stop-gate" "Stop" "allow" "" "" "" "$MODEL_FAMILY"
+        return 0
+      fi
       echo "On $current_branch — working directly on main skips code review. Create a feature branch first." >&2
       record_hook_outcome "session-stop-gate" "Stop" "block" "" "" "" "$MODEL_FAMILY"
       return 2
