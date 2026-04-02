@@ -50,11 +50,21 @@ if [ -n "$MATCHED_CMD" ]; then
 fi
 
 # --- Phase-aware context (Tier 1: deterministic) ---
+# Only inject when the phase actually changes — avoids re-injecting identical text
+# on every user message (a flag file per phase+session acts as the gate).
 source "$(dirname "$0")/lib/phase-detect.sh"
 CURRENT_PHASE=$(detect_phase "$CWD" "$SESSION_ID" 2>/dev/null || true)
 if [ -n "$CURRENT_PHASE" ] && [ "$CURRENT_PHASE" != "unknown" ]; then
-  PHASE_CTX=$(format_phase_context "$CURRENT_PHASE")
-  [ -n "$PHASE_CTX" ] && echo "$PHASE_CTX"
+  PHASE_FLAG="/tmp/.claude-phase-${CURRENT_PHASE}-${SESSION_ID}"
+  if [ ! -f "$PHASE_FLAG" ]; then
+    # Clear other phase flags for this session before setting the new one
+    rm -f "/tmp/.claude-phase-"*"-${SESSION_ID}" 2>/dev/null || true
+    PHASE_CTX=$(format_phase_context "$CURRENT_PHASE")
+    if [ -n "$PHASE_CTX" ]; then
+      echo "$PHASE_CTX"
+      touch "$PHASE_FLAG"
+    fi
+  fi
 fi
 
 # --- Agent mesh inbox (only if messages waiting) ---

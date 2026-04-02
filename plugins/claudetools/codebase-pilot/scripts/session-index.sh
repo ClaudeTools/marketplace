@@ -118,10 +118,25 @@ if [ "$SKIP_FULL_INDEX" -eq 0 ]; then
   fi
 fi
 
+# Determine injection flags before any output is produced.
+# WorktreeCreate: no output (stdout corruption).
+# SubagentStart: skip map and memories (parent already has them; saves ~1,500 tokens).
+_inject_context=1
+_inject_map=1
+_inject_memories=1
+if [[ "$HOOK_EVENT" == "WorktreeCreate" ]]; then
+  _inject_context=0
+  _inject_map=0
+  _inject_memories=0
+elif [[ "$HOOK_EVENT" == "SubagentStart" ]]; then
+  _inject_map=0       # subagent has its task — full map is noise
+  _inject_memories=0  # parent session already has memories
+fi
+
 # Output the project map to stdout (injected as context for the agent)
 # Only attempt map if indexing succeeded
 MAP_OUTPUT=""
-if [[ "$_idx_ok" -eq 1 ]]; then
+if [[ "$_idx_ok" -eq 1 ]] && [[ "$_inject_map" -eq 1 ]]; then
   MAP_ERR=""
   MAP_OUTPUT=$(srcpilot map "$PROJECT_ROOT" 2>/tmp/srcpilot-map-err-$$.txt) || true
   MAP_ERR=$(head -c 200 /tmp/srcpilot-map-err-$$.txt 2>/dev/null || true)
@@ -132,15 +147,7 @@ if [[ "$_idx_ok" -eq 1 ]]; then
   fi
 fi
 
-# Only inject context to stdout on SessionStart/SubagentStart — NOT WorktreeCreate.
-# WorktreeCreate stdout gets concatenated with the worktree path by Claude Code,
-# corrupting the chdir target. All context injection below is gated on this flag.
-_inject_context=1
-if [[ "$HOOK_EVENT" == "WorktreeCreate" ]]; then
-  _inject_context=0
-fi
-
-if [[ "$_inject_context" -eq 1 ]] && [[ -n "$MAP_OUTPUT" ]]; then
+if [[ "$_inject_context" -eq 1 ]] && [[ "$_inject_map" -eq 1 ]] && [[ -n "$MAP_OUTPUT" ]]; then
   echo "--- Codebase Index (auto-generated) ---"
   echo "$MAP_OUTPUT"
   echo "--- End Codebase Index ---"
@@ -217,63 +224,62 @@ PLUGIN_ROOT_DIR="$PLUGIN_ROOT"
 SUBAGENT_CONTEXT="$PLUGIN_ROOT_DIR/assets/subagent-context.md"
 METRICS_DB_PATH="$PLUGIN_ROOT_DIR/data/metrics.db"
 
-# Inject static capabilities doc
+# Inject static capabilities doc and optionally memories
 if [[ -f "$SUBAGENT_CONTEXT" ]]; then
   echo ""
   echo "--- Plugin Context (auto-injected) ---"
   cat "$SUBAGENT_CONTEXT"
-fi
 
-# Inject relevant memories for this agent's task
-if command -v sqlite3 &>/dev/null && [[ -f "$METRICS_DB_PATH" ]]; then
-  MEM_COUNT=$(sqlite3 "$METRICS_DB_PATH" "SELECT COUNT(*) FROM memories;" 2>/dev/null || echo "0")
-  if [[ "$MEM_COUNT" -gt 0 ]]; then
-    # Always inject top feedback-type memories (behavioral rules)
-    FEEDBACK_MEMS=$(sqlite3 "$METRICS_DB_PATH" \
-      "SELECT type, description FROM memories WHERE type='feedback' AND confidence > 0.3
-       ORDER BY confidence DESC, access_count DESC LIMIT 3;" 2>/dev/null || true)
+  # Inject relevant memories for this agent's task (skipped on SubagentStart — parent has them)
+  if [[ "$_inject_memories" -eq 1 ]] && command -v sqlite3 &>/dev/null && [[ -f "$METRICS_DB_PATH" ]]; then
+    MEM_COUNT=$(sqlite3 "$METRICS_DB_PATH" "SELECT COUNT(*) FROM memories;" 2>/dev/null || echo "0")
+    if [[ "$MEM_COUNT" -gt 0 ]]; then
+      # Always inject top feedback-type memories (behavioral rules)
+      FEEDBACK_MEMS=$(sqlite3 "$METRICS_DB_PATH" \
+        "SELECT type, description FROM memories WHERE type='feedback' AND confidence > 0.3
+         ORDER BY confidence DESC, access_count DESC LIMIT 3;" 2>/dev/null || true)
 
-    # Also inject task-relevant memories via FTS5
-    TASK_TEXT=$(echo "${INPUT:-}" | jq -r '(.tool_input.prompt // .tool_input.description // .prompt // "") | .[0:2000]' 2>/dev/null || true)
-    FTS_MEMS=""
-    if [[ -n "$TASK_TEXT" && ${#TASK_TEXT} -gt 10 ]]; then
-      FTS_TERMS=$(echo "$TASK_TEXT" | \
-        grep -oE '\b[A-Z][a-zA-Z0-9]{2,}\b|\b[a-z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*\b|\b[a-z_]{4,}\b' | \
-        tr '[:upper:]' '[:lower:]' | \
-        grep -vE '^(this|that|with|from|have|been|will|would|could|should|there|their|about|which|when|what|make|just|more|also|than|them|then|these|those|each|into|some|like|over|such|only|after|before|other|your|does|were|being|here|very|most|much|need|want|help|please|using|file|code)$' | \
-        sort -u | head -6)
-      if [[ -n "$FTS_TERMS" ]]; then
-        FTS_QUERY=$(echo "$FTS_TERMS" | tr '\n' ' ' | sed 's/ *$//' | sed 's/ / OR /g')
-        # Composite ranking: FTS relevance + confidence + usage frequency
-        FTS_MEMS=$(sqlite3 "$METRICS_DB_PATH" \
-          "SELECT m.type, m.description FROM memories m
-           INNER JOIN (
-             SELECT rowid, rank FROM memories_fts WHERE memories_fts MATCH '$FTS_QUERY'
-           ) fts ON m.rowid = fts.rowid
-           WHERE m.confidence > 0.3 AND m.type != 'feedback'
-           ORDER BY (fts.rank * -1.0 + m.confidence * 5.0 + MIN(m.access_count, 10) * 0.5) DESC
-           LIMIT 3;" 2>/dev/null || true)
+      # Also inject task-relevant memories via FTS5
+      TASK_TEXT=$(echo "${INPUT:-}" | jq -r '(.tool_input.prompt // .tool_input.description // .prompt // "") | .[0:2000]' 2>/dev/null || true)
+      FTS_MEMS=""
+      if [[ -n "$TASK_TEXT" && ${#TASK_TEXT} -gt 10 ]]; then
+        FTS_TERMS=$(echo "$TASK_TEXT" | \
+          grep -oE '\b[A-Z][a-zA-Z0-9]{2,}\b|\b[a-z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*\b|\b[a-z_]{4,}\b' | \
+          tr '[:upper:]' '[:lower:]' | \
+          grep -vE '^(this|that|with|from|have|been|will|would|could|should|there|their|about|which|when|what|make|just|more|also|than|them|then|these|those|each|into|some|like|over|such|only|after|before|other|your|does|were|being|here|very|most|much|need|want|help|please|using|file|code)$' | \
+          sort -u | head -6)
+        if [[ -n "$FTS_TERMS" ]]; then
+          FTS_QUERY=$(echo "$FTS_TERMS" | tr '\n' ' ' | sed 's/ *$//' | sed 's/ / OR /g')
+          # Composite ranking: FTS relevance + confidence + usage frequency
+          FTS_MEMS=$(sqlite3 "$METRICS_DB_PATH" \
+            "SELECT m.type, m.description FROM memories m
+             INNER JOIN (
+               SELECT rowid, rank FROM memories_fts WHERE memories_fts MATCH '$FTS_QUERY'
+             ) fts ON m.rowid = fts.rowid
+             WHERE m.confidence > 0.3 AND m.type != 'feedback'
+             ORDER BY (fts.rank * -1.0 + m.confidence * 5.0 + MIN(m.access_count, 10) * 0.5) DESC
+             LIMIT 3;" 2>/dev/null || true)
+        fi
       fi
-    fi
 
-    if [[ -n "$FEEDBACK_MEMS" || -n "$FTS_MEMS" ]]; then
-      echo ""
-      if [[ -n "$FEEDBACK_MEMS" ]]; then
-        echo "$FEEDBACK_MEMS" | while IFS='|' read -r mtype mdesc; do
-          [[ -z "$mdesc" ]] && continue
-          echo "[memory:${mtype}] ${mdesc}"
-        done
-      fi
-      if [[ -n "$FTS_MEMS" ]]; then
-        echo "$FTS_MEMS" | while IFS='|' read -r mtype mdesc; do
-          [[ -z "$mdesc" ]] && continue
-          echo "[memory:${mtype}] ${mdesc}"
-        done
+      if [[ -n "$FEEDBACK_MEMS" || -n "$FTS_MEMS" ]]; then
+        echo ""
+        if [[ -n "$FEEDBACK_MEMS" ]]; then
+          echo "$FEEDBACK_MEMS" | while IFS='|' read -r mtype mdesc; do
+            [[ -z "$mdesc" ]] && continue
+            echo "[memory:${mtype}] ${mdesc}"
+          done
+        fi
+        if [[ -n "$FTS_MEMS" ]]; then
+          echo "$FTS_MEMS" | while IFS='|' read -r mtype mdesc; do
+            [[ -z "$mdesc" ]] && continue
+            echo "[memory:${mtype}] ${mdesc}"
+          done
+        fi
       fi
     fi
   fi
-  echo "--- End Plugin Context ---"
-elif [[ -f "$SUBAGENT_CONTEXT" ]]; then
+
   echo "--- End Plugin Context ---"
 fi
 
