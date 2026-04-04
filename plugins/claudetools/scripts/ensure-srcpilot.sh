@@ -6,29 +6,21 @@
 SETUP_MARKER="${CLAUDE_PLUGIN_ROOT}/.srcpilot-setup-version"
 LOCAL_BIN="${CLAUDE_PLUGIN_ROOT}/node_modules/.bin/srcpilot"
 
-# Resolve which binary to use
-if command -v srcpilot &>/dev/null; then
-  SRCPILOT_BIN="srcpilot"
-elif [[ -f "$LOCAL_BIN" ]]; then
-  SRCPILOT_BIN="$LOCAL_BIN"
-else
-  SRCPILOT_BIN=""
-fi
-
-# Install locally if not available anywhere
-if [[ -z "$SRCPILOT_BIN" ]]; then
-  if command -v npm &>/dev/null; then
+# Install locally if srcpilot is not globally available
+if ! command -v srcpilot &>/dev/null; then
+  if [[ ! -f "$LOCAL_BIN" ]] && command -v npm &>/dev/null; then
     npm install --prefix "$CLAUDE_PLUGIN_ROOT" --no-audit --no-fund --loglevel=error 2>/dev/null || true
-    [[ -f "$LOCAL_BIN" ]] && SRCPILOT_BIN="$LOCAL_BIN"
   fi
 fi
 
-# Run setup if srcpilot is available and version has changed (or never run)
-if [[ -n "$SRCPILOT_BIN" ]]; then
-  CURRENT_VERSION=$("$SRCPILOT_BIN" --version 2>/dev/null || echo "unknown")
+# Run global setup only when srcpilot is in PATH (global install).
+# Skipped for plugin-local installs — those binaries are not in PATH so the
+# installed skill would reference commands the user can't run directly.
+if command -v srcpilot &>/dev/null; then
+  CURRENT_VERSION=$(srcpilot --version 2>/dev/null || echo "unknown")
   STORED_VERSION=$(cat "$SETUP_MARKER" 2>/dev/null || echo "")
   if [[ "$CURRENT_VERSION" != "$STORED_VERSION" ]]; then
-    "$SRCPILOT_BIN" setup --agent claude-code -g -y 2>/dev/null || true
+    srcpilot setup --agent claude-code -g -y 2>/dev/null || true
     echo "$CURRENT_VERSION" > "$SETUP_MARKER"
   fi
 fi
