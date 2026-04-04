@@ -6,6 +6,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/lib/hook-input.sh"
 source "$SCRIPT_DIR/lib/worktree.sh"
+# shellcheck source=lib/resolve-srcpilot.sh
+source "$SCRIPT_DIR/lib/resolve-srcpilot.sh"
 hook_init
 
 # --- Extract tool inputs ---
@@ -73,12 +75,12 @@ fi
 # Require srcpilot binary and indexed DB
 PROJECT_ROOT=$(get_repo_root)
 DB_PATH="$PROJECT_ROOT/.srcpilot/db.sqlite"
-if ! command -v srcpilot &>/dev/null || [ ! -f "$DB_PATH" ]; then
+if ! command -v "$SRCPILOT" &>/dev/null || [ ! -f "$DB_PATH" ]; then
   exit 0
 fi
 
 # Run srcpilot with a hard timeout guard
-PILOT_RESULT=$(timeout 4 srcpilot "$PILOT_CMD" "$PATTERN" 2>/dev/null | head -40 | cut -c1-200 || true)
+PILOT_RESULT=$(timeout 4 "$SRCPILOT" "$PILOT_CMD" "$PATTERN" 2>/dev/null | head -40 | cut -c1-200 || true)
 
 # Fallback: if pilot returns < 2 non-empty lines, allow grep
 NON_EMPTY=$(echo "$PILOT_RESULT" | grep -c '\S' || true)

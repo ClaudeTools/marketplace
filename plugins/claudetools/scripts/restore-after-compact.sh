@@ -7,6 +7,8 @@
 set -euo pipefail
 
 source "$(dirname "$0")/hook-log.sh"
+# shellcheck source=lib/resolve-srcpilot.sh
+source "$(dirname "$0")/lib/resolve-srcpilot.sh"
 
 # Read hook input from stdin
 INPUT=$(cat)
@@ -105,8 +107,8 @@ run_with_timeout() {
 }
 
 # --- P2: Abbreviated project map ---
-if command -v srcpilot &>/dev/null && [ "$BYTES_USED" -lt "$TOTAL_BUDGET" ]; then
-  MAP_OUTPUT=$(run_with_timeout 3 srcpilot map 2>/dev/null | head -20) || true
+if command -v "$SRCPILOT" &>/dev/null && [ "$BYTES_USED" -lt "$TOTAL_BUDGET" ]; then
+  MAP_OUTPUT=$(run_with_timeout 3 "$SRCPILOT" map 2>/dev/null | head -20) || true
   if [ -n "$MAP_OUTPUT" ]; then
     P2_CONTENT=$'\n'"=== Codebase Map (abbreviated) ==="$'\n'"$MAP_OUTPUT"$'\n'
     emit_if_fits "$P2_CONTENT" "$P2_BUDGET"
@@ -114,7 +116,7 @@ if command -v srcpilot &>/dev/null && [ "$BYTES_USED" -lt "$TOTAL_BUDGET" ]; the
 fi
 
 # --- P3: File overviews for modified files (lowest priority) ---
-if command -v srcpilot &>/dev/null && [ "$BYTES_USED" -lt "$TOTAL_BUDGET" ]; then
+if command -v "$SRCPILOT" &>/dev/null && [ "$BYTES_USED" -lt "$TOTAL_BUDGET" ]; then
   mod_files_json=$(jq -r '.modified_files // []' "$STATE_FILE" 2>/dev/null) || mod_files_json="[]"
   if [ -n "$mod_files_json" ] && [ "$mod_files_json" != "[]" ]; then
     mod_list=$(echo "$mod_files_json" | jq -r '.[:3][]' 2>/dev/null) || mod_list=""
@@ -122,7 +124,7 @@ if command -v srcpilot &>/dev/null && [ "$BYTES_USED" -lt "$TOTAL_BUDGET" ]; the
       P3_CONTENT=$'\n'"=== Modified File Symbols ==="$'\n'
       while IFS= read -r mpath; do
         [ -z "$mpath" ] && continue
-        overview=$(run_with_timeout 2 srcpilot file-overview "$mpath" 2>/dev/null | head -10) || true
+        overview=$(run_with_timeout 2 "$SRCPILOT" file-overview "$mpath" 2>/dev/null | head -10) || true
         if [ -n "$overview" ]; then
           P3_CONTENT+="$overview"$'\n'
         fi

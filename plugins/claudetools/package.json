@@ -1,0 +1,7 @@
+{
+  "name": "claudetools-plugin",
+  "private": true,
+  "dependencies": {
+    "srcpilot": "latest"
+  }
+}

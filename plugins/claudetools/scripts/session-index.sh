@@ -24,13 +24,15 @@ fi
 # Determine project root from CWD (Claude Code sets this to the project)
 PROJECT_ROOT="${SRCPILOT_PROJECT_ROOT:-$(pwd)}"
 
-# Require globally installed srcpilot
-if ! command -v srcpilot &>/dev/null; then
-  hook_log "srcpilot: not found in PATH — install with: npm install -g srcpilot" 2>/dev/null || true
+# Require srcpilot (global or plugin-local)
+if ! command -v srcpilot &>/dev/null && [[ ! -f "${CLAUDE_PLUGIN_ROOT}/node_modules/.bin/srcpilot" ]]; then
+  hook_log "srcpilot: not found — install with: npm install -g srcpilot" 2>/dev/null || true
   emit_event "srcpilot" "not_installed" "warn" 2>/dev/null || true
   echo "[srcpilot] not installed — run: npm install -g srcpilot"
   exit 0
 fi
+# shellcheck source=lib/resolve-srcpilot.sh
+source "${BASH_SOURCE[0]%/*}/lib/resolve-srcpilot.sh"
 
 # Skip if no source files exist in project (now includes .py)
 # Also skip if project is too large (>10000 source files)
@@ -94,7 +96,7 @@ if [ -f "$INDEX_DB" ]; then
     if [ -n "$CHANGED_SINCE" ]; then
       hook_log "srcpilot: incremental reindex (${INDEX_AGE}s old, $(echo "$CHANGED_SINCE" | wc -l) files changed)" 2>/dev/null || true
       echo "$CHANGED_SINCE" | while IFS= read -r f; do
-        [ -f "$PROJECT_ROOT/$f" ] && srcpilot index-file "$PROJECT_ROOT/$f" 2>/dev/null || true
+        [ -f "$PROJECT_ROOT/$f" ] && "$SRCPILOT" index-file "$PROJECT_ROOT/$f" 2>/dev/null || true
       done
     else
       hook_log "srcpilot: index fresh and no changes — skipping" 2>/dev/null || true
@@ -107,7 +109,7 @@ fi
 _idx_start=${EPOCHREALTIME:-$(date +%s.%N 2>/dev/null || echo 0)} 2>/dev/null || true
 _idx_ok=1
 if [ "$SKIP_FULL_INDEX" -eq 0 ]; then
-  IDX_OUTPUT=$(srcpilot index "$PROJECT_ROOT" 2>&1) || _idx_ok=0
+  IDX_OUTPUT=$("$SRCPILOT" index "$PROJECT_ROOT" 2>&1) || _idx_ok=0
   if [[ "$_idx_ok" -eq 0 ]]; then
     IDX_ERR_SHORT="${IDX_OUTPUT:0:200}"
     hook_log "srcpilot: indexing FAILED for $PROJECT_ROOT: $IDX_ERR_SHORT" 2>/dev/null || true
@@ -139,7 +141,7 @@ fi
 MAP_OUTPUT=""
 if [[ "$_idx_ok" -eq 1 ]] && [[ "$_inject_map" -eq 1 ]]; then
   MAP_ERR=""
-  MAP_OUTPUT=$(srcpilot map "$PROJECT_ROOT" 2>/tmp/srcpilot-map-err-$$.txt) || true
+  MAP_OUTPUT=$("$SRCPILOT" map "$PROJECT_ROOT" 2>/tmp/srcpilot-map-err-$$.txt) || true
   MAP_ERR=$(head -c 200 /tmp/srcpilot-map-err-$$.txt 2>/dev/null || true)
   rm -f /tmp/srcpilot-map-err-$$.txt 2>/dev/null || true
   if [[ -z "$MAP_OUTPUT" ]]; then
