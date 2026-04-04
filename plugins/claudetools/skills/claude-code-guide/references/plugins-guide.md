@@ -59,8 +59,6 @@ plugin/                              # Source (development)
 ├── task-system/                     # MCP server
 │   ├── server.js
 │   └── start.sh
-├── codebase-pilot/                  # Bundled tooling
-├── agent-mesh/                      # Multi-agent coordination
 └── README.md
 
 plugins/claudetools/                 # Published artifact (synced by CI)

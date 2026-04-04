@@ -22,7 +22,7 @@
   <a href="#-skills">Skills</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
   <a href="#-hooks">Hooks</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
   <a href="#-agents">Agents</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
-  <a href="#-codebase-pilot">Codebase Pilot</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
+  <a href="#-srcpilot">srcpilot</a>&nbsp;&nbsp;&bull;&nbsp;&nbsp;
   <a href="#-configuration">Config</a>
 </p>
 
@@ -214,8 +214,6 @@ claudetools/
     validators/                  26 modular validators
   skills/                        14 skill definitions
   agents/                        10 agent pipelines
-  codebase-pilot/                Tree-sitter indexing engine (uses global srcpilot CLI)
-  agent-mesh/                    Multi-agent coordination
   task-system/                   MCP task persistence server
 ```
 

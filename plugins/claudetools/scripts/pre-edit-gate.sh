@@ -1,5 +1,5 @@
 #!/bin/bash
-# PreToolUse:Edit|Write dispatcher — runs blind-edit, task-scope, research-backing, bulk-edit, prefer-edit, mesh-lock validators
+# PreToolUse:Edit|Write dispatcher — runs blind-edit, task-scope, research-backing, bulk-edit, prefer-edit validators
 set -euo pipefail
 
 # Quiet mode: skip non-safety hooks
@@ -18,7 +18,6 @@ source "$SCRIPT_DIR/validators/task-scope.sh"
 source "$SCRIPT_DIR/validators/research-backing.sh"
 source "$SCRIPT_DIR/validators/bulk-edit.sh"
 source "$SCRIPT_DIR/validators/prefer-edit-over-write.sh"
-source "$SCRIPT_DIR/validators/mesh-lock.sh"
 
 # Tier 1 fast-path: skip edit validators for non-code files
 FILE_PATH=$(hook_get_field '.tool_input.file_path // .tool_input.path // empty' 2>/dev/null || true)
@@ -70,7 +69,6 @@ run_pretool_validator "enforce-task-scope"       validate_task_scope
 run_pretool_validator "research-backing-gate"    validate_research_backing
 run_pretool_validator "detect-bulk-edit"         validate_bulk_edit
 run_pretool_validator "prefer-edit-over-write"   validate_prefer_edit_over_write
-run_pretool_validator "mesh-lock-check"         validate_mesh_lock
 
 record_hook_outcome "pre-edit-gate" "PreToolUse" "allow" "" "" "" "$MODEL_FAMILY"
 exit 0

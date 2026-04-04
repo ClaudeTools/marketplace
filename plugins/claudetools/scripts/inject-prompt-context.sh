@@ -67,14 +67,4 @@ if [ -n "$CURRENT_PHASE" ] && [ "$CURRENT_PHASE" != "unknown" ]; then
   fi
 fi
 
-# --- Agent mesh inbox (only if messages waiting) ---
-MESH_CLI="$(dirname "$(dirname "$0")")/agent-mesh/cli.js"
-if [[ -f "$MESH_CLI" ]]; then
-  MESSAGES=$(node "$MESH_CLI" inbox --id "$SESSION_ID" --ack 2>/dev/null) || true
-  if [[ -n "$MESSAGES" ]]; then
-    echo "[mesh] $MESSAGES"
-  fi
-  { node "$MESH_CLI" heartbeat --id "$SESSION_ID" 2>/dev/null || true; } &
-fi
-
 exit 0

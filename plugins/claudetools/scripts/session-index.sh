@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# SessionStart / SubagentStart hook: index the project and output a project map
+# SubagentStart / ConfigChange / WorktreeCreate hook: index the project and output a project map
+# Also called indirectly on SessionStart via session-start-dispatcher.sh.
 # This script runs when a session or subagent starts, building/updating the
 # codebase index and injecting a compact project map into the agent's context.
 set -euo pipefail
@@ -285,30 +286,5 @@ fi
 
 echo ""
 echo "Use srcpilot tools: find_symbol, find_usages, file_overview, related_files, navigate for code navigation."
-
-# --- Agent mesh registration ---
-MESH_CLI="$PLUGIN_ROOT/agent-mesh/cli.js"
-if [[ -f "$MESH_CLI" ]]; then
-  AGENT_NAME="${AGENT_MESH_NAME:-agent-${SESSION_ID}}"
-  BRANCH=$(git -C "$PROJECT_ROOT" branch --show-current 2>/dev/null || echo "unknown")
-  node "$MESH_CLI" register \
-    --id "$SESSION_ID" \
-    --name "$AGENT_NAME" \
-    --worktree "$PROJECT_ROOT" \
-    --branch "$BRANCH" \
-    --pid "$PPID" 2>/dev/null || true
-
-  # NOTE: Deregistration is handled by session-end-dispatcher.sh (SessionEnd hook).
-  # Do NOT add an EXIT/INT/TERM trap here — this script runs as a short-lived hook
-  # process, so traps fire immediately when the script exits, not when the Claude
-  # session ends. That was the original bug that broke the entire mesh.
-
-  OTHERS=$(node "$MESH_CLI" list --exclude "$SESSION_ID" --brief 2>/dev/null || true)
-  if [[ -n "$OTHERS" ]]; then
-    echo ""
-    echo "[agent-mesh] Other agents active in this repo:"
-    echo "$OTHERS"
-  fi
-fi
 
 exit 0

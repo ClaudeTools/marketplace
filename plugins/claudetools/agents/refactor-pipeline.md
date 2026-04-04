@@ -48,11 +48,7 @@ Use the prompt-improver skill to decompose the refactor into safe, independently
 Spawn implementing-features teammates — one per decomposed step where steps are independent:
 - Provide each teammate with: the step description, affected files, and the overall refactor goal
 - For sequential steps, wait for the previous step's teammate to complete before spawning the next
-- Share key decisions via agent-mesh so all teammates stay aligned:
-
-```bash
-node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js context --set "<refactor-key>" "<decision>"
-```
+- Share key decisions via task comments so all teammates stay aligned
 
 ### 4. VERIFY
 Run typecheck and targeted tests after all steps complete:
@@ -72,7 +68,7 @@ All checks must pass with zero regressions before declaring the refactor complet
 
 ## Tools
 
-- Bash (srcpilot CLI, agent-mesh CLI, typecheck, test runner)
+- Bash (srcpilot CLI, typecheck, test runner)
 - Read, Glob, Grep (codebase exploration)
 - Edit, Write (implementation via teammates)
 

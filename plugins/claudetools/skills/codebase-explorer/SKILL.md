@@ -12,9 +12,7 @@ metadata:
 
 # Exploring Codebase
 
-Structured codebase navigation using the codebase-pilot CLI. This skill wraps the CLI into workflow modes that chain commands for deeper understanding.
-
-The CLI path: `node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js`
+Structured codebase navigation using the srcpilot CLI (globally installed: `npm install -g srcpilot`). This skill wraps the CLI into workflow modes that chain commands for deeper understanding.
 
 For the full command reference table, see the `codebase-navigation` rule file. This skill focuses on **when and how** to chain commands, not repeating the reference.
 
@@ -24,19 +22,26 @@ Before running commands, determine the right mode based on the user's intent:
 
 | User Intent | Mode | Commands Used |
 |-------------|------|---------------|
-| "How is this project structured?" / "Give me an overview" | **map** | `map` |
-| "Where is X defined?" / "Find the function Y" | **find** | `find-symbol`, then `file-overview` on the result |
-| "How does this file/module work?" / "What does X depend on?" | **explore** | `file-overview` + `related-files` |
-| "What uses X?" / "Trace the dependency chain for Y" | **trace** | `find-usages` + `related-files` on each result |
+| "How is this project structured?" / "Give me an overview" | **map** | `srcpilot map` |
+| "Where is X defined?" / "Find the function Y" | **find** | `srcpilot find`, then `srcpilot overview` on the result |
+| "How does this file/module work?" / "What does X depend on?" | **explore** | `srcpilot overview` + `srcpilot related` |
+| "What uses X?" / "Trace the dependency chain for Y" | **trace** | `srcpilot usages` + `srcpilot related` on each result |
 | "Trace a field through the codebase" / "Where does amount_due get transformed?" | **trace-field** | `trace-field.sh` script |
 | "Which handler serves this route?" / "Trace GET /api/v1/dashboard" | **find-route** | `find-route.sh` script |
 | "Find all queries on the transactions table" | **find-queries** | `find-queries.sh` script |
 | "Compare schema.sql vs types.ts for mismatches" | **diff-schema** | `diff-schema.sh` script |
-| Free-form question about the codebase | **navigate** | `navigate` (query-driven search) |
+| Free-form question about the codebase | **navigate** | `srcpilot navigate` (query-driven search) |
 | "Are there any security issues?" / "Scan for vulnerabilities" | **security-scan** | `security-scan.sh` script |
-| "Find unused exports" / "What code is dead?" | **dead-code** | `dead-code` CLI command |
-| "What breaks if I change X?" / "Impact of modifying Y" | **change-impact** | `change-impact` CLI command |
+| "Find unused exports" / "What code is dead?" | **dead-code** | `srcpilot dead` CLI command |
+| "What breaks if I change X?" / "Impact of modifying Y" | **change-impact** | `srcpilot impact` CLI command |
 | "Which functions are too long?" / "Show complex code" | **complexity-report** | `complexity-report.sh` script |
+| "Why is this file important?" / "What owns this logic?" | **why** | `srcpilot why <query>` |
+| "What should I open next?" / "Where is this pattern used?" | **next** | `srcpilot next <query>` |
+| "Are there duplicate implementations?" / "Name conflicts?" | **ambiguities** | `srcpilot ambiguities` |
+| "What are the most-imported files?" / "Context budget" | **budget** | `srcpilot budget` |
+| "What does this module export?" / "API surface" | **exports** | `srcpilot exports` |
+| "Are there circular imports?" | **cycles** | `srcpilot cycles` |
+| "Show all implementations of X" | **implementations** | `srcpilot implementations <symbol>` |
 
 ### Ambiguous Intent Resolution
 
@@ -54,31 +59,31 @@ When the user's query maps to 2+ modes (e.g. "understand the auth system" could 
 Get a high-level project overview — languages, structure, entry points, key exports.
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js map
+srcpilot map
 ```
 
 Use this as the first step when entering an unfamiliar codebase. Read the output to understand the project's shape before diving into specifics.
 
-**When to chain further:** After `map`, use `file-overview` on key entry points or files that look relevant to the user's question.
+**When to chain further:** After `map`, use `srcpilot overview` on key entry points or files that look relevant to the user's question.
 
 ## Mode: find
 
 Locate a symbol (function, class, type, variable) by name.
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-symbol "$ARGUMENTS"
+srcpilot find "$ARGUMENTS"
 ```
 
 Optionally filter by kind:
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-symbol "$ARGUMENTS" --kind function
+srcpilot find "$ARGUMENTS" --kind function
 ```
 
 Kinds: `function`, `class`, `interface`, `type`, `variable`, `enum`, `method`, `property`.
 
 **When to chain further:**
-1. After finding the symbol, run `file-overview` on the file to see surrounding context
-2. Run `related-files` to understand what imports or depends on that file
+1. After finding the symbol, run `srcpilot overview` on the file to see surrounding context
+2. Run `srcpilot related` to understand what imports or depends on that file
 3. Read the actual file at the symbol's line number for implementation details
 
 ## Mode: explore
@@ -87,13 +92,13 @@ Understand a specific file or module — what it exports, what it imports, and w
 
 ```bash
 # Step 1: See all symbols defined in the file
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js file-overview "$ARGUMENTS"
+srcpilot overview "$ARGUMENTS"
 
 # Step 2: Find files connected via imports
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js related-files "$ARGUMENTS"
+srcpilot related "$ARGUMENTS"
 ```
 
-**When to chain further:** Read the most-connected related files to understand the broader subsystem. Use `find-usages` on key exported symbols to see where they're consumed.
+**When to chain further:** Read the most-connected related files to understand the broader subsystem. Use `srcpilot usages` on key exported symbols to see where they're consumed.
 
 ## Mode: trace
 
@@ -101,13 +106,13 @@ Trace the usage chain of a symbol across the codebase — who calls it, who impo
 
 ```bash
 # Step 1: Find all files that import the symbol
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-usages "$ARGUMENTS"
+srcpilot usages "$ARGUMENTS"
 
 # Step 2: For each importing file, check what it does with it
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js file-overview "<importing-file>"
+srcpilot overview "<importing-file>"
 
 # Step 3: Follow the chain — check related files of heavy consumers
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js related-files "<importing-file>"
+srcpilot related "<importing-file>"
 ```
 
 **When to chain further:** If the symbol is re-exported or wrapped, trace the wrapper's usages too. Stop when you reach the user-facing entry point (route handler, CLI command, UI component).
@@ -117,7 +122,7 @@ node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js related-files "<importing-
 Free-form query-driven search when you're not sure what you're looking for. Searches across symbol names, file paths, and import graphs.
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js navigate "$ARGUMENTS"
+srcpilot navigate "$ARGUMENTS"
 ```
 
 **When to chain further:** Use the results to identify relevant files, then switch to `explore` or `find` mode for deeper investigation.
@@ -127,19 +132,19 @@ node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js navigate "$ARGUMENTS"
 Common multi-step navigation sequences:
 
 **Architecture understanding:**
-1. `map` → identify key directories
-2. `file-overview` on entry points → see exports
-3. `related-files` on core modules → see dependency graph
+1. `srcpilot map` → identify key directories
+2. `srcpilot overview` on entry points → see exports
+3. `srcpilot related` on core modules → see dependency graph
 
 **Bug investigation:**
-1. `find-symbol` on the error source → locate the function
-2. `file-overview` on that file → see surrounding context
-3. `find-usages` on the function → see all call sites
+1. `srcpilot find` on the error source → locate the function
+2. `srcpilot overview` on that file → see surrounding context
+3. `srcpilot usages` on the function → see all call sites
 4. Read each call site to find the bug trigger
 
 **Dependency impact analysis:**
-1. `find-usages` on the symbol being changed → see all consumers
-2. `related-files` on each consumer → see secondary effects
+1. `srcpilot usages` on the symbol being changed → see all consumers
+2. `srcpilot related` on each consumer → see secondary effects
 3. Report the full blast radius before making changes
 
 ## Mode: trace-field
@@ -168,7 +173,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/find-route.sh "/api/
 
 Shows the full chain:
 - Route registration (Express/Hono/framework router)
-- Handler function (located via codebase-pilot find-symbol)
+- Handler function (located via `srcpilot find`)
 - Middleware in the chain
 - Database calls in handler files
 
@@ -219,7 +224,7 @@ Output grouped by severity: CRITICAL, HIGH, MEDIUM, LOW.
 Find exported symbols that are never imported anywhere in the project.
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js dead-code
+srcpilot dead
 ```
 
 **When to use:** "Find unused exports", "What code can I safely delete?", "Show dead code"
@@ -229,7 +234,7 @@ node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js dead-code
 Show what files break if a symbol changes — separates direct importers from test files.
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js change-impact "handleAuth"
+srcpilot impact "handleAuth"
 ```
 
 **When to use:** "What breaks if I change X?", "Impact analysis for refactoring Y", "Show blast radius"
@@ -242,15 +247,86 @@ Find functions over a line threshold, flagging deeply nested code.
 bash ${CLAUDE_PLUGIN_ROOT}/skills/codebase-explorer/scripts/complexity-report.sh --threshold 30
 ```
 
-Default threshold is 50 lines. Uses the codebase-pilot index to find functions with line ranges, then checks nesting depth in source.
+Default threshold is 50 lines. Uses the srcpilot index to find functions with line ranges, then checks nesting depth in source.
 
 **When to use:** "Which functions are too long?", "Show complex code", "Find refactoring candidates"
+
+## Mode: why
+
+Rank the most likely root nodes and owners for a concept.
+
+```bash
+srcpilot why "<query>"
+```
+
+**When to use:** "Why does auth fail here?", "What owns the payment logic?", "Root cause of this error pattern"
+
+## Mode: next
+
+Rank what file to open next based on a query — combines symbol matching, import frequency, and structural centrality.
+
+```bash
+srcpilot next "<query>"
+```
+
+**When to use:** "What should I read after this file?", "Where is this pattern most used?"
+
+## Mode: ambiguities
+
+Find symbols with duplicate names and symbols split across multiple owners.
+
+```bash
+srcpilot ambiguities
+srcpilot ambiguities "<query>"
+```
+
+**When to use:** "Are there naming conflicts?", "What needs disambiguation before refactoring?"
+
+## Mode: budget
+
+Rank files by import frequency — the most-imported files are the ones that matter most for context decisions.
+
+```bash
+srcpilot budget
+```
+
+**When to use:** "What are the core files I should read first?", "Context budget for a large task"
+
+## Mode: exports
+
+List all exported symbols — the public API surface.
+
+```bash
+srcpilot exports
+```
+
+**When to use:** "What does this module expose?", "Show me the public API"
+
+## Mode: cycles
+
+Find circular import chains.
+
+```bash
+srcpilot cycles
+```
+
+**When to use:** "Are there circular dependencies?", "What will break if I split this module?"
+
+## Mode: implementations
+
+Show all competing implementations of a symbol.
+
+```bash
+srcpilot implementations "<symbol>"
+```
+
+**When to use:** "Are there multiple implementations of handleAuth?", "Show all versions of this function"
 
 ## Context Awareness
 
 Before running commands:
 - Check if the project has already been indexed this session (the `session-index.sh` hook auto-indexes at session start)
-- If files were recently edited, run `node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js index-file "<path>"` to incrementally re-index changed files
+- If files were recently edited, run `srcpilot reindex "<path>"` to incrementally re-index changed files
 - Skip re-reading files already loaded in context — check the conversation for prior file reads before using Read
 
 ## Reindex
@@ -258,7 +334,7 @@ Before running commands:
 If the index seems stale (symbols not found that should exist, or recently added files missing):
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js index
+srcpilot index
 ```
 
-This rebuilds the full index. Use `index-file <path>` for incremental updates after single-file edits.
+This rebuilds the full index. Use `srcpilot reindex "<path>"` for incremental updates after single-file edits.

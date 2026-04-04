@@ -40,8 +40,8 @@ validate_session_stop_gate() {
       dirty=$(git -C "$cwd" status --porcelain 2>/dev/null | grep -c '^[^?]' || true)
       if [ "${dirty:-0}" -gt 0 ]; then
         echo "On $current_branch with uncommitted changes — create a feature branch to keep code review in the loop." >&2
-        record_hook_outcome "session-stop-gate" "Stop" "block" "" "" "" "$MODEL_FAMILY"
-        return 2
+        record_hook_outcome "session-stop-gate" "Stop" "warn" "" "" "" "$MODEL_FAMILY"
+        return 1
       fi
     fi
   fi
@@ -55,26 +55,8 @@ validate_session_stop_gate() {
       local file_count
       file_count=$(echo "$changed_files" | wc -l | tr -d ' ')
 
-      # Check if team agents are active — downgrade to warning if so
-      local agents_active=0
-      local mesh_cli
-      mesh_cli="$(cd "$(dirname "$SCRIPT_DIR")" && pwd)/agent-mesh/cli.js"
-      if [ -f "$mesh_cli" ]; then
-        local agent_output
-        agent_output=$(node "$mesh_cli" list --brief 2>/dev/null || true)
-        if [ -n "$agent_output" ] && ! echo "$agent_output" | grep -q "No active agents"; then
-          agents_active=1
-        fi
-      fi
-
-      if [ "$agents_active" -eq 1 ]; then
-        echo "$file_count uncommitted file(s) (agents still active — commit when they finish)" >&2
-        # Warning only, don't block
-      else
-        echo "$file_count uncommitted file(s). Uncommitted work is lost when the session ends — commit or stash before stopping." >&2
-        record_hook_outcome "session-stop-gate" "Stop" "block" "" "" "" "$MODEL_FAMILY"
-        return 2
-      fi
+      echo "$file_count uncommitted file(s). Uncommitted work is lost when the session ends — commit or stash before stopping." >&2
+      record_hook_outcome "session-stop-gate" "Stop" "warn" "" "" "" "$MODEL_FAMILY"
     fi
   fi
 

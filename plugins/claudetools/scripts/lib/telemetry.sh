@@ -158,7 +158,7 @@ emit_session_start() {
   team_mode="solo"
   [ "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-}" = "1" ] && team_mode="teams"
 
-  # Project language breakdown from codebase-pilot index
+  # Project language breakdown from srcpilot index
   project_langs="{}"
   local db_path="${CLAUDE_PLUGIN_ROOT:-}/data/codeindex.db"
   if [ -f "$db_path" ] && command -v sqlite3 &>/dev/null; then

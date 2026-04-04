@@ -27,6 +27,8 @@ is_benign_failure() {
       echo "$ERROR" | grep -qiE 'no (files|match)|0 match|empty result' && return 0
       # Ripgrep timeout — infrastructure issue (large repo/slow disk), not an agent logic error
       echo "$ERROR" | grep -qiE 'ripgrep.*timed?[[:space:]]*out|timed?[[:space:]]*out.*ripgrep|search.*timed?[[:space:]]*out' && return 0
+      # rg binary missing or not executable — infrastructure issue, not agent logic error
+      echo "$ERROR" | grep -qiE 'ENOENT.*posix_spawn|posix_spawn.*rg|no such file.*rg\b|rg.*not found' && return 0
       # Also: Glob returns success with empty output, but if somehow an error, skip it
       [ -z "$ERROR" ] && return 0
       ;;
@@ -35,6 +37,8 @@ is_benign_failure() {
       echo "$ERROR" | grep -qiE 'no (files|match)|0 match|empty result' && return 0
       # Ripgrep timeout — infrastructure issue (large repo/slow disk), not an agent logic error
       echo "$ERROR" | grep -qiE 'ripgrep.*timed?[[:space:]]*out|timed?[[:space:]]*out.*ripgrep|search.*timed?[[:space:]]*out' && return 0
+      # rg binary missing or not executable — infrastructure issue, not agent logic error
+      echo "$ERROR" | grep -qiE 'ENOENT.*posix_spawn|posix_spawn.*rg|no such file.*rg\b|rg.*not found' && return 0
       [ -z "$ERROR" ] && return 0
       ;;
     Bash)
@@ -42,6 +46,9 @@ is_benign_failure() {
       echo "$ERROR" | grep -qiE 'exit (code|status) [12]\b' && return 0
       # diff exit code 1 means "files differ" — informational
       echo "$ERROR" | grep -qiE 'diff.*exit|exit.*diff' && return 0
+      # Claude Code infrastructure errors — worktree path missing, Claude Code internal checks
+      # These are environment failures, not agent logic errors
+      echo "$ERROR" | grep -qiE 'Path.*does not exist|worktree.*does not exist' && return 0
       ;;
     Edit)
       # "old_string not found" when the agent hasn't read the file is a REAL failure

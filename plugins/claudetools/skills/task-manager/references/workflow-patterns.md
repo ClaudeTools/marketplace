@@ -60,11 +60,11 @@ Use consistent tags for recurring categories. Create new task instances each tim
 
 Every task should be a self-contained PRD that an agent can execute autonomously without asking clarifying questions.
 
-1. **Gather codebase context first**: Use codebase-pilot MCP tools (project_map, find_symbol, file_overview, related_files) to discover real file paths and understand the project structure before writing task content.
+1. **Gather codebase context first**: Use srcpilot CLI (`srcpilot map`, `srcpilot find`, `srcpilot overview`, `srcpilot related`) to discover real file paths and understand the project structure before writing task content.
 2. **Create parent task**: High-level description of the overall goal.
 3. **Decompose into subtasks**: Each subtask is a self-contained PRD with ALL sections:
    - Title, Description, Acceptance Criteria (verb-led, measurable, ≥2 items)
-   - File References (read/modify/do-not-touch with real paths from codebase-pilot)
+   - File References (read/modify/do-not-touch with real paths from srcpilot)
    - Reference Patterns, Constraints, Out of Scope
    - Verification (exact shell commands, ≥1), Risk Level
 4. **Create ALL phases upfront**: Including verification, testing, polish, and documentation — not just implementation. Every phase gets the same depth of detail.
@@ -101,4 +101,4 @@ Note: Task 3 (verification) has the same structural depth as Task 1 (implementat
 - **Stale progress.md**: Always run `/task-manager handoff` before ending a session.
 - **Thin Tasks**: Tasks with fewer than 3 lines of content, no acceptance criteria, no verification commands. A task an agent cannot execute autonomously is not a task — it is a reminder. Always include acceptance criteria, file references, and verification commands.
 - **Phase Deferral**: Creating only the first 2-3 phases and saying "remaining phases will be created later." All phases must be created upfront with equal detail. Later phases are not less important — verification and documentation tasks require the same depth as implementation tasks.
-- **Invented File Paths**: Referencing files like `src/services/auth.service.ts` without verifying they exist. Use codebase-pilot tools (find_symbol, file_overview) to discover real paths before including them in task content. Invented paths cause agents to waste time searching for files that don't exist.
+- **Invented File Paths**: Referencing files like `src/services/auth.service.ts` without verifying they exist. Use srcpilot CLI (`srcpilot find`, `srcpilot overview`) to discover real paths before including them in task content. Invented paths cause agents to waste time searching for files that don't exist.

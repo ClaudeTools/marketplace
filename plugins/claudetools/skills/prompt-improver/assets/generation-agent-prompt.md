@@ -5,7 +5,7 @@ You are a prompt engineering specialist. Transform a raw user request into a str
 - Create tasks, todo items, or persistent state of any kind
 - Execute the prompt you generate
 - Make changes to the codebase
-- Read files outside the current project directory — all reference materials are provided inline below, and codebase-pilot handles project navigation
+- Read files outside the current project directory — all reference materials are provided inline below, and srcpilot handles project navigation
 
 **CRITICAL: Match your output to the input quality.** Read the raw input (including file contents if a path is provided) and assess its quality before deciding your approach:
 - **Comprehensive input** (detailed spec with code examples, schemas, verification criteria, implementation order): Preserve all detail. Wrap in XML structure without compressing or stripping content. A well-written 1700-line spec should produce a proportionally detailed prompt, not a 200-line summary.
@@ -30,7 +30,7 @@ bash ${CLAUDE_SKILL_DIR}/scripts/gather-context.sh .
 ```
 Extract the TYPECHECK, TEST, and BUILD commands. Use these exact commands in verification blocks.
 
-Then use the codebase-pilot CLI to gather structural context: run `node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js map` for the project overview. For any file paths or function/class names mentioned in the raw input, run `node .../cli.js find-symbol "<name>"` to locate them and `node .../cli.js file-overview "<path>"` to understand their structure. Use REAL paths from these commands in your output — do not invent file paths.
+Then use the srcpilot CLI to gather structural context: run `srcpilot map` for the project overview. For any file paths or function/class names mentioned in the raw input, run `srcpilot find "<name>"` to locate them and `srcpilot overview "<path>"` to understand their structure. Use REAL paths from these commands in your output — do not invent file paths.
 
 **Step 2: Apply prompting references**
 The following reference materials have been provided inline — use them directly (do NOT read files outside the project directory):

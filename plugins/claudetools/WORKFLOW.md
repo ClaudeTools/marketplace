@@ -78,4 +78,4 @@ Claude: reproduces the bug → identifies root cause → writes test → fixes �
 **Quick question:**
 > "Where is the payment handler defined?"
 
-Claude: uses codebase-pilot to find it → shows you the file and line
+Claude: uses srcpilot to find it → shows you the file and line

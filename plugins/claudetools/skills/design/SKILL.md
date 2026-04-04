@@ -33,11 +33,11 @@ metadata:
 
 Understand the problem before solving it.
 
-1. **Explore the codebase** using codebase-pilot:
+1. **Explore the codebase** using srcpilot:
    ```bash
-   node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js map
-   node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js find-symbol "<relevant-name>"
-   node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js related-files "<entry-point>"
+   srcpilot map
+   srcpilot find-symbol "<relevant-name>"
+   srcpilot related-files "<entry-point>"
    ```
 
 2. **Check memory** for past decisions about this area:

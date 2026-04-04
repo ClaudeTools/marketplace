@@ -25,15 +25,15 @@ Create a new task with enriched context. The raw input goes through a lightweigh
 
 1. **Parse** the remaining arguments as the raw input.
 
-2. **Gather codebase context** using codebase-pilot CLI before any triage or enrichment:
-   - Run `node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js map` to get the project overview (languages, structure, entry points, key exports)
-   - For any file paths mentioned in the input, run `node .../cli.js file-overview "<path>"` and `node .../cli.js related-files "<path>"` to verify they exist and understand their structure
-   - For any function/class names mentioned, run `node .../cli.js find-symbol "<name>"` to locate them
+2. **Explore the codebase** using srcpilot:
+   - Run `srcpilot map` to get the project overview (languages, structure, entry points, key exports)
+   - For any file paths mentioned in the input, run `srcpilot overview "<path>"` and `srcpilot related "<path>"` to verify they exist and understand their structure
+   - For any function/class names mentioned, run `srcpilot find "<name>"` to locate them
    - Store this context as `{CODEBASE_CONTEXT}` — it will be passed to the enrichment agent or used directly for triage
 
 3. **Resolve and triage** the input:
    - If the input is a file path, read it. If it's a URL, fetch it. The resolved content is what you assess.
-   - **Already detailed** (comprehensive spec, structured prompt with requirements/verification/approach, implementation guide with code examples): Skip the enrichment agent. However, still verify file references against `{CODEBASE_CONTEXT}` — replace any invented paths with real ones discovered from the codebase-pilot CLI. Go straight to step 5 (task creation).
+   - **Already detailed** (comprehensive spec, structured prompt with requirements/verification/approach, implementation guide with code examples): Skip the enrichment agent. However, still verify file references against `{CODEBASE_CONTEXT}` — replace any invented paths with real ones discovered from the srcpilot CLI. Go straight to step 5 (task creation).
    - **Needs enrichment** (vague, rough notes, missing context, incomplete): Proceed to step 4.
 
 4. **Enrich** (only if triage says input needs it) — Read [references/enrichment-agent.md](references/enrichment-agent.md) to get the full agent prompt. Spawn a general-purpose Agent with that prompt, substituting `{RAW_INPUT}` with the original input and `{CODEBASE_CONTEXT}` with the context gathered in step 2.

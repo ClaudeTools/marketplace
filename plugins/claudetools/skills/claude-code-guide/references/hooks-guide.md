@@ -280,7 +280,7 @@ validate_blind_edit() {
   case "$FILE_EXT" in md|json|yaml) return 0 ;; esac  # Non-code — skip
 
   source "$(dirname "${BASH_SOURCE[0]}")/../lib/worktree.sh"
-  local READS_FILE="/tmp/codebase-pilot-reads-$(get_session_id "$INPUT").jsonl"
+  local READS_FILE="/tmp/srcpilot-reads-$(get_session_id "$INPUT").jsonl"
   [ ! -f "$READS_FILE" ] && return 0
   grep -qF "\"$FILE_PATH\"" "$READS_FILE" 2>/dev/null && return 0
 
@@ -362,7 +362,7 @@ sid=$(get_session_id "$INPUT")
 | Hook | Event | What it does |
 |---|---|---|
 | `pre-bash-gate.sh` | PreToolUse:Bash | Dispatches dangerous-bash, ai-safety, and unasked-restructure validators |
-| `pre-edit-gate.sh` | PreToolUse:Edit\|Write | Dispatches blind-edit, task-scope, research-backing, bulk-edit, prefer-edit, mesh-lock validators |
+| `pre-edit-gate.sh` | PreToolUse:Edit\|Write | Dispatches blind-edit, task-scope, research-backing, bulk-edit, prefer-edit validators |
 | `track-file-reads.sh` | PostToolUse:Read | Records reads to session-scoped JSONL; powers the blind-edit validator |
 | `session-stop-dispatcher.sh` | Stop | Runs task-quality and stop-gate; blocks stopping with incomplete work |
 | `session-index.sh` | SessionStart | Builds/updates codebase navigation index (30s timeout) |

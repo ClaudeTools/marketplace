@@ -41,11 +41,7 @@ Use the prompt-improver skill to structure the implementation plan:
 Spawn implementing-features teammates to build each step:
 - One teammate per logical unit (e.g., one for the data layer, one for the UI layer)
 - Provide each teammate with a scoped task and the relevant file context from Step 1
-- Coordinate via the agent-mesh CLI if teammates need to share decisions
-
-```bash
-node ${CLAUDE_PLUGIN_ROOT}/agent-mesh/cli.js context --set "<decision-key>" "<value>"
-```
+- Coordinate via task comments if teammates need to share decisions
 
 ### 4. REVIEW
 Run a code-reviewer agent over the output:
@@ -68,7 +64,7 @@ All checks must pass before declaring the feature complete.
 
 ## Tools
 
-- Bash (srcpilot CLI, agent-mesh CLI, typecheck, tests)
+- Bash (srcpilot CLI, typecheck, tests)
 - Read, Glob, Grep (codebase exploration)
 - Edit, Write (implementation)
 - All tools available

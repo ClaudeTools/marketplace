@@ -150,8 +150,6 @@ Every resource has a specific trigger point. Generic instructions like "see refe
 
 The `field-review` skill uses scripts for metrics collection (`scripts/collect-metrics.sh`) and feedback submission (`scripts/submit-feedback.sh`). The SKILL.md tells the agent exactly when to run each script.
 
-The `mesh` skill delegates all operations to a Node.js CLI (`agent-mesh/cli.js`) — the SKILL.md is purely a router that maps subcommands to CLI invocations.
-
 The `prompt-improver` skill delegates prompt generation to a subagent to keep the main context clean, then validates the output structure.
 
 ---

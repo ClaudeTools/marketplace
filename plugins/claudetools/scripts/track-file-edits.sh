@@ -31,11 +31,4 @@ jq -nc \
   '{"path":$p,"ts":$t,"event":"edit"}' \
   >> "$READS_FILE" 2>/dev/null || true
 
-# --- Agent mesh file tracking ---
-MESH_CLI="$(dirname "$(dirname "$0")")/agent-mesh/cli.js"
-if [[ -f "$MESH_CLI" ]]; then
-  _HOOK_LOG_DIR="$(cd "$(dirname "$0")/.." && pwd)/logs"
-  { node "$MESH_CLI" track-file --id "$SESSION_ID" --file "$FILE_PATH" 2>&1 || echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") | track-file-edits.sh | mesh: track-file failed for $SESSION_ID $FILE_PATH" >> "$_HOOK_LOG_DIR/hooks.log"; } &
-fi
-
 exit 0

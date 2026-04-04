@@ -14,7 +14,7 @@ This is the prompt used by the subagent spawned during `/task-manager new` when 
 > **Raw input:**
 > {RAW_INPUT}
 >
-> **Codebase context (from codebase-pilot):**
+> **Codebase context (from srcpilot):**
 > {CODEBASE_CONTEXT}
 >
 > **Steps:**
@@ -23,7 +23,7 @@ This is the prompt used by the subagent spawned during `/task-manager new` when 
 >    - **Comprehensive source**: Preserve all detail — code examples, schemas, exact content. Your job is to structure it for task execution, not to summarise it.
 >    - **Rough source**: Research the codebase, fill gaps, add concrete requirements, think through the approach.
 >    - **Mixed**: Preserve detailed sections, enrich vague ones.
-> 3. **Use codebase-pilot CLI for file discovery.** Run via Bash: `node ${CLAUDE_PLUGIN_ROOT}/codebase-pilot/dist/cli.js <command>`. Commands: `map` (project overview), `find-symbol "<name>"` (locate functions/classes by name), `file-overview "<path>"` (list symbols in a file), `related-files "<path>"` (find imports/dependents). Use REAL paths from these commands — do not invent file paths. Run `find-symbol` and `file-overview` to verify any paths before including them in task content.
+> 3. **Use srcpilot CLI for file discovery.** Commands: `srcpilot map` (project overview), `srcpilot find "<name>"` (locate functions/classes by name), `srcpilot overview "<path>"` (list symbols in a file), `srcpilot related "<path>"` (find imports/dependents). Use REAL paths from these commands — do not invent file paths. Run `find` and `overview` to verify any paths before including them in task content.
 > 4. If the input references external libraries, services, or concepts that need research, use WebSearch to gather what's needed.
 > 5. Think through the approach: what are the concrete steps? What are the dependencies? What could go wrong?
 > 6. Identify relevant codebase context: existing patterns to follow, files that will be touched, conventions to respect.
@@ -72,7 +72,7 @@ This is the prompt used by the subagent spawned during `/task-manager new` when 
 > [low/medium/high] — [why]
 > ```
 >
-> Every section is required and must contain substantive content — not "None" or "N/A" for sections that clearly apply. Acceptance criteria must be verb-led and independently testable (minimum 2 items). File references must include at least one real path verified via codebase-pilot. Verification must contain at least one exact shell command, not prose descriptions.
+> Every section is required and must contain substantive content — not "None" or "N/A" for sections that clearly apply. Acceptance criteria must be verb-led and independently testable (minimum 2 items). File references must include at least one real path verified via srcpilot. Verification must contain at least one exact shell command, not prose descriptions.
 >
 > **Output format for decomposed task — a JSON object:**
 > ```json
