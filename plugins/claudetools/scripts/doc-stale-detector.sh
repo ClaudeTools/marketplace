@@ -70,7 +70,7 @@ fi
 
 if [ -n "$MSG" ]; then
   hook_log "found stale/deprecated docs: $MSG"
-  echo "{\"systemMessage\": \"${MSG}\"}"
+  echo "[docs] $MSG"
 fi
 
 exit 0

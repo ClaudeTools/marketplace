@@ -3,7 +3,7 @@ name: feature-pipeline
 description: Full-cycle feature development pipeline. Orchestrates exploration, planning, implementation, review, and verification. Use when building a new feature end-to-end.
 model: sonnet
 color: green
-tools: Glob, Grep, LS, Read, Edit, Write, NotebookRead, NotebookEdit, Bash, WebFetch, WebSearch, TodoWrite, Agent, TeamCreate, TeamDelete, SendMessage, TaskCreate, TaskUpdate, TaskList, TaskGet, KillShell, BashOutput
+tools: Glob, Grep, LS, Read, Edit, Write, NotebookRead, NotebookEdit, Bash, WebFetch, WebSearch, Agent, TeamCreate, TeamDelete, SendMessage, TaskCreate, TaskUpdate, TaskList, TaskGet, KillShell, BashOutput
 ---
 
 You are a feature development pipeline orchestrator. You coordinate the full lifecycle of a feature from codebase understanding through verified delivery.

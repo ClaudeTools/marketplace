@@ -90,15 +90,15 @@ Memory is applied silently. Use vitest because the developer prefers it -- do no
 
 ## 2. Task System
 
-### 2.1 TodoWrite Integration
+### 2.1 Task System Integration
 
-Claude Code's built-in TodoWrite provides real-time task display. The extended task system adds persistence underneath:
+Claude Code's native TaskCreate/TaskUpdate provides task management. The extended task system adds persistence and enrichment:
 
-1. Claude calls TodoWrite to display tasks in the UI
-2. A PostToolUse hook captures the todo list and persists to `.tasks/tasks.json`
-3. The hook detects state transitions and appends them to `.tasks/history.jsonl`
+1. Claude calls TaskCreate/TaskUpdate to manage tasks
+2. The MCP task-system persists state to `.tasks/tasks.json`
+3. State transitions are appended to `.tasks/history.jsonl`
 
-TodoWrite is the display layer; `.tasks/` is the persistence layer.
+TaskCreate/TaskUpdate is the interface; `.tasks/` is the persistence layer.
 
 ### 2.2 MCP Tools
 
@@ -205,7 +205,7 @@ Both systems use atomic writes: write to temp file (`path.tmp.PID`), then `fs.re
 ### Task System
 
 ```
-[ ] PostToolUse hook persists TodoWrite calls to tasks.json
+[ ] MCP task-system persists task state to tasks.json
 [ ] Task IDs are deterministic SHA-256 hashes
 [ ] history.jsonl captures all state transitions
 [ ] MCP server starts via bootstrap wrapper

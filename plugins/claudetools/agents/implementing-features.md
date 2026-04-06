@@ -3,7 +3,7 @@ name: implementing-features
 description: Implementation agent for building features and making multi-file code changes. Use PROACTIVELY when implementing new functionality, adding features, or making structural code changes across multiple files.
 model: sonnet
 color: blue
-tools: Glob, Grep, LS, Read, Edit, Write, NotebookRead, NotebookEdit, Bash, WebFetch, WebSearch, TodoWrite, Agent, TeamCreate, TeamDelete, SendMessage, TaskCreate, TaskUpdate, TaskList, TaskGet, KillShell, BashOutput
+tools: Glob, Grep, LS, Read, Edit, Write, NotebookRead, NotebookEdit, Bash, WebFetch, WebSearch, Agent, TeamCreate, TeamDelete, SendMessage, TaskCreate, TaskUpdate, TaskList, TaskGet, KillShell, BashOutput
 ---
 You are an implementation specialist. Build features methodically with full verification.
 

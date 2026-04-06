@@ -34,6 +34,37 @@ if [ -n "$MISSING_DEPS" ]; then
   echo "[claudetools] Missing dependencies: ${MISSING_DEPS}. Some guardrails will silently bypass. Install with: apt install ${MISSING_DEPS%%(*}" >&2
 fi
 
+# --- Project-type build/test/lint commands (re-introduced from dynamic-rules.sh) ---
+source "$(dirname "$0")/lib/detect-project.sh"
+detect_project_type
+case "$PROJECT_TYPE" in
+  node)
+    _cmds="Typecheck: npx tsc --noEmit | Test: npm test | Lint: npx eslint ."
+    if [ -f "package.json" ]; then
+      grep -q '"next"' package.json 2>/dev/null && _cmds="${_cmds} | Framework: Next.js"
+      grep -q '"vitest"' package.json 2>/dev/null && _cmds="${_cmds} | Test runner: vitest"
+    fi
+    echo "[project:${PROJECT_TYPE}] ${_cmds}"
+    ;;
+  python)
+    _cmds="Typecheck: pyright | Test: pytest | Lint: ruff check ."
+    [ -f "pyproject.toml" ] && grep -q 'django' pyproject.toml 2>/dev/null && _cmds="${_cmds} | Framework: Django"
+    echo "[project:${PROJECT_TYPE}] ${_cmds}"
+    ;;
+  rust)   echo "[project:rust] Typecheck: cargo check | Test: cargo test | Lint: cargo clippy" ;;
+  go)     echo "[project:go] Typecheck: go vet ./... | Test: go test ./... | Lint: golangci-lint run" ;;
+  java)
+    if [ -f "pom.xml" ]; then
+      echo "[project:java] Build: mvn compile | Test: mvn test"
+    else
+      echo "[project:java] Build: gradle build | Test: gradle test"
+    fi
+    ;;
+  dotnet) echo "[project:dotnet] Build: dotnet build | Test: dotnet test" ;;
+  ruby)   echo "[project:ruby] Test: bundle exec rspec | Lint: bundle exec rubocop" ;;
+  swift)  echo "[project:swift] Build: swift build | Test: swift test" ;;
+esac
+
 # sqlite3 required for remaining setup
 if ! command -v sqlite3 &>/dev/null; then
   exit 0

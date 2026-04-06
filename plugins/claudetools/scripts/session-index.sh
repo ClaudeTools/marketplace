@@ -24,32 +24,11 @@ fi
 # Determine project root from CWD (Claude Code sets this to the project)
 PROJECT_ROOT="${SRCPILOT_PROJECT_ROOT:-$(pwd)}"
 
-# Require srcpilot (global or plugin-local)
-if ! command -v srcpilot &>/dev/null && [[ ! -f "${CLAUDE_PLUGIN_ROOT}/node_modules/.bin/srcpilot" ]]; then
-  hook_log "srcpilot: not found — install with: npm install -g srcpilot" 2>/dev/null || true
-  emit_event "srcpilot" "not_installed" "warn" 2>/dev/null || true
-  echo "[srcpilot] not installed — run: npm install -g srcpilot"
-  exit 0
-fi
-# shellcheck source=lib/resolve-srcpilot.sh
-source "${BASH_SOURCE[0]%/*}/lib/resolve-srcpilot.sh"
-
-# Skip if no source files exist in project (now includes .py)
-# Also skip if project is too large (>10000 source files)
-MAX_FILES=10000
-SOURCE_COUNT=$(find "$PROJECT_ROOT" -maxdepth 5 \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" \) -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/__pycache__/*" -not -path "*/.venv/*" -not -path "*/dist/*" -not -path "*/build/*" -not -path "*/.next/*" 2>/dev/null | head -$((MAX_FILES + 1)) | wc -l)
-if [[ "$SOURCE_COUNT" -eq 0 ]]; then
-  hook_log "srcpilot: no source files in $PROJECT_ROOT, skipping" 2>/dev/null || true
-  emit_event "srcpilot" "no_source_files" "allow" 2>/dev/null || true
-  exit 0
-fi
-if [[ "$SOURCE_COUNT" -gt "$MAX_FILES" ]]; then
-  hook_log "srcpilot: project too large (>${MAX_FILES} source files), skipping" 2>/dev/null || true
-  emit_event "srcpilot" "index_skipped_too_large" "warn" 2>/dev/null || true
-  exit 0
-fi
-
-# Persist session_id for CLI tools to find the reads file
+# ── Session registration (always — independent of srcpilot availability) ──────
+# guard-context-reread, track-file-reads, and blind-edit all depend on
+# .srcpilot/session-ids and /tmp/srcpilot-reads-{id}.jsonl existing.
+# Register unconditionally before any early-exit so these hooks work in
+# every project regardless of whether srcpilot is installed or indexed.
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)
 if [ -z "$SESSION_ID" ]; then
   SESSION_ID="$$"
@@ -83,6 +62,30 @@ else
       fi
     ) 200>"$INDEX_DIR/session-ids.lock"
   fi
+fi
+
+# ── srcpilot: required for indexing + map output (not for session tracking) ───
+if ! command -v srcpilot &>/dev/null && [[ ! -f "${CLAUDE_PLUGIN_ROOT}/node_modules/.bin/srcpilot" ]]; then
+  hook_log "srcpilot: not found — install with: npm install -g srcpilot" 2>/dev/null || true
+  emit_event "srcpilot" "not_installed" "warn" 2>/dev/null || true
+  echo "[srcpilot] not installed — run: npm install -g srcpilot"
+  exit 0
+fi
+# shellcheck source=lib/resolve-srcpilot.sh
+source "${BASH_SOURCE[0]%/*}/lib/resolve-srcpilot.sh"
+
+# Skip indexing if no source files exist or project is too large
+MAX_FILES=10000
+SOURCE_COUNT=$(find "$PROJECT_ROOT" -maxdepth 5 \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -o -name "*.py" \) -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/__pycache__/*" -not -path "*/.venv/*" -not -path "*/dist/*" -not -path "*/build/*" -not -path "*/.next/*" 2>/dev/null | head -$((MAX_FILES + 1)) | wc -l)
+if [[ "$SOURCE_COUNT" -eq 0 ]]; then
+  hook_log "srcpilot: no source files in $PROJECT_ROOT, skipping" 2>/dev/null || true
+  emit_event "srcpilot" "no_source_files" "allow" 2>/dev/null || true
+  exit 0
+fi
+if [[ "$SOURCE_COUNT" -gt "$MAX_FILES" ]]; then
+  hook_log "srcpilot: project too large (>${MAX_FILES} source files), skipping" 2>/dev/null || true
+  emit_event "srcpilot" "index_skipped_too_large" "warn" 2>/dev/null || true
+  exit 0
 fi
 
 # Incremental indexing: skip full rebuild if index is recent (< 1 hour)
@@ -127,7 +130,7 @@ fi
 _inject_context=1
 _inject_map=1
 _inject_memories=1
-if [[ "$HOOK_EVENT" == "WorktreeCreate" ]]; then
+if [[ "$HOOK_EVENT" == "WorktreeCreate" ]] || [[ "$HOOK_EVENT" == "ConfigChange" ]]; then
   _inject_context=0
   _inject_map=0
   _inject_memories=0
@@ -148,6 +151,16 @@ if [[ "$_idx_ok" -eq 1 ]] && [[ "$_inject_map" -eq 1 ]]; then
     hook_log "srcpilot: map generation returned empty for $PROJECT_ROOT${MAP_ERR:+: $MAP_ERR}" 2>/dev/null || true
     emit_event "srcpilot" "map_empty" "warn" 2>/dev/null || true
   fi
+fi
+
+# Byte budget: cap map output to prevent context bloat on large projects
+MAX_MAP_BYTES=2048
+if [[ "$HOOK_EVENT" == "SubagentStart" ]]; then
+  MAX_MAP_BYTES=1024
+fi
+if [[ ${#MAP_OUTPUT} -gt $MAX_MAP_BYTES ]]; then
+  MAP_OUTPUT="${MAP_OUTPUT:0:$MAX_MAP_BYTES}
+... (truncated — use srcpilot map for full output)"
 fi
 
 if [[ "$_inject_context" -eq 1 ]] && [[ "$_inject_map" -eq 1 ]] && [[ -n "$MAP_OUTPUT" ]]; then
@@ -222,71 +235,18 @@ if [[ -n "$DB_PATH" ]] && command -v sqlite3 &>/dev/null; then
   fi
 fi
 
-# --- Subagent memory + capabilities injection ---
-PLUGIN_ROOT_DIR="$PLUGIN_ROOT"
-SUBAGENT_CONTEXT="$PLUGIN_ROOT_DIR/assets/subagent-context.md"
-METRICS_DB_PATH="$PLUGIN_ROOT_DIR/data/metrics.db"
-
-# Inject static capabilities doc and optionally memories
-if [[ -f "$SUBAGENT_CONTEXT" ]]; then
-  echo ""
-  echo "--- Plugin Context (auto-injected) ---"
-  cat "$SUBAGENT_CONTEXT"
-
-  # Inject relevant memories for this agent's task (skipped on SubagentStart — parent has them)
-  if [[ "$_inject_memories" -eq 1 ]] && command -v sqlite3 &>/dev/null && [[ -f "$METRICS_DB_PATH" ]]; then
-    MEM_COUNT=$(sqlite3 "$METRICS_DB_PATH" "SELECT COUNT(*) FROM memories;" 2>/dev/null || echo "0")
-    if [[ "$MEM_COUNT" -gt 0 ]]; then
-      # Always inject top feedback-type memories (behavioral rules)
-      FEEDBACK_MEMS=$(sqlite3 "$METRICS_DB_PATH" \
-        "SELECT type, description FROM memories WHERE type='feedback' AND confidence > 0.3
-         ORDER BY confidence DESC, access_count DESC LIMIT 3;" 2>/dev/null || true)
-
-      # Also inject task-relevant memories via FTS5
-      TASK_TEXT=$(echo "${INPUT:-}" | jq -r '(.tool_input.prompt // .tool_input.description // .prompt // "") | .[0:2000]' 2>/dev/null || true)
-      FTS_MEMS=""
-      if [[ -n "$TASK_TEXT" && ${#TASK_TEXT} -gt 10 ]]; then
-        FTS_TERMS=$(echo "$TASK_TEXT" | \
-          grep -oE '\b[A-Z][a-zA-Z0-9]{2,}\b|\b[a-z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*\b|\b[a-z_]{4,}\b' | \
-          tr '[:upper:]' '[:lower:]' | \
-          grep -vE '^(this|that|with|from|have|been|will|would|could|should|there|their|about|which|when|what|make|just|more|also|than|them|then|these|those|each|into|some|like|over|such|only|after|before|other|your|does|were|being|here|very|most|much|need|want|help|please|using|file|code)$' | \
-          sort -u | head -6)
-        if [[ -n "$FTS_TERMS" ]]; then
-          FTS_QUERY=$(echo "$FTS_TERMS" | tr '\n' ' ' | sed 's/ *$//' | sed 's/ / OR /g')
-          # Composite ranking: FTS relevance + confidence + usage frequency
-          FTS_MEMS=$(sqlite3 "$METRICS_DB_PATH" \
-            "SELECT m.type, m.description FROM memories m
-             INNER JOIN (
-               SELECT rowid, rank FROM memories_fts WHERE memories_fts MATCH '$FTS_QUERY'
-             ) fts ON m.rowid = fts.rowid
-             WHERE m.confidence > 0.3 AND m.type != 'feedback'
-             ORDER BY (fts.rank * -1.0 + m.confidence * 5.0 + MIN(m.access_count, 10) * 0.5) DESC
-             LIMIT 3;" 2>/dev/null || true)
-        fi
-      fi
-
-      if [[ -n "$FEEDBACK_MEMS" || -n "$FTS_MEMS" ]]; then
-        echo ""
-        if [[ -n "$FEEDBACK_MEMS" ]]; then
-          echo "$FEEDBACK_MEMS" | while IFS='|' read -r mtype mdesc; do
-            [[ -z "$mdesc" ]] && continue
-            echo "[memory:${mtype}] ${mdesc}"
-          done
-        fi
-        if [[ -n "$FTS_MEMS" ]]; then
-          echo "$FTS_MEMS" | while IFS='|' read -r mtype mdesc; do
-            [[ -z "$mdesc" ]] && continue
-            echo "[memory:${mtype}] ${mdesc}"
-          done
-        fi
-      fi
-    fi
+# --- Subagent capabilities injection (SubagentStart only) ---
+# On SessionStart, the main session already has CLAUDE.md with tool listings.
+# Only inject subagent-context.md for subagents where it's the primary reference.
+# Memory injection is owned by inject-session-context.sh — not duplicated here.
+if [[ "$HOOK_EVENT" == "SubagentStart" ]]; then
+  SUBAGENT_CONTEXT="$PLUGIN_ROOT/assets/subagent-context.md"
+  if [[ -f "$SUBAGENT_CONTEXT" ]]; then
+    echo ""
+    echo "--- Plugin Context (auto-injected) ---"
+    cat "$SUBAGENT_CONTEXT"
+    echo "--- End Plugin Context ---"
   fi
-
-  echo "--- End Plugin Context ---"
 fi
-
-echo ""
-echo "Use srcpilot tools: find_symbol, find_usages, file_overview, related_files, navigate for code navigation."
 
 exit 0

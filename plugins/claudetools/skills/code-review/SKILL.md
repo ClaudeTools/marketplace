@@ -5,7 +5,7 @@ description: >
   and maintainability. Use when completing tasks, implementing major features,
   or before merging to verify work meets requirements.
 argument-hint: "[file-or-directory-to-review]"
-allowed-tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch
+allowed-tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, WebSearch
 metadata:
   author: claudetools
   version: 1.0.0

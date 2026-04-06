@@ -29,7 +29,7 @@ The primary state file. Located at `.tasks/tasks.json`. Contains an array of tas
 | Field          | Type         | Default    | Nullable | Set by      | Description                                                |
 |---------------|-------------|------------|----------|-------------|------------------------------------------------------------|
 | id            | string       | generated  | no       | hook        | Deterministic ID (see ID generation below).                |
-| content       | string       | (required) | no       | hook        | Task description. Matched against TodoWrite content.       |
+| content       | string       | (required) | no       | hook        | Task description.                                          |
 | status        | string       | "pending"  | no       | hook        | Current status (see valid transitions below).              |
 | priority      | string       | "medium"   | yes      | MCP/skill   | One of: low, medium, high, critical.                       |
 | tags          | string[]     | []         | no       | MCP/skill   | Freeform tags for grouping and filtering.                  |

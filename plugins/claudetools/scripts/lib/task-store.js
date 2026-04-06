@@ -136,7 +136,7 @@ function createTask(content, activeForm, id) {
 }
 
 /**
- * Diff incoming TodoWrite array against existing tasks.
+ * Diff incoming task array against existing tasks.
  * Returns { updatedTasks, transitions } where:
  *   - updatedTasks: the new full tasks array for tasks.json
  *   - transitions: array of {task_id, transition, content} for history.jsonl

@@ -206,7 +206,7 @@ Tool descriptions are injected every turn. Long descriptions (500+ words) consum
 
 ### MCP Server Priority
 
-Claude Code prioritises MCP tools over its built-in alternatives when the MCP tool is a better fit. If your MCP server provides a task creation tool, Claude will prefer it over TodoWrite for structured task management. Make sure tool descriptions clearly state when the tool should and should not be used.
+Claude Code prioritises MCP tools over its built-in alternatives when the MCP tool is a better fit. If your MCP server provides a task creation tool, Claude will prefer it over TaskCreate for structured task management. Make sure tool descriptions clearly state when the tool should and should not be used.
 
 ---
 

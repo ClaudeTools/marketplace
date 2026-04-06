@@ -143,17 +143,6 @@ check_contradiction() {
     fi
   fi
 
-  # Generic fallback: check for explicit "NEVER <verb> <keyword>" patterns
-  # Match "NEVER use X" where X appears in the tool context
-  if echo "$directive_lower" | grep -qoP 'never (use|run|execute|write|create|add) \K\S+' 2>/dev/null; then
-    local forbidden_keyword
-    forbidden_keyword=$(echo "$directive_lower" | grep -oP 'never (use|run|execute|write|create|add) \K\S+' 2>/dev/null | head -1)
-    if [ -n "$forbidden_keyword" ] && echo "$TOOL_CONTEXT" | grep -qF "$forbidden_keyword" 2>/dev/null; then
-      echo "$directive"
-      return 0
-    fi
-  fi
-
   return 1
 }
 

@@ -5,7 +5,7 @@ description: >
   hooks, validators, and skills performance — false positives, bugs, gaps,
   praise. Use when evaluating plugin health or reporting on hook behavior.
 argument-hint: "[area-to-review: hooks|validators|skills|all]"
-allowed-tools: Glob, Grep, LS, Read, Bash, WebFetch, TodoWrite, WebSearch
+allowed-tools: Glob, Grep, LS, Read, Bash, WebFetch, WebSearch
 metadata:
   author: claudetools
   version: 1.0.0

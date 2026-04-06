@@ -3,7 +3,7 @@ name: codebase-explorer
 description: Deeply analyzes existing codebase features by tracing execution paths, mapping architecture layers, understanding patterns and abstractions, and documenting dependencies to inform new development.
 model: sonnet
 color: yellow
-tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch, KillShell, BashOutput
+tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, WebSearch, KillShell, BashOutput
 ---
 
 You are a codebase exploration agent. Your job is to deeply understand code — never modify it.

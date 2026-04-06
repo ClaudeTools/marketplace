@@ -70,16 +70,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/ai-session-audit.sh",
-            "async": true,
-            "timeout": 45
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/memory-combined.sh",
             "async": true,
             "timeout": 60
@@ -216,15 +206,6 @@
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/config-audit-trail.sh",
             "timeout": 5
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/session-index.sh",
-            "timeout": 30
           }
         ]
       }

@@ -6,7 +6,7 @@ const path = require('path');
 const { getTasksDir, readTasks } = require(path.join(__dirname, '..', '..', '..', 'scripts', 'lib', 'task-store.js'));
 
 /**
- * Converts tasks.json into TodoWrite format for session restoration.
+ * Converts tasks.json into task display format for session restoration.
  *
  * Usage: node sync-display.js [path-to-tasks-dir]
  *
@@ -32,7 +32,7 @@ function main() {
     return orderA - orderB;
   });
 
-  // Map to TodoWrite format
+  // Map to task display format
   const todoItems = visible.map(t => ({
     content: t.content,
     status: t.status,

@@ -13,7 +13,7 @@ metadata:
 
 # Managing Tasks
 
-You are executing the `/task-manager` skill. This is a subcommand router for the extended task system. It provides persistent storage, cross-session continuity, and deterministic validation on top of the built-in TodoWrite tool.
+You are executing the `/task-manager` skill. This is a subcommand router for the extended task system. It provides persistent storage, cross-session continuity, and deterministic validation on top of native TaskCreate/TaskUpdate.
 
 Parse the first argument to select the subcommand. Default to `status` if no argument is given.
 
@@ -126,7 +126,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/task-manager/scripts/task-report.js" --format
 
 ### restore
 
-Restore tasks from a previous session into the TodoWrite display. Critical for cross-session continuity.
+Restore tasks from a previous session. Critical for cross-session continuity.
 
 1. Check if `.tasks/progress.md` exists. If yes, read it FIRST — it provides narrative context about where the previous session left off.
 2. Run the sync script:
@@ -134,8 +134,7 @@ Restore tasks from a previous session into the TodoWrite display. Critical for c
 node "${CLAUDE_PLUGIN_ROOT}/skills/task-manager/scripts/sync-display.js"
 ```
 3. Parse the JSON output. It contains an array of task objects with `content` and `status` fields.
-4. Call `TodoWrite` with the restored task list to sync the display.
-5. Report to the user:
+4. Report to the user:
    - Total tasks restored
    - Status counts (pending, in_progress, completed, blocked)
    - Last session context (from progress.md, if available)
@@ -212,9 +211,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/task-manager/scripts/validate-tasks.js"
 
 ## Gotchas
 
-- **TodoWrite has no ID field.** Tasks are matched by content string. If you rephrase a task description, the system treats it as a deletion of the old task plus creation of a new one. Keep descriptions stable.
-- **Hook fires on every TodoWrite including restores.** This is by design — the hook is idempotent because it uses deterministic IDs. Restoring tasks does not create duplicate history entries. See [references/task-schema.md](references/task-schema.md) for ID generation details.
-- **Hook must complete in <100ms.** The PostToolUse hook runs synchronously. It has zero npm dependencies and uses only Node.js built-ins to stay fast.
+- **Task IDs are deterministic.** Tasks are matched by content string hash. If you rephrase a task description, the system treats it as a new task. Keep descriptions stable. See [references/task-schema.md](references/task-schema.md) for ID generation details.
 - **progress.md uses append-prepend ordering.** Newest session block goes at the top of the file, so the most recent context is always first.
 - **.tasks/ belongs in version control.** The entire directory is designed to be committed. It contains only JSON, JSONL, and markdown — no binaries, no secrets.
 

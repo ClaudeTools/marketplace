@@ -70,7 +70,7 @@ When Claude Code starts a session, it reads all applicable CLAUDE.md files and m
 | Detailed architecture docs | Displaces conversation context | docs/ directory, referenced on demand |
 | Secrets and credentials | Security risk | .env files, secret managers |
 | Temporary debugging notes | Stale quickly | Memory files (see `memory-task-guide.md`) |
-| Task lists | Stale quickly | .tasks/ directory, TodoWrite |
+| Task lists | Stale quickly | .tasks/ directory, TaskCreate/TaskUpdate |
 
 The core principle: CLAUDE.md should contain **workflow rules and project context**, not code patterns or reference documentation. It must be compact enough that its token cost is justified by the value it provides every turn.
 
