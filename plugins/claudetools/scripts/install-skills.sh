@@ -39,6 +39,12 @@ for skill_dir in "$SKILLS_SRC"/*/; do
     continue
   fi
 
+  # For project-level installs, skip if the skill already exists globally
+  # to avoid duplicate registration (Claude Code scans both directories)
+  if [ "$TARGET" != "$HOME/.claude/skills" ] && [ -e "$HOME/.claude/skills/$name" ]; then
+    continue
+  fi
+
   # Create or update symlink
   ln -sfn "$skill_dir" "$dest"
 done
