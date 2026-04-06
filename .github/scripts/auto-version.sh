@@ -108,11 +108,15 @@ BUMPED_PLUGINS=()
 for plugin_dir in "$PLUGINS_DIR"/*/; do
   [ ! -d "$plugin_dir" ] && continue
   plugin_name=$(basename "$plugin_dir")
-  plugin_json="$plugin_dir/.claude-plugin/plugin.json"
-
-  # Validate plugin.json exists and has version
+  # Support both plugin.publish.json (dev repo) and plugin.json (other plugins)
+  plugin_json="$plugin_dir/.claude-plugin/plugin.publish.json"
   if [ ! -f "$plugin_json" ]; then
-    echo "ERROR: $plugin_name missing .claude-plugin/plugin.json" >&2
+    plugin_json="$plugin_dir/.claude-plugin/plugin.json"
+  fi
+
+  # Validate plugin manifest exists and has version
+  if [ ! -f "$plugin_json" ]; then
+    echo "ERROR: $plugin_name missing .claude-plugin/plugin.json or plugin.publish.json" >&2
     exit 1
   fi
 
@@ -199,7 +203,8 @@ cd "$REPO_ROOT"
 git add .claude-plugin/marketplace.json
 for entry in "${BUMPED_PLUGINS[@]}"; do
   name="${entry%%@*}"
-  git add "plugins/$name/.claude-plugin/plugin.json"
+  git add "plugins/$name/.claude-plugin/plugin.publish.json" 2>/dev/null || \
+  git add "plugins/$name/.claude-plugin/plugin.json" 2>/dev/null || true
   git add "plugins/$name/CHANGELOG.md" 2>/dev/null || true
 done
 

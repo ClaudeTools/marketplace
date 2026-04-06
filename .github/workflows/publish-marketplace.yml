@@ -32,20 +32,23 @@ jobs:
           # NOT be overwritten with claudetools content.
           plugin_dir="plugins/claudetools"
 
-          # Preserve the published plugin.json (auto-version manages it)
-          published_json="$plugin_dir/.claude-plugin/plugin.json"
+          # Preserve the published version (auto-version manages it via plugin.publish.json)
+          published_json="$plugin_dir/.claude-plugin/plugin.publish.json"
           preserved_version=""
           if [ -f "$published_json" ]; then
             preserved_version=$(jq -r '.version' "$published_json" 2>/dev/null || true)
           fi
 
+          # Exclude .claude-plugin/ — plugin.publish.json is managed separately
+          # to prevent double plugin registration during local development
           rsync -a --delete \
             --exclude='.git' \
             --exclude='node_modules' \
             --exclude='logs/' \
+            --exclude='.claude-plugin' \
             plugin/ "$plugin_dir/"
 
-          # Restore the published version (source has stale version)
+          # Restore the published version into plugin.publish.json
           if [ -n "$preserved_version" ] && [ -f "$published_json" ]; then
             tmp=$(mktemp)
             jq --arg v "$preserved_version" '.version = $v' "$published_json" > "$tmp" && mv "$tmp" "$published_json"
@@ -68,6 +71,12 @@ jobs:
           cp README.md ${{ github.workspace }}/public-out/ 2>/dev/null || true
           cp -r docs ${{ github.workspace }}/public-out/docs 2>/dev/null || true
           cp -r .github ${{ github.workspace }}/public-out/.github 2>/dev/null || true
+
+          # Rename plugin.publish.json → plugin.json for the published artifact
+          # (publish.json prevents double registration during local dev)
+          for pj in ${{ github.workspace }}/public-out/plugins/*/.claude-plugin/plugin.publish.json; do
+            [ -f "$pj" ] && mv "$pj" "${pj%.publish.json}.json"
+          done
 
       - name: Push to public marketplace
         uses: cpina/github-action-push-to-another-repository@main

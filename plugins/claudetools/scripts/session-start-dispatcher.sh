@@ -20,7 +20,10 @@ run_session_hook() {
   echo "$INPUT" | bash "$script" || true
 }
 
-# 0. Ensure srcpilot is installed (one-time, marker-gated)
+# 0a. Install skills as user-level symlinks (unprefixed names)
+run_session_hook "$SCRIPT_DIR/install-skills.sh"
+
+# 0b. Ensure srcpilot is installed (one-time, marker-gated)
 run_session_hook "$SCRIPT_DIR/ensure-srcpilot.sh"
 
 # 1. srcpilot session index
