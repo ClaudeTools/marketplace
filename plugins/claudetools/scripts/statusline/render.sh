@@ -153,11 +153,18 @@ record_usage() {
     fi
   fi
 
-  # Extract current usage data
+  # Extract current usage data (use effective ctx percentage, not raw)
   local five_pct seven_pct ctx_pct
   five_pct=$(echo "$INPUT" | jq -r '.rate_limits.five_hour.used_percentage // 0' 2>/dev/null) || five_pct=0
   seven_pct=$(echo "$INPUT" | jq -r '.rate_limits.seven_day.used_percentage // 0' 2>/dev/null) || seven_pct=0
-  ctx_pct=$(echo "$INPUT" | jq -r '.context_window.used_percentage // 0' 2>/dev/null) || ctx_pct=0
+  ctx_pct=$(echo "$INPUT" | jq -r '
+    (.context_window.context_window_size // 200000) as $window |
+    (.context_window.current_usage.input_tokens // 0) as $input |
+    ($window - 20000 - 13000) as $effective |
+    if $input > 0 and $effective > 0 then ($input / $effective * 100) | floor
+    elif .context_window.used_percentage then .context_window.used_percentage | floor
+    else 0 end
+  ' 2>/dev/null) || ctx_pct=0
 
   local peak_flag="off-peak"
   is_peak_time && peak_flag="peak"
@@ -226,13 +233,45 @@ widget_git() {
 }
 
 widget_context() {
-  local pct
-  pct=$(echo "$INPUT" | jq -r '.context_window.used_percentage // empty')
-  [[ -z "$pct" || "$pct" == "null" ]] && return
-  local int_pct color
-  int_pct=$(echo "$INPUT" | jq -r '.context_window.used_percentage | floor')
-  color="$GREEN"; (( int_pct > 50 )) && color="$YELLOW"; (( int_pct > 80 )) && color="$RED"
-  printf "%s ${color}%d%%${RESET} ${DIM}ctx${RESET}" "$(simple_bar "$int_pct" "$BAR_WIDTH")" "$int_pct"
+  local raw_pct
+  raw_pct=$(echo "$INPUT" | jq -r '.context_window.used_percentage // empty')
+  [[ -z "$raw_pct" || "$raw_pct" == "null" ]] && return
+
+  # CC's used_percentage divides by the raw context_window_size, but the
+  # usable window is smaller due to:
+  #   - Output buffer: min(max_output_tokens, 20000) = 20K reserved for responses
+  #   - Autocompact reserve: 13K tokens before the hard limit
+  # This makes the displayed percentage lower than effective usage.
+  # We correct by calculating against the effective (usable) window.
+  #
+  # See: github.com/anthropics/claude-code/issues/17959
+  #      github.com/anthropics/claude-code/issues/18944
+  local eff_pct tokens_k window_k
+  read -r eff_pct tokens_k window_k <<< "$(echo "$INPUT" | jq -r '
+    (.context_window.context_window_size // 200000) as $window |
+    (.context_window.current_usage.input_tokens // 0) as $input |
+    ($window - 20000 - 13000) as $effective |
+    (if $input > 0 then $input
+     elif .context_window.used_percentage then
+       (.context_window.used_percentage / 100 * $window) | floor
+     else 0 end) as $tokens |
+    (if $effective > 0 then ($tokens / $effective * 100) | floor
+     else 0 end) as $pct |
+    (if $pct > 100 then 100 elif $pct < 0 then 0 else $pct end) as $clamped |
+    # Format token counts as K or M
+    (if $tokens >= 1000000 then (($tokens / 100000 | floor) / 10 | tostring) + "M"
+     elif $tokens >= 1000 then (($tokens / 1000 | floor) | tostring) + "K"
+     else ($tokens | tostring) end) as $tok_display |
+    (if $effective >= 1000000 then (($effective / 100000 | floor) / 10 | tostring) + "M"
+     elif $effective >= 1000 then (($effective / 1000 | floor) | tostring) + "K"
+     else ($effective | tostring) end) as $win_display |
+    "\($clamped) \($tok_display) \($win_display)"
+  ')"
+
+  local color
+  color="$GREEN"; (( eff_pct > 50 )) && color="$YELLOW"; (( eff_pct > 80 )) && color="$RED"
+  printf "%s ${color}%d%%${RESET} ${DIM}%s/%s ctx${RESET}" \
+    "$(simple_bar "$eff_pct" "$BAR_WIDTH")" "$eff_pct" "$tokens_k" "$window_k"
 }
 
 widget_session() {
